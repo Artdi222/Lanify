@@ -119,7 +119,9 @@ export default function BeatmapDetailPage() {
     od: beatmap.od || 0,
     hp: beatmap.hp || 0,
     bpm: beatmap.bpm,
-    lengthSeconds: beatmap.lengthSeconds
+    lengthSeconds: beatmap.lengthSeconds,
+    noteCount: beatmap.noteCount,
+    holdCount: beatmap.holdCount
   };
 
   return (

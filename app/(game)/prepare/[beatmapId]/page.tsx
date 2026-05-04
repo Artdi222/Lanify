@@ -74,7 +74,7 @@ export default function PreparePage() {
       setProgress(10);
       
       let signedUrl = "";
-      if (BeatmapLoader.hasCache(beatmapId)) {
+      if (BeatmapLoader.hasCache(beatmap.filePath)) {
         // If cached, we don't need a fresh signed URL
         setProgress(25);
       } else {
@@ -89,7 +89,7 @@ export default function PreparePage() {
       updateStep(2, "loading");
       updateStep(3, "loading");
       
-      await BeatmapLoader.load(beatmapId, signedUrl, beatmap.difficultyName);
+      await BeatmapLoader.load(beatmap.filePath, signedUrl);
       
       updateStep(1, "done");
       setProgress(50);
