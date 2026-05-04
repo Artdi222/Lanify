@@ -1,26 +1,258 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-heading: var(--font-fira-code);
+  
+  /* Game-specific font families */
+  --font-game-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-game-body: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-game-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Lanify game theme colors */
+  --color-lanify-accent: #00e5ff;
+  --color-lanify-accent2: #7C3AED;
+  --color-lanify-bg: #08080f;
+  --color-lanify-surface: #0f0f1a;
+  --color-lanify-text: #ffffff;
+  --color-lanify-text-secondary: #8888aa;
+  --color-lanify-danger: #ff4444;
+  --color-lanify-success: #00ff88;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: oklch(0.98 0.01 240);
+  --foreground: oklch(0.2 0.05 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.05 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.05 240);
+  --primary: oklch(0.45 0.15 250);
+  --primary-foreground: oklch(0.98 0.01 240);
+  --secondary: oklch(0.9 0.05 250);
+  --secondary-foreground: oklch(0.2 0.05 240);
+  --muted: oklch(0.95 0.02 240);
+  --muted-foreground: oklch(0.5 0.05 240);
+  --accent: oklch(0.75 0.15 80); /* Amber */
+  --accent-foreground: oklch(0.2 0.05 240);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 240);
+  --border: oklch(0.9 0.02 240);
+  --input: oklch(0.9 0.02 240);
+  --ring: oklch(0.45 0.15 250);
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* OLED Dark Mode: Pure black background */
+  --background: oklch(0.05 0 0); 
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0.01 240);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.1 0.01 240);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.5 0.2 250); /* Deep Blue */
+  --primary-foreground: oklch(0.95 0 0);
+  --secondary: oklch(0.2 0.02 240);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.15 0.02 240);
+  --muted-foreground: oklch(0.65 0.02 240);
+  --accent: oklch(0.7 0.18 85); /* Vibrant Amber */
+  --accent-foreground: oklch(0.1 0.01 240);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.2 0.02 240);
+  --input: oklch(0.2 0.02 240);
+  --ring: oklch(0.5 0.2 250);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Admin glass utilities ─── */
+.glass {
+  @apply bg-card/60 backdrop-blur-md border border-white/10;
+}
+
+.glow-amber {
+  text-shadow: 0 0 15px oklch(0.7 0.18 85 / 0.5);
+}
+
+.glow-blue {
+  text-shadow: 0 0 15px oklch(0.5 0.2 250 / 0.5);
+}
+
+/* ─── Lanify Game Utilities ─── */
+.glow-cyan {
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.6), 0 0 40px rgba(0, 229, 255, 0.3);
+}
+
+.glow-purple {
+  text-shadow: 0 0 20px rgba(124, 58, 237, 0.6), 0 0 40px rgba(124, 58, 237, 0.3);
+}
+
+.neon-text {
+  text-shadow: 
+    0 0 7px currentColor,
+    0 0 10px currentColor,
+    0 0 21px currentColor,
+    0 0 42px rgba(0, 229, 255, 0.5);
+}
+
+.box-glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3), 0 0 30px rgba(0, 229, 255, 0.15), inset 0 0 15px rgba(0, 229, 255, 0.05);
+}
+
+.box-glow-purple {
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3), 0 0 30px rgba(124, 58, 237, 0.15), inset 0 0 15px rgba(124, 58, 237, 0.05);
+}
+
+/* Scanline overlay effect for game UI */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Breathing animation for logo */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* Judgement text pop animation */
+@keyframes judgement-pop {
+  0% { opacity: 1; transform: translateY(0) scale(1.2); }
+  30% { transform: translateY(-5px) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+}
+
+.animate-judgement {
+  animation: judgement-pop 600ms ease-out forwards;
+}
+
+/* Score count-up shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.text-shimmer {
+  background: linear-gradient(90deg, #ffffff 0%, #00e5ff 50%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Game font classes */
+.font-game-display {
+  font-family: var(--font-game-display);
+}
+
+.font-game-body {
+  font-family: var(--font-game-body);
+}
+
+.font-game-mono {
+  font-family: var(--font-game-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-breathe,
+  .animate-judgement,
+  .text-shimmer {
+    animation: none;
+  }
+}
+
+@keyframes music-bar-1 {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+@keyframes music-bar-2 {
+  0%, 100% { height: 8px; }
+  50% { height: 4px; }
+}
+@keyframes music-bar-3 {
+  0%, 100% { height: 6px; }
+  50% { height: 10px; }
+}
+
+.animate-music-bar-1 { animation: music-bar-1 0.8s ease-in-out infinite; }
+.animate-music-bar-2 { animation: music-bar-2 0.8s ease-in-out infinite 0.2s; }
+.animate-music-bar-3 { animation: music-bar-3 0.8s ease-in-out infinite 0.4s; }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

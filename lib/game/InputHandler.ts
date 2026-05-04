@@ -1,0 +1,283 @@
+import type { ParsedNote, JudgementType } from "@/types/game";
+import { JudgementEngine } from "./JudgementEngine";
+
+type JudgementCallback = (
+  type: JudgementType,
+  errorMs: number,
+  time: number,
+  weight?: number,
+) => void;
+type ColumnFlashCallback = (column: number) => void;
+
+export class InputHandler {
+  private keyMap: Map<string, number> = new Map();
+  private keyStates: Map<string, boolean> = new Map();
+  private notes: ParsedNote[];
+  private notesByColumn: ParsedNote[][] = [];
+  private columnIndices: number[] = [];
+  private activeHoldsByColumn: (ParsedNote | null)[] = [];
+
+  private judgementEngine: JudgementEngine;
+  private onJudgement: JudgementCallback;
+  private onColumnFlash: ColumnFlashCallback;
+  private getCurrentTime: () => number;
+  private active: boolean = false;
+
+  private handleKeyDown: (e: KeyboardEvent) => void;
+  private handleKeyUp: (e: KeyboardEvent) => void;
+
+  /** Exposed so GameEngine.checkMissedNotes() can read it without a separate call */
+  readonly missWindow: number;
+
+  constructor(
+    keybinds: string[],
+    notes: ParsedNote[],
+    od: number,
+    getCurrentTime: () => number,
+    onJudgement: JudgementCallback,
+    onColumnFlash: ColumnFlashCallback,
+  ) {
+    this.notes = notes;
+    this.judgementEngine = new JudgementEngine(od);
+    this.missWindow = this.judgementEngine.getMissWindow();
+    this.onJudgement = onJudgement;
+    this.onColumnFlash = onColumnFlash;
+    this.getCurrentTime = getCurrentTime;
+
+    keybinds.forEach((key, idx) => {
+      this.keyMap.set(key.toLowerCase(), idx);
+      this.keyStates.set(key.toLowerCase(), false);
+    });
+
+    this.setupNotes(notes, keybinds.length);
+
+    this.handleKeyDown = this._onKeyDown.bind(this);
+    this.handleKeyUp = this._onKeyUp.bind(this);
+  }
+
+  private setupNotes(notes: ParsedNote[], keyCount: number) {
+    this.notesByColumn = Array.from({ length: keyCount }, () => []);
+    this.columnIndices = Array(keyCount).fill(0);
+    this.activeHoldsByColumn = Array(keyCount).fill(null);
+
+    for (const note of notes) {
+      if (note.column < this.notesByColumn.length) {
+        this.notesByColumn[note.column].push(note);
+      }
+    }
+  }
+
+  start(): void {
+    this.active = true;
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
+  }
+
+  stop(): void {
+    this.active = false;
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Miss marking — GameEngine MUST call these instead of mutating notes directly.
+  // This keeps columnIndices in sync so _onKeyDown never lands on a stale note.
+  // ---------------------------------------------------------------------------
+
+  markMissed(note: ParsedNote, missWindow: number, currentTime: number): void {
+    if (note.hit) return; // already processed — guard against double-mark
+    note.hit = true;
+    note.judgement = "MISS";
+    this.onJudgement("MISS", missWindow, currentTime);
+    this._advanceColumnPast(note.column);
+  }
+
+  markHoldMissed(
+    note: ParsedNote,
+    missWindow: number,
+    currentTime: number,
+  ): void {
+    if (note.holdMissed) return;
+    note.holdMissed = true;
+    note.hit = true;
+    note.tailHit = true;
+    const weight = 1 / (2 + (note.totalTicks ?? 0));
+    this.onJudgement("MISS", missWindow, currentTime, weight); // head
+    this.onJudgement("MISS", missWindow, currentTime, weight); // tail
+    for (let t = 0; t < (note.totalTicks ?? 0); t++) {
+      this.onJudgement("MISS", missWindow, currentTime, weight);
+    }
+    this._advanceColumnPast(note.column);
+  }
+
+  /** Advance a column's index past all already-processed notes */
+  private _advanceColumnPast(col: number): void {
+    if (col >= this.notesByColumn.length) return;
+    const columnNotes = this.notesByColumn[col];
+    let idx = this.columnIndices[col];
+    while (
+      idx < columnNotes.length &&
+      (columnNotes[idx].hit || columnNotes[idx].holdMissed)
+    ) {
+      idx++;
+    }
+    this.columnIndices[col] = idx;
+  }
+
+  // ---------------------------------------------------------------------------
+
+  private _onKeyDown(e: KeyboardEvent): void {
+    if (!this.active) return;
+
+    const key = e.key.toLowerCase();
+    if (key === "escape") return;
+
+    const column = this.keyMap.get(key);
+    if (column === undefined) return;
+
+    e.preventDefault();
+
+    if (this.keyStates.get(key)) return;
+    this.keyStates.set(key, true);
+
+    this.onColumnFlash(column);
+
+    const currentTime = this.getCurrentTime();
+    const missWindow = this.missWindow;
+    const columnNotes = this.notesByColumn[column];
+
+    let index = this.columnIndices[column];
+
+    // Advance past any notes that are already processed or hopelessly missed.
+    // Because markMissed/markHoldMissed keep columnIndices current, this loop
+    // should almost always be a no-op during normal play — just a safety net.
+    while (index < columnNotes.length) {
+      const note = columnNotes[index];
+      if (note.hit || note.holdMissed) {
+        index++;
+        continue;
+      }
+      if (currentTime - note.startTime > missWindow) {
+        index++;
+        continue;
+      }
+      break;
+    }
+
+    this.columnIndices[column] = index;
+
+    if (index < columnNotes.length) {
+      const note = columnNotes[index];
+      const errorMs = currentTime - note.startTime;
+
+      if (Math.abs(errorMs) <= missWindow) {
+        const result = this.judgementEngine.judge(currentTime, note.startTime);
+        note.hit = true;
+        note.judgement = result.type;
+
+        if (note.isHoldNote) {
+          note.headHit = true;
+          note.isActiveHold = true;
+          this.activeHoldsByColumn[column] = note;
+          const weight = 1 / (2 + (note.totalTicks ?? 0));
+          this.onJudgement(result.type, result.errorMs, currentTime, weight);
+        } else {
+          this.onJudgement(result.type, result.errorMs, currentTime, 1);
+        }
+
+        this.columnIndices[column] = index + 1;
+      }
+    }
+  }
+
+  private _onKeyUp(e: KeyboardEvent): void {
+    const key = e.key.toLowerCase();
+    const column = this.keyMap.get(key);
+    if (column === undefined) return;
+
+    if (!this.keyStates.get(key)) return;
+    this.keyStates.set(key, false);
+
+    const activeNote = this.activeHoldsByColumn[column];
+    if (!activeNote) return;
+
+    this.activeHoldsByColumn[column] = null;
+    activeNote.isActiveHold = false;
+    activeNote.tailHit = true;
+
+    const currentTime = this.getCurrentTime();
+    const earlyMs = activeNote.endTime - currentTime;
+    const totalTicks = activeNote.totalTicks ?? 0;
+    const ticksHit = activeNote.ticksHit ?? 0;
+    const weight = 1 / (2 + totalTicks);
+    const remainingTicks = totalTicks - ticksHit;
+
+    if (earlyMs <= this.missWindow * 1.5) {
+      const type = earlyMs <= 50 ? "MARVELOUS" : "PERFECT";
+      this.onJudgement(type, -earlyMs, currentTime, weight);
+      for (let i = 0; i < remainingTicks; i++) {
+        this.onJudgement("PERFECT", 0, currentTime, weight);
+      }
+      activeNote.tailHit = true;
+    } else {
+      this.onJudgement("MISS", -earlyMs, currentTime, weight);
+      for (let i = 0; i < remainingTicks; i++) {
+        this.onJudgement("MISS", -earlyMs, currentTime, weight);
+      }
+      activeNote.holdMissed = true;
+      activeNote.tailHit = true; // Still mark as finished to advance indices
+    }
+    activeNote.ticksHit = totalTicks;
+  }
+
+  update(currentTime: number): void {
+    if (!this.active) return;
+
+    for (let i = 0; i < this.activeHoldsByColumn.length; i++) {
+      const note = this.activeHoldsByColumn[i];
+      if (!note) continue;
+
+      if (
+        note.nextTickTime !== undefined &&
+        note.ticksHit !== undefined &&
+        note.totalTicks !== undefined &&
+        currentTime >= note.nextTickTime &&
+        note.ticksHit < note.totalTicks
+      ) {
+        note.ticksHit++;
+        note.nextTickTime += 100;
+        this.onJudgement("PERFECT", 0, currentTime, 1 / (2 + note.totalTicks));
+      }
+
+      if (currentTime >= note.endTime) {
+        this.activeHoldsByColumn[i] = null;
+        note.isActiveHold = false;
+        note.tailHit = true;
+
+        const totalTicks = note.totalTicks ?? 0;
+        const ticksHit = note.ticksHit ?? 0;
+        const weight = 1 / (2 + totalTicks);
+        this.onJudgement("MARVELOUS", 0, currentTime, weight);
+        for (let j = 0; j < totalTicks - ticksHit; j++) {
+          this.onJudgement("PERFECT", 0, currentTime, weight);
+        }
+        note.ticksHit = totalTicks;
+      }
+    }
+  }
+
+  reset(notes: ParsedNote[]): void {
+    this.notes = notes;
+    this.activeHoldsByColumn.fill(null);
+    this.setupNotes(notes, this.notesByColumn.length);
+    this.keyStates.forEach((_, key) => this.keyStates.set(key, false));
+  }
+
+  destroy(): void {
+    this.stop();
+    this.activeHoldsByColumn = [];
+    this.keyMap.clear();
+    this.keyStates.clear();
+    this.notesByColumn = [];
+  }
+}
