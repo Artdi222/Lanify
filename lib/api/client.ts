@@ -22,11 +22,17 @@ export async function apiClient<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (err: any) {
+    console.error(`[API Client] Connection failed to ${API_URL}${path}. Verify that backend is running and CORS is configured.`, err);
+    throw err;
+  }
 
   const json = await res.json().catch(() => ({}));
 

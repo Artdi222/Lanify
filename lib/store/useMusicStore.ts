@@ -42,7 +42,7 @@ export const useMusicStore = create<MusicState>((set, get) => {
     initPlaylist: async () => {
       if (get().playlist.length > 0) return;
       try {
-        const res = await listBeatmaps(1, 100);
+        const res = await listBeatmaps(1, 10000);
         
         // Group by Title + Artist to show only unique songs
         const uniquePlaylist: Beatmap[] = [];

@@ -91,7 +91,7 @@ export default function SongSelectPage() {
     
     try {
       setLoading(true);
-      const res = await listBeatmaps(1, 100);
+      const res = await listBeatmaps(1, 10000);
       setBeatmaps(res.data);
       
       if (res.data.length > 0 && !selectedBeatmap) {

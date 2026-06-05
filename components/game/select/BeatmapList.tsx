@@ -363,7 +363,7 @@ export default function BeatmapList({
                             opacity: 1,
                             x: 0,
                             width: rowWidth,
-                            zIndex: isSelectedGroup ? 30 : 10 - distance,
+                            zIndex: isSelectedGroup ? 30 : 1,
                           }}
                           transition={{ 
                             type: "spring", 
