@@ -21,6 +21,7 @@ export default function MainMenuPage() {
   const currentSong = playlist[currentIndex];
   const [fallbackBgUrl, setFallbackBgUrl] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMenuExpanded, setIsMenuExpanded] = useState(false);
   const [tip, setTip] = useState("");
   const [particles, setParticles] = useState<Array<{
     width: number;
@@ -83,8 +84,8 @@ export default function MainMenuPage() {
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${activeBgUrl})` }}
           >
-            {/* Brighter background treatment with less blur */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+            {/* Sharp, darkened background treatment without blur */}
+            <div className="absolute inset-0 bg-black/60" />
           </motion.div>
         ) : (
           <motion.div 
@@ -92,17 +93,17 @@ export default function MainMenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-linear-to-br from-[#1a0b2e] via-[#0d1b2a] to-black" 
+            className="absolute inset-0 bg-linear-to-br from-[#060e1a] via-[#040810] to-black" 
           />
         )}
       </AnimatePresence>
 
-      {/* Subtle animated particles */}
+      {/* Subtle animated particles - now crisp dots instead of blur */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-white/20 blur-[1px]"
+            className="absolute rounded-full bg-blue-400/20"
             style={{
               width: p.width + "px",
               height: p.height + "px",
@@ -111,7 +112,7 @@ export default function MainMenuPage() {
             }}
             animate={{
               y: [0, p.yOffset],
-              opacity: [0, 0.8, 0],
+              opacity: [0, 0.5, 0],
               x: p.xOffset,
             }}
             transition={{
@@ -124,109 +125,90 @@ export default function MainMenuPage() {
         ))}
       </div>
 
-      {/* Ambient glow effects */}
-      <div className="absolute inset-0 pointer-events-none mix-blend-screen">
-        <motion.div
-          animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[120px]" 
-        />
-        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] rounded-full bg-cyan-600/10 blur-[150px]" />
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-cyan-400/10 blur-[150px]" />
-      </div>
-
-      {/* Subtle animated particles */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center pb-16">
-        
-        {/* Pulsing Center Logo */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
-          className="relative z-20 flex flex-col items-center"
+      <div className="relative z-10 flex flex-1 flex-row items-center justify-center pb-16 h-full w-full max-w-6xl mx-auto px-4">
+        <motion.div 
+          layout
+          className="flex flex-row items-center justify-center gap-0"
         >
+          {/* Interactive Logo Toggle */}
           <motion.div
-            animate={{ scale: [1, 1.03, 1] }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-            className="relative"
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative z-30 flex flex-col items-center shrink-0"
           >
-            {/* Inner dynamic ring */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -inset-4 rounded-full border border-dashed border-cyan-400/50"
-            />
-            
-            {/* Outer dynamic ring */}
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-              className="absolute -inset-8 rounded-full border border-cyan-500/20"
-            />
-
-            {/* Core logo circle */}
-            <div className="relative w-64 h-64 rounded-full bg-black/60 border border-cyan-500/30 flex items-center justify-center backdrop-blur-md shadow-[0_0_50px_rgba(0,229,255,0.3)] overflow-hidden group">
-              <div className="absolute inset-0 bg-linear-to-br from-cyan-500/10 to-cyan-400/10 group-hover:from-cyan-500/30 group-hover:to-cyan-400/30 transition-all duration-500" />
-              <span className="px-4 text-5xl font-game-display font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-300 via-white to-cyan-300 tracking-[0.15em] drop-shadow-[0_0_15px_rgba(0,229,255,0.8)] z-10">
-                LANIFY
-              </span>
-            </div>
+            <button 
+              onClick={() => setIsMenuExpanded(!isMenuExpanded)}
+              className="group relative focus:outline-hidden cursor-pointer"
+            >
+              {/* Core logo circle - clean and sharp, removed outer rings */}
+              <div className="relative w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-[#040b16] border-[4px] border-blue-500 flex items-center justify-center overflow-hidden transition-colors duration-500 group-hover:bg-[#071326] shadow-[0_0_30px_rgba(59,130,246,0.3)] z-30">
+                <span className="px-4 text-3xl sm:text-5xl font-game-display font-bold text-blue-100 tracking-[0.15em] z-10 transition-colors group-hover:text-white">
+                  LANIFY
+                </span>
+              </div>
+            </button>
           </motion.div>
-        </motion.div>
 
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6, type: "spring", bounce: 0.4 }}
-          className="flex flex-row items-center justify-center gap-6 mt-16 z-20 relative"
-        >
-          {/* Settings */}
-          <SettingsDrawer>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center w-20 h-20 rounded-full bg-[#0a1929] border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-950 transition-all cursor-pointer group shadow-[0_4px_15px_rgba(0,0,0,0.5)]"
-            >
-              <SettingsIcon className="w-8 h-8 text-cyan-400 group-hover:rotate-90 transition-transform duration-500" />
-            </motion.button>
-          </SettingsDrawer>
+          {/* Action Buttons */}
+          <AnimatePresence>
+            {isMenuExpanded && (
+              <motion.div
+                initial={{ opacity: 0, width: 0, x: -50 }}
+                animate={{ opacity: 1, width: "auto", x: -20 }}
+                exit={{ opacity: 0, width: 0, x: -50 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-row items-center gap-0 z-10 relative overflow-hidden py-4 pr-6"
+              >
+                {/* Settings */}
+                <SettingsDrawer>
+                  <button 
+                    className="flex flex-col items-center justify-center w-40 h-24 sm:w-52 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 -ml-12 pl-12 sm:pl-16"
+                  >
+                    <div className="flex flex-col items-center gap-2 skew-x-12">
+                      <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Settings</span>
+                    </div>
+                  </button>
+                </SettingsDrawer>
 
-          {/* PLAY BUTTON - HUGE & VIVID */}
-          <motion.button
-            onClick={() => router.push("/select")}
-            whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(0, 229, 255, 0.6)" }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative flex items-center justify-center w-72 h-20 rounded-full bg-linear-to-r from-cyan-400 to-cyan-600 shadow-[0_0_20px_rgba(0,229,255,0.4)] cursor-pointer overflow-hidden"
-          >
-            {/* Shine effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-linear-to-r from-transparent via-white/30 to-transparent skew-x-12" />
-            <div className="relative flex items-center justify-center z-10">
-               <Play className="w-8 h-8 mr-3 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
-               <span className="text-3xl font-game-display font-bold text-white tracking-[0.2em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">Play</span>
-            </div>
-          </motion.button>
+                {/* PLAY BUTTON - CLEAN AND BOLD */}
+                <button
+                  onClick={() => router.push("/select")}
+                  className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-blue-600 hover:bg-blue-500 border-y-2 border-r-2 border-blue-500 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12"
+                >
+                  <div className="flex flex-col items-center gap-2 skew-x-12">
+                    <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] sm:text-sm font-game-display font-bold text-white uppercase tracking-wider">Play</span>
+                  </div>
+                </button>
 
-          {/* Login / Logout */}
-          {isGuest ? (
-            <motion.button
-              onClick={() => router.push("/login")}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center w-20 h-20 rounded-full bg-[#0a1929] border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-950 transition-all cursor-pointer group shadow-[0_4px_15px_rgba(0,0,0,0.5)]"
-            >
-              <LogIn className="w-8 h-8 text-cyan-400 group-hover:translate-x-1 transition-transform duration-300" />
-            </motion.button>
-          ) : (
-            <motion.button
-              onClick={() => logout()}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center w-20 h-20 rounded-full bg-[#0a1929] border-2 border-cyan-500/50 hover:border-cyan-400 hover:bg-cyan-950 transition-all cursor-pointer group shadow-[0_4px_15px_rgba(0,0,0,0.5)]"
-            >
-              <LogOut className="w-8 h-8 text-cyan-400 group-hover:-translate-x-1 transition-transform duration-300" />
-            </motion.button>
-          )}
+                {/* Login / Logout */}
+                {isGuest ? (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900/60 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 pr-2"
+                  >
+                    <div className="flex flex-col items-center gap-2 skew-x-12">
+                      <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Log In</span>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => logout()}
+                    className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900/60 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 pr-2"
+                  >
+                    <div className="flex flex-col items-center gap-2 skew-x-12">
+                      <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Log Out</span>
+                    </div>
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
 
@@ -238,11 +220,11 @@ export default function MainMenuPage() {
         className="absolute bottom-0 left-0 right-0 z-20 bg-linear-to-t from-black via-black/80 to-transparent pt-16 pb-6 px-8 flex justify-between items-end"
       >
         <div className="flex items-center gap-4">
-           <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-             <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
+           <div className="w-10 h-10 rounded-full bg-blue-900/40 flex items-center justify-center border border-blue-500/40">
+             <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse"></div>
            </div>
            <div>
-             <div className="text-[10px] font-game-mono text-cyan-400/70 uppercase tracking-widest mb-1">System Message</div>
+             <div className="text-[10px] font-game-mono text-blue-400/80 uppercase tracking-widest mb-1">System Message</div>
              <span className="text-sm font-game-body text-white/90">
                {tip}
              </span>
@@ -251,8 +233,8 @@ export default function MainMenuPage() {
 
         {/* Global Offset */}
         <div className="flex flex-col items-end">
-          <span className="text-[10px] font-game-mono text-white/40 uppercase tracking-widest mb-1">Global Offset</span>
-          <span className="text-sm font-game-mono text-cyan-300 tabular-nums bg-cyan-950/40 border border-cyan-900/50 px-3 py-1.5 rounded-lg backdrop-blur-md shadow-[inset_0_0_10px_rgba(0,229,255,0.1)]">
+          <span className="text-[10px] font-game-mono text-white/50 uppercase tracking-widest mb-1">Global Offset</span>
+          <span className="text-sm font-game-mono text-blue-300 tabular-nums bg-[#0a1424] border border-blue-800/60 px-3 py-1.5 rounded-sm">
             {globalOffset >= 0 ? "+" : ""}{globalOffset}ms
           </span>
         </div>

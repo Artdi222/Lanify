@@ -157,15 +157,27 @@ export class NoteRenderer {
     app.renderer.render(headG, { renderTexture: this.noteTexture });
     headG.destroy();
 
-    // Build hold body texture — a pill/capsule shape with rounded top & bottom.
-    // NineSlicePlane will stretch only the middle row, keeping caps crisp.
+    // Build hold body texture — sharp tail, circular start (ponytail)
     const holdW = Math.round(this.radius * 1.8);
-    const holdCapR = Math.round(holdW / 2); // fully semicircular caps
-    const holdTexH = holdCapR * 2 + 4; // top cap + 4px stretchable middle + bottom cap
+    const holdCapR = Math.round(holdW / 2);
+    const holdTexH = holdCapR * 2 + 4;
     this.holdCapSize = holdCapR;
     const holdG = new PIXI.Graphics();
     holdG.beginFill(0xffffff);
-    holdG.drawRoundedRect(0, 0, holdW, holdTexH, holdCapR);
+    if (this.scrollDirection === "down") {
+      holdG.moveTo(holdW / 2, 0); // top tip (tail)
+      holdG.lineTo(holdW, holdCapR);
+      holdG.lineTo(holdW, holdCapR + 4);
+      holdG.arc(holdW / 2, holdCapR + 4, holdCapR, 0, Math.PI); // bottom circular (start)
+      holdG.lineTo(0, holdCapR);
+      holdG.lineTo(holdW / 2, 0);
+    } else {
+      holdG.arc(holdW / 2, holdCapR, holdCapR, Math.PI, 0); // top circular (start)
+      holdG.lineTo(holdW, holdCapR + 4);
+      holdG.lineTo(holdW / 2, holdTexH); // bottom tip (tail)
+      holdG.lineTo(0, holdCapR + 4);
+      holdG.lineTo(0, holdCapR);
+    }
     holdG.endFill();
     this.holdTexture = PIXI.RenderTexture.create({
       width: holdW,
@@ -373,7 +385,8 @@ export class NoteRenderer {
       const y = isDown
         ? this.hitZoneY - timeDiff * pxPerMs
         : this.hitZoneY + timeDiff * pxPerMs;
-      const color = this.parsedColors[note.column];
+      const color = note.isHoldNote ? 0xd4b6ea : 0x86aae8;
+      const tailColor = 0xcccccc;
       const centerX = this.centerXs[note.column];
 
       // ─── HOLD BODY (sprite-based, no Graphics redraw) ───
@@ -406,11 +419,11 @@ export class NoteRenderer {
 
           hold.sprite.visible = true;
           if (note.holdMissed) {
-            hold.sprite.tint = this.darkenColor(color, 0.4);
+            hold.sprite.tint = this.darkenColor(tailColor, 0.4);
             hold.sprite.alpha = 0.6;
           } else {
-            hold.sprite.tint = this.darkenColor(color, 0.5);
-            hold.sprite.alpha = 0.8;
+            hold.sprite.tint = tailColor;
+            hold.sprite.alpha = 1.0;
           }
           hold.sprite.height = Math.max(bodyH, this.holdCapSize * 2 + 4);
           hold.sprite.x = centerX;
@@ -486,6 +499,12 @@ export class NoteRenderer {
 
   getHitZoneY(): number {
     return this.hitZoneY;
+  }
+  getScrollDirection(): ScrollDirection {
+    return this.scrollDirection;
+  }
+  getScrollSpeed(): number {
+    return this.scrollSpeed;
   }
   getLaneBounds() {
     return { x: this.laneX, width: this.laneWidth };

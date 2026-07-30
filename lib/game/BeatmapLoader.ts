@@ -4,6 +4,7 @@ import { BeatmapParser, ParsedOsuData } from "./BeatmapParser";
 export interface LoadedBeatmapData {
   id: string;
   difficulties: Map<string, ParsedOsuData>;
+  getDifficulty: (difficultyName: string, keyCount?: number) => ParsedOsuData | undefined;
   audioUrl: string;
   backgroundUrl: string | null;
   audioBlob: Blob;
@@ -62,8 +63,12 @@ export class BeatmapLoader {
       const content = await zip.files[fileName].async("text");
       const parsed = BeatmapParser.parse(content);
       
-      // Store by difficulty name (Version)
-      difficulties.set(parsed.difficultyName.toLowerCase(), parsed);
+      const key = parsed.difficultyName.toLowerCase().trim();
+      const existing = difficulties.get(key);
+      // Prefer mania mode (3) over non-mania mode if there's a difficulty name collision
+      if (!existing || (parsed.mode === 3 && existing.mode !== 3)) {
+        difficulties.set(key, parsed);
+      }
       
       // Usually all difficulties share the same audio and background
       if (!audioFilename) audioFilename = parsed.audioFilename;
@@ -73,15 +78,19 @@ export class BeatmapLoader {
     if (!audioFilename) throw new Error("No AudioFilename found in any .osu file");
 
     // Extract audio
-    const audioFile = zip.files[audioFilename] || zip.files[audioFilename.replace(/\\/g, "/")];
+    let audioFile = zip.files[audioFilename] || zip.files[audioFilename.replace(/\\/g, "/")];
     if (!audioFile) {
-      // Try to find any audio file if the specified one is missing
-      const anyAudio = Object.keys(zip.files).find(f => f.endsWith(".mp3") || f.endsWith(".ogg"));
-      if (!anyAudio) throw new Error(`Audio file "${audioFilename}" not found in archive`);
-      audioFilename = anyAudio;
+      const lowerName = audioFilename.toLowerCase().replace(/\\/g, "/");
+      const foundAudio = Object.keys(zip.files).find(f => {
+        const l = f.toLowerCase().replace(/\\/g, "/");
+        return l === lowerName || l.endsWith(".mp3") || l.endsWith(".ogg") || l.endsWith(".wav");
+      });
+      if (!foundAudio) throw new Error(`Audio file "${audioFilename}" not found in archive`);
+      audioFilename = foundAudio;
+      audioFile = zip.files[audioFilename];
     }
 
-    const audioArrayBuffer = await zip.files[audioFilename!].async("arraybuffer");
+    const audioArrayBuffer = await audioFile.async("arraybuffer");
     const audioBlob = new Blob([audioArrayBuffer], { type: "audio/mpeg" });
     const audioUrl = URL.createObjectURL(audioBlob);
 
@@ -110,9 +119,55 @@ export class BeatmapLoader {
       }
     }
 
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    const getDifficulty = (difficultyName: string, keyCount?: number): ParsedOsuData | undefined => {
+      if (!difficultyName && difficulties.size > 0) {
+        return difficulties.values().next().value;
+      }
+      const targetLower = difficultyName.toLowerCase().trim();
+      
+      // 1. Direct lowercase lookup
+      if (difficulties.has(targetLower)) {
+        return difficulties.get(targetLower);
+      }
+
+      // 2. Normalized alphanumeric match
+      const targetNorm = normalize(difficultyName);
+      for (const [key, parsed] of difficulties.entries()) {
+        if (normalize(key) === targetNorm) {
+          return parsed;
+        }
+      }
+
+      // 3. Mania-only filtering + keyCount match
+      const maniaDiffs = Array.from(difficulties.values()).filter(d => d.mode === 3);
+      if (keyCount !== undefined) {
+        const keyMatched = maniaDiffs.find(d => 
+          d.keyCount === keyCount && 
+          (normalize(d.difficultyName).includes(targetNorm) || targetNorm.includes(normalize(d.difficultyName)))
+        );
+        if (keyMatched) return keyMatched;
+      }
+
+      // 4. Single mania diff fallback or first matching keyCount
+      if (keyCount !== undefined) {
+        const keyMatchedAny = maniaDiffs.find(d => d.keyCount === keyCount);
+        if (keyMatchedAny) return keyMatchedAny;
+      }
+
+      if (maniaDiffs.length > 0) {
+        return maniaDiffs[0];
+      }
+
+      // 5. Fallback: first difficulty in map
+      return difficulties.values().next().value;
+    };
+
     const data: LoadedBeatmapData = {
       id: archiveKey,
       difficulties,
+      getDifficulty,
       audioUrl,
       backgroundUrl,
       audioBlob,

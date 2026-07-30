@@ -2,6 +2,7 @@ import type { ParsedNote } from "@/types/game";
 
 export interface ParsedOsuData {
   difficultyName: string;
+  mode: number;
   keyCount: number;
   od: number;
   hp: number;
@@ -12,10 +13,17 @@ export interface ParsedOsuData {
 }
 
 export class BeatmapParser {
+  private static getValue(line: string): string {
+    const idx = line.indexOf(":");
+    if (idx === -1) return "";
+    return line.substring(idx + 1).trim();
+  }
+
   /** Parse .osu file content into structured data */
   static parse(content: string): ParsedOsuData {
     const lines = content.split(/\r?\n/);
     const data: Partial<ParsedOsuData> = {
+      mode: 0,
       notes: [],
     };
 
@@ -41,23 +49,25 @@ export class BeatmapParser {
 
       if (inGeneral) {
         if (trimmed.startsWith("AudioFilename:")) {
-          data.audioFilename = trimmed.split(":")[1].trim();
+          data.audioFilename = BeatmapParser.getValue(trimmed);
+        } else if (trimmed.startsWith("Mode:")) {
+          data.mode = parseInt(BeatmapParser.getValue(trimmed), 10) || 0;
         }
       }
 
       if (inMetadata) {
         if (trimmed.startsWith("Version:")) {
-          data.difficultyName = trimmed.split(":")[1].trim();
+          data.difficultyName = BeatmapParser.getValue(trimmed);
         }
       }
 
       if (inDifficulty) {
         if (trimmed.startsWith("CircleSize:")) {
-          data.keyCount = parseInt(trimmed.split(":")[1].trim());
+          data.keyCount = parseInt(BeatmapParser.getValue(trimmed), 10);
         } else if (trimmed.startsWith("OverallDifficulty:")) {
-          data.od = parseFloat(trimmed.split(":")[1].trim());
+          data.od = parseFloat(BeatmapParser.getValue(trimmed));
         } else if (trimmed.startsWith("HPDrainRate:")) {
-          data.hp = parseFloat(trimmed.split(":")[1].trim());
+          data.hp = parseFloat(BeatmapParser.getValue(trimmed));
         }
       }
 

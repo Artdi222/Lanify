@@ -183,9 +183,8 @@ export default function BeatmapUploadForm() {
       let coverUrl: string | undefined = undefined;
       if (coverFile) {
         const coverPath = await uploadToSupabase(coverFile);
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ampvduihfkdyvgobpwiv.supabase.co";
-        const bucketName = process.env.NEXT_PUBLIC_SUPABASE_BUCKET_NAME || "beatmaps";
-        coverUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${coverPath}`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        coverUrl = `${apiUrl}/beatmaps/bg?path=${encodeURIComponent(coverPath)}`;
       }
 
       // 2. Create entries in backend

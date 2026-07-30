@@ -72,19 +72,36 @@ export class GameEngine {
 
   start(): void {
     if (this.running) {
-      this.audioEngine.play();
+      this.audioEngine.resume();
       this.inputHandler.start();
       return;
     }
 
     this.running = true;
-    this.audioEngine.play();
+    const leadInMs = this.calculateLeadIn();
+    this.audioEngine.play(leadInMs);
     this.inputHandler.start();
     this.app.ticker.add(this.gameLoop, this);
     this.audioEngine.onEnd(() => {
       this.callbacks.onComplete();
       this.pause();
     });
+  }
+
+  private calculateLeadIn(): number {
+    if (this.notes.length === 0) return 0;
+    const firstNoteTime = this.notes[0].startTime;
+    const hitZoneY = this.noteRenderer.getHitZoneY();
+    const isDown = this.noteRenderer.getScrollDirection() === "down";
+    const screenH = this.app?.screen?.height || 800;
+    const spawnDistance = isDown ? hitZoneY + 100 : screenH - hitZoneY + 100;
+    const pxPerMs = this.noteRenderer.getScrollSpeed() * 0.08;
+    const travelTime = spawnDistance / pxPerMs;
+
+    if (firstNoteTime < travelTime) {
+      return Math.max(1500, Math.ceil(travelTime - firstNoteTime + 300));
+    }
+    return 0;
   }
 
   pause(): void {

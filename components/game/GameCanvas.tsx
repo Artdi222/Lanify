@@ -39,8 +39,10 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
 
       // Re-parse notes for a fresh start (to reset all 'hit' flags etc)
       const cached = BeatmapLoader.getCache(archiveKey);
-      const difficulty = currentBeatmap?.difficultyName?.toLowerCase() || "";
-      const parsed = cached?.difficulties.get(difficulty);
+      const difficulty = currentBeatmap?.difficultyName || "";
+      const parsed = cached?.getDifficulty
+        ? cached.getDifficulty(difficulty, currentBeatmap?.keyCount)
+        : cached?.difficulties.get(difficulty.toLowerCase());
       
       if (parsed) {
         // We need NEW note objects because the old ones are mutated
@@ -202,8 +204,9 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
         }
         
         // 3. Get parsed data for this specific difficulty
-        const diffName = beatmap.difficultyName.toLowerCase();
-        const parsed = loaded.difficulties.get(diffName);
+        const parsed = loaded.getDifficulty
+          ? loaded.getDifficulty(beatmap.difficultyName, beatmap.keyCount)
+          : loaded.difficulties.get(beatmap.difficultyName.toLowerCase());
         if (!parsed) throw new Error(`Difficulty "${beatmap.difficultyName}" not found in archive`);
 
         // We need NEW note objects because they will be mutated by the engine
