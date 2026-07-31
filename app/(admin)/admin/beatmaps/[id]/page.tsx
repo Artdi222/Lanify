@@ -20,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import BeatmapPreview from "@/components/admin/BeatmapPreview";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { getBeatmap, deleteBeatmap, getBeatmapUrl } from "@/lib/api/beatmaps";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import type { Beatmap, DifficultyInfo } from "@/types/beatmap";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -38,7 +38,7 @@ export default function BeatmapDetailPage() {
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [copied, setCopied] = useState(false);
   
-  const { token } = useAdminStore();
+  const { token } = useAuthStore();
 
   useEffect(() => {
     const fetchData = async () => {

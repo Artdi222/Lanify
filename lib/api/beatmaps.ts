@@ -5,7 +5,7 @@ import type {
   CreateBeatmapBatchPayload 
 } from "@/types/beatmap";
 import { apiClient } from "./client";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 
 /** Fetch paginated beatmap list */
 export async function listBeatmaps(
@@ -80,7 +80,7 @@ export function uploadToSupabase(
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<string> {
-  const { token } = useAdminStore.getState();
+  const { token } = useAuthStore.getState();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
   return new Promise((resolve, reject) => {

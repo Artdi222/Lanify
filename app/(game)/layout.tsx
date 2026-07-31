@@ -12,8 +12,7 @@ export default function GameLayout({
   const pathname = usePathname();
   const isPlayPage = pathname.includes("/play/");
   const isResultPage = pathname.includes("/result");
-  const isLoginPage = pathname === "/login";
-  const hideNavbar = isPlayPage || isResultPage || isLoginPage;
+  const hideNavbar = isPlayPage || isResultPage;
 
   return (
     <div className="h-full bg-lanify-bg text-lanify-text font-game-body flex flex-col overflow-hidden">

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BeatmapTable from "@/components/admin/BeatmapTable";
 import { listBeatmaps, deleteBeatmap } from "@/lib/api/beatmaps";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import type { Beatmap } from "@/types/beatmap";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -32,7 +32,7 @@ export default function BeatmapsListPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
-  const { token } = useAdminStore();
+  const { token } = useAuthStore();
 
   useEffect(() => {
     const handler = setTimeout(() => {

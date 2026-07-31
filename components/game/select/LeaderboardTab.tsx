@@ -124,9 +124,14 @@ export default function LeaderboardTab({ beatmapId, beatmap, scope = 'GLOBAL', t
                 className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/15"
                 style={idx === 0 ? { borderColor: "rgba(0,229,255,0.5)", boxShadow: "0 0 8px rgba(0,229,255,0.3)" } : {}}
               >
-                <div className="w-full h-full bg-black/40 flex items-center justify-center">
-                  <User className={`w-6 h-6 ${idx === 0 ? "text-cyan-400" : "text-white/40"}`} />
-                </div>
+                {entry.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={entry.avatarUrl} alt={entry.username} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-black/40 flex items-center justify-center">
+                    <User className={`w-6 h-6 ${idx === 0 ? "text-cyan-400" : "text-white/40"}`} />
+                  </div>
+                )}
               </div>
 
               {/* Username block */}

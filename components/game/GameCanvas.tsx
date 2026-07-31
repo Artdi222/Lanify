@@ -224,6 +224,7 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
           keybinds: [...keybinds],
           scrollDirection: settings.scrollDirection,
           scrollSpeed: settings.scrollSpeed,
+          percyMaxLengthPx: settings.percyMaxLengthPx,
           volume: settings.volume,
           globalOffset: settings.globalOffset,
           callbacks: { onJudgement: handleJudgement, onComplete: handleComplete, onFail: handleFail },

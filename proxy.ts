@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 /**
  * Proxy (Next.js 16 middleware replacement).
  * 
- * - Protects /admin/* routes (except /admin/login) — requires admin cookie
+ * - Protects /admin/* routes — requires auth cookie
  * - Protects /profile/* routes — requires auth cookie
  * - All game routes (/, /select, /prepare/*, /play/*, /result) are fully public
  */
@@ -12,22 +12,21 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Admin route protection ──
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
-    const token = request.cookies.get("lanify-admin-token")?.value;
+  if (pathname.startsWith("/admin")) {
+    const token = request.cookies.get("lanify-auth-token")?.value;
     if (!token) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
   }
 
   // ── Profile route protection ──
   if (pathname.startsWith("/profile")) {
-    const token = request.cookies.get("lanify-auth")?.value;
+    const token = request.cookies.get("lanify-auth-token")?.value;
     if (!token) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      const homeUrl = new URL("/", request.url);
+      return NextResponse.redirect(homeUrl);
     }
   }
 

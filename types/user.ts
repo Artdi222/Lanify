@@ -5,6 +5,7 @@ export interface User {
   email: string;
   role: 'admin' | 'user';
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
   createdAt?: string;
 }
 

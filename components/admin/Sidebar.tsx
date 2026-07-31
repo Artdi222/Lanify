@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
@@ -25,11 +25,11 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAdminStore();
+  const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
     logout();
-    router.push("/admin/login");
+    router.push("/");
   };
 
   return (

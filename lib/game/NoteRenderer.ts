@@ -11,8 +11,8 @@ const COLUMN_COLORS_7K = [
   "#00e5ff",
   "#3399ff",
 ];
-const HIT_ZONE_COLOR = 0x00e5ff;
-const COLUMN_FLASH_COLOR = 0x00e5ff;
+const HIT_ZONE_COLOR = 0x7d7d7d;
+const COLUMN_FLASH_COLOR = 0x7d7d7d;
 
 // Pre-parsed colors to avoid parseInt on every frame
 const PARSED_COLORS_4K = COLUMN_COLORS_4K.map((c) =>
@@ -68,16 +68,21 @@ export class NoteRenderer {
   // Reusable Set to avoid allocation per frame
   private holdEndTimes: Set<string> = new Set();
 
+  // Percy skin: maximum visual LN body length in pixels (Infinity = no cap)
+  private percyMaxLengthPx: number;
+
   constructor(
     app: PIXI.Application,
     keyCount: number,
     scrollDirection: ScrollDirection,
     scrollSpeed: number,
+    percyMaxLengthPx: number = 99999,
   ) {
     this.app = app;
     this.keyCount = keyCount;
     this.scrollDirection = scrollDirection;
     this.scrollSpeed = scrollSpeed;
+    this.percyMaxLengthPx = percyMaxLengthPx || 99999; // guard stale null from localStorage
     const isBigger = app.screen.height > 1000;
     const sizeScale = isBigger ? 1.2 : 1.0;
     
@@ -386,7 +391,7 @@ export class NoteRenderer {
         ? this.hitZoneY - timeDiff * pxPerMs
         : this.hitZoneY + timeDiff * pxPerMs;
       const color = note.isHoldNote ? 0xd4b6ea : 0x86aae8;
-      const tailColor = 0xcccccc;
+      const tailColor = 0xbbbcbe;
       const centerX = this.centerXs[note.column];
 
       // ─── HOLD BODY (sprite-based, no Graphics redraw) ───
@@ -398,8 +403,26 @@ export class NoteRenderer {
         const startY = note.isActiveHold ? this.hitZoneY : y;
 
         if (!isDown || endY < this.hitZoneY || note.holdMissed) {
-          const top = Math.min(startY, endY);
-          const bodyH = Math.abs(endY - startY);
+          const realBodyH = Math.abs(endY - startY);
+          // Percy-cut: cap visual body length, but never smaller than the
+          // NineSlicePlane's two caps (tail-tip + rounded start) + 4px gap.
+          const minBodyH = this.holdCapSize * 2 + 4;
+          const visualBodyH = Math.max(
+            Math.min(realBodyH, this.percyMaxLengthPx),
+            minBodyH,
+          );
+
+          // Anchor fix: the pivot sits on the texture's top edge.
+          // - down scroll: pivot must be at the HEAD side (startY), so shift
+          //   the visual top upward from startY by visualBodyH.
+          // - up scroll: pivot is already at the HEAD side (startY), just
+          //   cap the length.
+          // Overlap: extend the body past the head so the start-cap is fully
+          // hidden behind the circular head sprite (body is narrower than head).
+          const overlap = this.holdCapSize;
+          const top = isDown
+            ? startY - visualBodyH
+            : startY - overlap;
 
           let hold = this.holdPool.pop();
           if (!hold) {
@@ -425,7 +448,7 @@ export class NoteRenderer {
             hold.sprite.tint = tailColor;
             hold.sprite.alpha = 1.0;
           }
-          hold.sprite.height = Math.max(bodyH, this.holdCapSize * 2 + 4);
+          hold.sprite.height = visualBodyH + overlap;
           hold.sprite.x = centerX;
           hold.sprite.y = top;
           hold.inUse = true;
@@ -434,7 +457,11 @@ export class NoteRenderer {
       }
 
       // ─── HEAD SPRITE ───
-      if (!note.isActiveHold && y > -100 && y < screenH + 100) {
+      // Bug #1 fix: during an active hold, pin the head to the hit zone
+      // instead of hiding it. It disappears on release via the tailHit
+      // check at the top of this loop.
+      const headY = note.isActiveHold ? this.hitZoneY : y;
+      if (headY > -100 && headY < screenH + 100) {
         let sprite = this.notePool.pop();
         if (!sprite) {
           sprite = new PIXI.Sprite(this.noteTexture!);
@@ -449,7 +476,7 @@ export class NoteRenderer {
           sprite.tint = color;
           sprite.alpha = 1.0;
         }
-        sprite.position.set(centerX, y);
+        sprite.position.set(centerX, headY);
         this.activeNotes.push(sprite);
       }
     }
@@ -457,6 +484,10 @@ export class NoteRenderer {
 
   setScrollSpeed(speed: number): void {
     this.scrollSpeed = speed;
+  }
+
+  setPercyMaxLength(px: number): void {
+    this.percyMaxLengthPx = px;
   }
 
   setBackgroundDim(dim: number): void {

@@ -14,7 +14,7 @@ import StatsCard from "@/components/admin/StatsCard";
 import BeatmapTable from "@/components/admin/BeatmapTable";
 import { listBeatmaps, deleteBeatmap } from "@/lib/api/beatmaps";
 import { getAdminStats } from "@/lib/api/admin";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import type { Beatmap } from "@/types/beatmap";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const { token } = useAdminStore();
+  const { token } = useAuthStore();
 
   const fetchData = useCallback(async () => {
     try {

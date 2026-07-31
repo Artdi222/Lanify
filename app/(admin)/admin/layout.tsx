@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import Sidebar from "@/components/admin/Sidebar";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -14,7 +14,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { token } = useAdminStore();
+  const { token, user } = useAuthStore();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -24,12 +24,12 @@ export default function AdminLayout({
   }, []);
 
   useEffect(() => {
-    if (mounted && !token && pathname !== "/admin/login") {
-      router.push("/admin/login");
+    if (mounted && (!token || user?.role !== "admin")) {
+      router.push("/");
     }
-  }, [mounted, token, pathname, router]);
+  }, [mounted, token, user, pathname, router]);
 
-  if (!mounted || (!token && pathname !== "/admin/login")) {
+  if (!mounted || !token || user?.role !== "admin") {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <motion.div

@@ -36,6 +36,7 @@ export class GameEngine {
     keybinds: string[];
     scrollDirection: ScrollDirection;
     scrollSpeed: number;
+    percyMaxLengthPx?: number;
     volume: number;
     globalOffset: number;
     callbacks: GameEngineCallbacks;
@@ -50,6 +51,7 @@ export class GameEngine {
       config.keyCount,
       config.scrollDirection,
       config.scrollSpeed,
+      config.percyMaxLengthPx,
     );
     this.inputHandler = new InputHandler(
       config.keybinds,
@@ -196,6 +198,10 @@ export class GameEngine {
 
   setScrollSpeed(speed: number): void {
     this.noteRenderer.setScrollSpeed(speed);
+  }
+
+  setPercyMaxLength(px: number): void {
+    this.noteRenderer.setPercyMaxLength(px);
   }
 
   setVolume(vol: number): void {

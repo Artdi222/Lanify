@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { OszInspector } from "@/lib/beatmap/OszInspector";
 import { uploadToSupabase, createBeatmapBatch, calculateStars } from "@/lib/api/beatmaps";
-import { useAdminStore } from "@/lib/store/useAdminStore";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 
@@ -62,7 +62,7 @@ export default function BeatmapUploadForm() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { token } = useAdminStore();
+  const { token } = useAuthStore();
   const {
     register,
     handleSubmit,

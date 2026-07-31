@@ -144,6 +144,7 @@ export interface GameSettings {
   selectionStarMin: number;
   selectionStarMax: number;
   lastSelectedBeatmapId: string | null;
+  percyMaxLengthPx: number;
 }
 
 /** Default game settings */
@@ -163,6 +164,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   selectionStarMin: 0,
   selectionStarMax: 10,
   lastSelectedBeatmapId: null,
+  percyMaxLengthPx: 99999, // ponytail: Infinity breaks JSON.stringify (zustand persist), 99999 is larger than any screen
 };
 
 /** Star rating color mapping */

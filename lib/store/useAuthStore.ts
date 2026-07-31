@@ -10,6 +10,15 @@ interface AuthState {
   logout: () => void;
 }
 
+function setAuthCookie(token: string | null) {
+  if (typeof document === 'undefined') return;
+  if (token) {
+    document.cookie = `lanify-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  } else {
+    document.cookie = 'lanify-auth-token=; path=/; max-age=0';
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -17,8 +26,14 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isGuest: true,
 
-      login: (token, user) => set({ token, user, isGuest: false }),
-      logout: () => set({ token: null, user: null, isGuest: true }),
+      login: (token, user) => {
+        setAuthCookie(token);
+        set({ token, user, isGuest: false });
+      },
+      logout: () => {
+        setAuthCookie(null);
+        set({ token: null, user: null, isGuest: true });
+      },
     }),
     {
       name: 'lanify-auth',

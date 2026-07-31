@@ -143,7 +143,7 @@ export default function MainMenuPage() {
               className="group relative focus:outline-hidden cursor-pointer"
             >
               {/* Core logo circle - clean and sharp, removed outer rings */}
-              <div className="relative w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-[#040b16] border-[4px] border-blue-500 flex items-center justify-center overflow-hidden transition-colors duration-500 group-hover:bg-[#071326] shadow-[0_0_30px_rgba(59,130,246,0.3)] z-30">
+              <div className="relative w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-[#040b16] border-4 border-blue-500 flex items-center justify-center overflow-hidden transition-colors duration-500 group-hover:bg-[#071326] shadow-[0_0_30px_rgba(59,130,246,0.3)] z-30">
                 <span className="px-4 text-3xl sm:text-5xl font-game-display font-bold text-blue-100 tracking-[0.15em] z-10 transition-colors group-hover:text-white">
                   LANIFY
                 </span>
@@ -187,7 +187,7 @@ export default function MainMenuPage() {
                 {/* Login / Logout */}
                 {isGuest ? (
                   <button
-                    onClick={() => router.push("/login")}
+                    onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))}
                     className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900/60 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 pr-2"
                   >
                     <div className="flex flex-col items-center gap-2 skew-x-12">
