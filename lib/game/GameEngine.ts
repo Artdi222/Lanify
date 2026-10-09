@@ -120,6 +120,7 @@ export class GameEngine {
 
   private gameLoop = (): void => {
     if (this.paused) return;
+    this.audioEngine.syncClock();
     const currentTime = this.audioEngine.getCurrentTime();
     this.checkMissedNotes(currentTime);
     this.inputHandler.update(currentTime);

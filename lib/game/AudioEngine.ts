@@ -1,13 +1,24 @@
-import { Howl } from "howler";
+import { Howl, Howler } from "howler";
+import { AnchorFilter, anchorFromLatency, anchorFromOutputTimestamp } from "./AudioClock";
+
+/** Minimum gap between audio-clock samples (ms). ctx.currentTime only ticks every ~8ms anyway. */
+const CLOCK_SAMPLE_INTERVAL_MS = 40;
 
 /**
  * AudioEngine — Howler.js wrapper for precise game audio timing.
+ *
+ * Game time = `performance.now() - startTimestamp + globalOffset`. `startTimestamp` is the
+ * "anchor": it starts as a raw guess at play()/seek()/resume() and is then continuously
+ * re-estimated from the audio clock by `syncClock()` so it follows the *audible* song
+ * position (output latency + clock drift), see AudioClock.ts.
  */
 export class AudioEngine {
   private howl: Howl | null = null;
   private soundId: number | null = null;
   private globalOffset: number;
   private startTimestamp: number = 0;
+  private clockFilter = new AnchorFilter();
+  private lastClockSampleAt: number = 0;
   private pauseTime: number = 0;
   private playing: boolean = false;
   private currentUrl: string | null = null;
@@ -57,11 +68,19 @@ export class AudioEngine {
     this.soundId = null;
     this.leadInMs = 0;
     this.audioStarted = false;
+    this.resyncClock(0);
+  }
+
+  /** Restart anchor tracking from a raw anchor; the next audio-clock sample is adopted without slewing. */
+  private resyncClock(anchor: number): void {
+    this.startTimestamp = anchor;
+    this.clockFilter.reset(anchor);
+    this.lastClockSampleAt = 0;
   }
 
   play(leadInMs: number = 0): void {
     if (!this.howl) return;
-    
+
     this.leadInMs = leadInMs;
     this.startTimestamp = performance.now();
     this.playing = true;
@@ -72,7 +91,46 @@ export class AudioEngine {
     } else {
       this.audioStarted = true;
       this.soundId = this.howl.play();
+      this.resyncClock(this.startTimestamp);
     }
+  }
+
+  /**
+   * Re-anchor game time to the audible audio position. Call once per frame while playing
+   * (throttled internally). Kept out of getCurrentTime() so the input path stays side-effect free.
+   * No-op without Web Audio, so HTML5-audio fallbacks keep the raw performance.now() clock.
+   * Assumes playback rate 1: HT/DT/NC (Plan.md section 1) will need the output-timestamp
+   * term and getCurrentTime() scaled by the rate.
+   */
+  syncClock(): void {
+    if (!this.howl || !this.playing || !this.audioStarted || this.soundId === null) return;
+    const now = performance.now();
+    if (now - this.lastClockSampleAt < CLOCK_SAMPLE_INTERVAL_MS) return;
+
+    const ctx = Howler.usingWebAudio ? Howler.ctx : undefined;
+    // After the song ends or while Howler waits for the context, seek() is meaningless: don't sample.
+    if (!ctx || ctx.state !== "running" || !this.howl.playing(this.soundId)) return;
+
+    const seek = this.howl.seek(this.soundId);
+    if (typeof seek !== "number") return;
+    this.lastClockSampleAt = now;
+
+    const seekMs = seek * 1000;
+    const ctxNowMs = ctx.currentTime * 1000;
+    const ts = typeof ctx.getOutputTimestamp === "function" ? ctx.getOutputTimestamp() : null;
+
+    const sample =
+      ts && ts.contextTime && ts.performanceTime
+        ? anchorFromOutputTimestamp({
+            seekMs,
+            ctxNowMs,
+            gotCtxMs: ts.contextTime * 1000,
+            gotPerfMs: ts.performanceTime,
+            perfNowMs: now,
+          })
+        : anchorFromLatency(seekMs, now, (ctx.outputLatency || ctx.baseLatency || 0) * 1000);
+
+    this.startTimestamp = this.clockFilter.push(sample);
   }
 
   pause(): void {
@@ -94,6 +152,7 @@ export class AudioEngine {
       if (this.soundId !== null) {
         this.howl.play(this.soundId);
       }
+      this.resyncClock(this.startTimestamp);
     }
     this.playing = true;
   }
@@ -113,7 +172,7 @@ export class AudioEngine {
       if (current >= 0) {
         this.audioStarted = true;
         this.soundId = this.howl.play();
-        this.startTimestamp = performance.now() - current;
+        this.resyncClock(performance.now() - current);
         return current + this.globalOffset;
       }
       return current + this.globalOffset;
@@ -151,7 +210,7 @@ export class AudioEngine {
     }
 
     if (this.playing) {
-      this.startTimestamp = performance.now() - timeMs;
+      this.resyncClock(performance.now() - timeMs);
     } else {
       this.pauseTime = timeMs;
     }
