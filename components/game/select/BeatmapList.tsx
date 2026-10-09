@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Search, Music, ChevronDown, Layers, ChevronRight, Star } from "lucide-react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Music,
-  ChevronDown,
-  Layers,
-  ChevronRight,
-  Star,
-} from "lucide-react";
 import { getStarRatingColor } from "@/types/game";
 import type { Beatmap } from "@/types/beatmap";
-import Image from "next/image";
+import { buildRows, isSelectedItem, selectedRowIndex, type Row } from "@/lib/select/rows";
 
 interface BeatmapListProps {
   beatmaps: Beatmap[];
@@ -47,6 +42,21 @@ export interface GroupCategory {
 }
 
 type SortKey = "title" | "artist" | "starRating" | "bpm";
+type ListRow = Row<BeatmapGroupItem, Beatmap>;
+
+const STATUS: Record<string, { label: string; className: string }> = {
+  ranked: { label: "RANKED", className: "bg-[#b3ff66] text-black" },
+  loved: { label: "LOVED", className: "bg-[#ff66aa] text-white" },
+  qualified: { label: "QUALIFIED", className: "bg-[#66ccff] text-black" },
+  approved: { label: "APPROVED", className: "bg-[#b3ff66] text-black" },
+  graveyard: { label: "GRAVEYARD", className: "bg-black/80 text-white border border-white/20" },
+  pending: { label: "PENDING", className: "bg-yellow-500/80 text-white" },
+};
+
+/** Kartu makin menyempit menjauhi kartu terpilih (efek "lengkung" ala lazer). Murni CSS, tanpa animasi per-frame. */
+const widthFor = (distance: number) => `${Math.max(85, 100 - distance * 3)}%`;
+
+const ROW_HEIGHT: Record<ListRow["kind"], number> = { header: 64, card: 76, diff: 64 };
 
 export default function BeatmapList({
   selectedBeatmap,
@@ -63,152 +73,87 @@ export default function BeatmapList({
   setGroupBy,
   groupedCategories,
 }: BeatmapListProps) {
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const lastGroupKey = useRef<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const selectedId = selectedBeatmap?.id ?? null;
 
-  const toggleCategory = (label: string) => {
-    setCollapsedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
+  const toggle = (set: Set<string>, key: string) => {
+    const next = new Set(set);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    return next;
   };
 
-  const prevSelectedId = useRef<string | null>(null);
-
-  // Auto-expand category/group when selected beatmap changes
-  useEffect(() => {
-    if (!selectedBeatmap) return;
-    
-    const isNewSelection = selectedBeatmap.id !== prevSelectedId.current;
-    if (!isNewSelection) return;
-    
-    prevSelectedId.current = selectedBeatmap.id;
-
-    // 1. Auto-expand category
-    const category = groupedCategories.find(cat => 
-      cat.items.some(item => 
-        groupBy === "DIFFICULTY" 
-          ? item.representedBeatmap?.id === selectedBeatmap.id
-          : item.allDifficulties.some(d => d.id === selectedBeatmap.id)
-      )
-    );
-
-    // We use setTimeout to avoid synchronous setState inside an effect
-    // which can trigger cascading render warnings.
-    setTimeout(() => {
-      if (category && collapsedCategories.has(category.label)) {
-        setCollapsedCategories(prev => {
-          const next = new Set(prev);
-          next.delete(category.label);
-          return next;
-        });
+  // Seleksi baru (mis. panah keyboard, Random) harus membuka kategori dan grup tempatnya berada.
+  const [prevSelectedId, setPrevSelectedId] = useState<string | null>(null);
+  if (selectedId !== prevSelectedId) {
+    setPrevSelectedId(selectedId);
+    if (selectedId) {
+      for (const cat of groupedCategories) {
+        const item = cat.items.find((it) => isSelectedItem(it, groupBy, selectedId));
+        if (!item) continue;
+        if (collapsedCategories.has(cat.label)) setCollapsedCategories((s) => toggle(s, cat.label));
+        if (collapsedGroups.has(item.id)) setCollapsedGroups((s) => toggle(s, item.id));
+        break;
       }
-
-      // 2. Auto-expand group
-      const groupId = groupBy === "DIFFICULTY" 
-        ? selectedBeatmap.id 
-        : `${selectedBeatmap.title}|||${selectedBeatmap.artist}`;
-
-      setCollapsedGroups((prev) => {
-        if (prev.has(groupId)) {
-          const next = new Set(prev);
-          next.delete(groupId);
-          return next;
-        }
-        return prev;
-      });
-    }, 0);
-  }, [selectedBeatmap, groupedCategories, groupBy, collapsedCategories]); // Removed collapsedCategories from deps
-
-
-  // Auto-scroll to selected beatmap
-  useEffect(() => {
-    if (!selectedBeatmap) return;
-    
-    let groupKey = "";
-    if (groupBy === "DIFFICULTY") {
-      groupKey = selectedBeatmap.id;
-    } else {
-      groupKey = `${selectedBeatmap.title}|||${selectedBeatmap.artist}`;
     }
-    const groupChanged = groupKey !== lastGroupKey.current;
-    lastGroupKey.current = groupKey;
+  }
 
-    // Longer delay if we're expanding a new group, shorter if moving within same group
-    const delay = groupChanged ? 250 : 50;
+  const rows = useMemo(
+    () => buildRows<Beatmap, BeatmapGroupItem>(groupedCategories, { groupBy, selectedId, collapsedCategories, collapsedGroups }),
+    [groupedCategories, groupBy, selectedId, collapsedCategories, collapsedGroups],
+  );
 
-    const timer = setTimeout(() => {
-      const selectedEl = document.getElementById(`beatmap-${selectedBeatmap.id}`);
-      const container = scrollContainerRef.current;
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (i) => ROW_HEIGHT[rows[i].kind],
+    getItemKey: (i) => rows[i].key,
+    overscan: 8,
+  });
 
-      if (selectedEl && container) {
-        const elementRect = selectedEl.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-        
-        // Calculate the scroll position to center the element within the container
-        const scrollTarget = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
-        
-        container.scrollTo({
-          top: scrollTarget,
-          behavior: "smooth",
-        });
-      } else if (groupChanged && container) {
-        const groupEl = document.getElementById(`group-${groupKey}`);
-        if (groupEl) {
-          const elementRect = groupEl.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          const scrollTarget = container.scrollTop + (elementRect.top - containerRect.top) - (containerRect.height / 2) + (elementRect.height / 2);
-          
-          container.scrollTo({
-            top: scrollTarget,
-            behavior: "smooth",
-          });
-        }
-      }
-    }, delay);
+  // Gulirkan seleksi baru ke tengah. Hanya saat id berubah, bukan saat grup dilipat/dibuka.
+  const lastScrolledId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedId || lastScrolledId.current === selectedId) return;
+    const idx = selectedRowIndex(rows);
+    if (idx < 0) return;
+    lastScrolledId.current = selectedId;
+    virtualizer.scrollToIndex(idx, { align: "center" });
+  }, [selectedId, rows, virtualizer]);
 
-    return () => clearTimeout(timer);
-  }, [selectedBeatmap, groupBy, collapsedCategories]);
+  const matchCount = groupedCategories.reduce((acc, cat) => acc + cat.items.length, 0);
 
   return (
     <div className="flex flex-col h-full">
       {/* ── TOP: Search + Filters ───────────────────────────── */}
-      <div className="relative z-50 shrink-0 p-4 space-y-3 bg-[#0a0a18]/80 backdrop-blur-md shadow-2xl border-b border-white/10">
-        {/* Search bar */}
-        <div className="relative group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/30 group-focus-within:text-cyan-400 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search beatmaps, artists, mappers..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white font-game-display font-medium placeholder:text-white/20 focus:outline-none focus:border-cyan-400/50 transition-all"
-          />
+      <div className="relative z-20 shrink-0 space-y-3 border-b border-white/10 bg-lf-bg-raised/85 p-4 backdrop-blur-md">
+        <div>
+          <div className="relative group">
+            <Search className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-lf-accent" />
+            <input
+              type="text"
+              placeholder="search..."
+              aria-label="Search beatmaps"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lf-md border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 font-game-display text-base font-medium text-white placeholder:text-white/30 focus:border-lf-accent/60 focus:outline-none"
+            />
+          </div>
+          <div className="mt-1 px-1 font-game-mono text-[11px] font-bold tracking-wider text-lf-accent">{matchCount} matches</div>
         </div>
 
-        {/* Star Rating — [label] [slider] all one row */}
         <div className="flex items-center justify-between" style={{ height: "26px" }}>
-          <span className="text-[11px] font-game-display font-bold text-white/40 tracking-widest uppercase whitespace-nowrap" style={{ width: "90px" }}>
+          <span className="whitespace-nowrap font-game-display text-[11px] font-bold uppercase tracking-widest text-white/50" style={{ width: "90px" }}>
             Star Rating
           </span>
           <div className="flex items-center gap-2" style={{ maxWidth: "calc(100% - 140px)", width: "100%", height: "26px", boxSizing: "border-box" }}>
-            <RangeSlider
-              min={0}
-              max={10}
-              step={0.1}
-              value={[starMin, starMax]}
-              onChange={([min, max]) => setStarRange(min, max)}
-            />
+            <RangeSlider min={0} max={10} step={0.1} value={[starMin, starMax]} onChange={([min, max]) => setStarRange(min, max)} />
           </div>
         </div>
 
-        {/* Controls Row */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center gap-2 rounded-lf-md bg-white/6 px-3 py-2">
           <InlineDropdown
             label="Sort"
             value={sortBy}
@@ -220,7 +165,6 @@ export default function BeatmapList({
             ]}
             onChange={(val) => setSortBy(val as SortKey)}
           />
-
           <InlineDropdown
             label="Group"
             value={groupBy}
@@ -231,7 +175,6 @@ export default function BeatmapList({
             ]}
             onChange={(val) => setGroupBy(val as "NONE" | "ARTIST" | "DIFFICULTY")}
           />
-
           <InlineDropdown
             label="Collection"
             value="ALL"
@@ -242,344 +185,175 @@ export default function BeatmapList({
             ]}
             onChange={() => {}}
           />
-
-          {search.trim().length > 0 && (
-            <div className="ml-auto text-[10px] font-game-mono font-bold text-white/30 tracking-widest whitespace-nowrap">
-              {groupedCategories.reduce((acc, cat) => acc + cat.items.length, 0)} matches
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── SONG LIST (scrollable) ─────────────────────────── */}
-      <div 
-        ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 flex flex-col scrollbar-hide pb-32 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-      >
+      {/* ── SONG LIST (virtualized) ────────────────────────── */}
+      <div ref={scrollRef} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-4 pb-32">
         {loading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="w-7 h-7 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <div className="flex h-48 items-center justify-center">
+            <div className="h-7 w-7 animate-spin rounded-full border-4 border-lf-accent border-t-transparent" />
           </div>
-        ) : groupedCategories.length === 0 || (groupedCategories.length === 1 && groupedCategories[0].items.length === 0) ? (
-          <div className="flex flex-col items-center justify-center h-48 text-white/20">
-            <Music className="w-10 h-10 mb-3 opacity-20" />
-            <p className="text-xs font-game-display font-bold uppercase tracking-widest">
-              No results
-            </p>
+        ) : rows.length === 0 ? (
+          <div className="flex h-48 flex-col items-center justify-center text-white/30">
+            <Music className="mb-3 h-10 w-10 opacity-30" />
+            <p className="font-game-display text-xs font-bold uppercase tracking-widest">No results</p>
           </div>
         ) : (
-          groupedCategories.map((category) => (
-            <div key={category.label} className="mb-3">
-              {/* Category Header Card */}
-              {category.label && (
-                <button
-                  onClick={() => toggleCategory(category.label)}
-                  className="relative z-10 w-[96%] ml-auto mr-0 px-6 py-3 mb-3 bg-[#111122]/95 border border-white/10 shadow-2xl flex items-center gap-4 text-left transition-all hover:bg-[#1a1a2e] active:scale-[0.98] group/header"
-                  style={{ borderRadius: "12px 0 0 12px" }}
+          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+            {virtualizer.getVirtualItems().map((v) => {
+              const row = rows[v.index];
+              return (
+                <div
+                  key={v.key}
+                  data-index={v.index}
+                  ref={virtualizer.measureElement}
+                  className="absolute left-0 top-0 w-full pb-0.5"
+                  style={{ transform: `translateY(${v.start}px)` }}
                 >
-                  <div className={`w-1.5 h-6 rounded-full transition-colors ${collapsedCategories.has(category.label) ? "bg-white/20" : "bg-cyan-500"}`} />
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-game-display font-black text-white/30 tracking-[0.2em] uppercase leading-none mb-1">
-                      Category
-                    </span>
-                    <span className="text-[15px] font-game-display font-bold text-white tracking-widest uppercase">
-                      {category.label}
-                    </span>
-                  </div>
-                  <div className="flex-1 h-px bg-white/5 ml-4" />
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-game-mono font-bold text-white/40">
-                      {category.items.length} {category.items.length === 1 ? 'ITEM' : 'ITEMS'}
-                    </span>
-                    <ChevronDown 
-                      className={`w-5 h-5 text-white/30 transition-transform duration-300 ${collapsedCategories.has(category.label) ? "-rotate-90" : ""}`} 
-                    />
-                  </div>
-                </button>
-              )}
-              
-              <AnimatePresence initial={false}>
-                {!collapsedCategories.has(category.label) && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    {category.items.map((item) => {
-                      const diffs = item.allDifficulties;
-                      const isSelectedGroup = groupBy === "DIFFICULTY" 
-                        ? item.representedBeatmap?.id === selectedBeatmap?.id
-                        : diffs.some((d) => d.id === selectedBeatmap?.id);
-                      
-                      const isExpanded = isSelectedGroup && groupBy !== "DIFFICULTY" && !collapsedGroups.has(item.id);
-
-                      const statusMap: Record<string, { label: string; className: string }> = {
-                        ranked: { label: "RANKED", className: "bg-[#b3ff66] text-black" },
-                        loved: { label: "LOVED", className: "bg-[#ff66aa] text-white" },
-                        qualified: { label: "QUALIFIED", className: "bg-[#66ccff] text-black" },
-                        approved: { label: "APPROVED", className: "bg-[#b3ff66] text-black" },
-                        graveyard: { label: "GRAVEYARD", className: "bg-black/80 text-white border border-white/20" },
-                        pending: { label: "PENDING", className: "bg-yellow-500/80 text-white" },
-                      };
-                      const status = statusMap[item.status] || statusMap.ranked;
-
-                      const allItems = groupedCategories.flatMap(c => c.items);
-                      const selectedGroupIdx = allItems.findIndex((it) => 
-                        groupBy === "DIFFICULTY" 
-                          ? it.representedBeatmap?.id === selectedBeatmap?.id
-                          : it.allDifficulties.some((dd) => dd.id === selectedBeatmap?.id)
-                      );
-                      
-                      let distance = 999;
-                      if (selectedGroupIdx >= 0) {
-                        const globalIdx = allItems.indexOf(item);
-                        distance = Math.abs(globalIdx - selectedGroupIdx);
-                      }
-                      
-                      const widthMap: Record<number, string> = {
-                        0: "100%",
-                        1: "97%",
-                        2: "94%",
-                        3: "91%",
-                        4: "88%",
-                      };
-                      const rowWidth = widthMap[distance] || "85%";
-
-                      const currentDiff = (isSelectedGroup && selectedBeatmap && diffs.some(d => d.id === selectedBeatmap.id))
-                        ? selectedBeatmap
-                        : item.representedBeatmap || diffs[0];
-
-                      const representedColor = currentDiff ? getStarRatingColor(currentDiff.starRating) : null;
-
-                      return (
-                        <motion.div
-                          key={item.id}
-                          id={`group-${item.id}`}
-                          layout
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{
-                            opacity: 1,
-                            x: 0,
-                            width: rowWidth,
-                            zIndex: isSelectedGroup ? 30 : 1,
-                          }}
-                          transition={{ 
-                            type: "spring", 
-                            stiffness: 400, 
-                            damping: 35,
-                            width: { duration: 0.3, ease: "easeOut" }
-                          }}
-                          className="relative mb-0.5 group ml-auto"
-                        >
-                          <button
-                            onClick={() => {
-                              if (isSelectedGroup) {
-                                // Toggle manual collapse if already selected
-                                setCollapsedGroups(prev => {
-                                  const next = new Set(prev);
-                                  if (next.has(item.id)) next.delete(item.id);
-                                  else next.add(item.id);
-                                  return next;
-                                });
-                              } else {
-                                onSelectBeatmap(item.representedBeatmap || diffs[0]);
-                              }
-                            }}
-                            className={`relative w-full flex items-stretch text-left transition-all duration-300 cursor-pointer shadow-lg overflow-hidden group/card z-10
-                              ${isSelectedGroup
-                                ? "drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                : "hover:brightness-110 opacity-85"}`}
-                            style={{
-                              minHeight: isSelectedGroup ? (groupBy === "DIFFICULTY" ? "100px" : "90px") : (groupBy === "DIFFICULTY" ? "64px" : "52px"),
-                              boxSizing: "border-box",
-                              borderRadius: "12px 0 0 12px",
-                              border: isSelectedGroup && representedColor ? `1px solid ${representedColor}` : undefined,
-                            }}
-                          >
-                            {/* ── Left Side Strip ── */}
-                            {groupBy === "DIFFICULTY" && currentDiff ? (
-                              <div 
-                                className={`w-12 shrink-0 flex flex-col items-center justify-center gap-1.5 z-20 transition-all duration-300
-                                  ${isSelectedGroup ? "w-14" : "w-10 opacity-80"}`}
-                                style={{ 
-                                  backgroundColor: representedColor || "rgba(255,255,255,0.1)",
-                                  borderRadius: "12px 0 0 12px" 
-                                }}
-                              >
-                                <span className={`text-[10px] font-game-mono font-black ${representedColor ? "text-black/70" : "text-white/70"}`}>
-                                  {currentDiff.keyCount}K
-                                </span>
-                                <div className={`p-1 rounded-full ${representedColor ? "bg-black/10" : "bg-white/10"}`}>
-                                  <Star className={`w-3.5 h-3.5 ${representedColor ? "fill-black/70 text-black/70" : "fill-white/70 text-white/70"}`} />
-                                </div>
-                                {isSelectedGroup && (
-                                  <motion.div initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}>
-                                    <ChevronRight className={`w-5 h-5 ${representedColor ? "text-black" : "text-white"}`} />
-                                  </motion.div>
-                                )}
-                              </div>
-                            ) : (
-                              isSelectedGroup && (
-                                <div className="w-10 shrink-0 flex items-center justify-center z-20" 
-                                     style={{ 
-                                       backgroundColor: representedColor || "white",
-                                       borderRadius: "12px 0 0 12px" 
-                                     }}>
-                                  <ChevronRight className="w-6 h-6 text-black" />
-                                </div>
-                              )
-                            )}
-
-                            {/* Main content area */}
-                            <div className="relative flex-1 flex z-10">
-                              {/* Background Image */}
-                              {item.coverUrl && (
-                                <Image
-                                  fill
-                                  unoptimized
-                                  src={item.coverUrl}
-                                  alt=""
-                                  className={`object-cover z-0 transition-transform duration-500 ${isSelectedGroup ? "scale-105" : ""}`}
-                                />
-                              )}
-                              
-                              {/* Dark Dim Overlay */}
-                              <div className={`absolute inset-0 z-0 transition-opacity duration-500 
-                                ${isSelectedGroup
-                                  ? "bg-linear-to-r from-black/80 via-black/40 to-transparent"
-                                  : "bg-linear-to-r from-black/90 via-black/60 to-black/20"}`} 
-                              />
-
-                              {/* Text Content */}
-                              <div className={`relative z-10 px-4 flex flex-col justify-center w-full ${isSelectedGroup ? "py-4" : "p-3"}`}>
-                                <h3 className={`text-[20px] font-game-display text-white leading-tight drop-shadow-md truncate ${isSelectedGroup ? "font-bold" : "font-semibold"}`}>
-                                  {item.title}
-                                </h3>
-                                
-                                <div className="flex items-center gap-2 mb-2 truncate">
-                                  <p className="text-[13px] font-game-body text-white/90 drop-shadow-md truncate">
-                                    {item.artist}
-                                  </p>
-                                  {currentDiff && (
-                                    <span className="text-[11px] font-game-display font-medium text-white/40 bg-white/5 px-2 py-px rounded italic truncate shrink-0">
-                                      {currentDiff.difficultyName}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-3 mt-auto">
-                                  {currentDiff && (
-                                    <div 
-                                      className="flex items-center gap-1 px-2 py-0.5 rounded-md font-game-mono font-bold text-[11px] shadow-sm border border-white/10"
-                                      style={{ 
-                                        backgroundColor: representedColor || "rgba(255,255,255,0.1)",
-                                        color: representedColor ? "black" : "white"
-                                      }}
-                                    >
-                                      <Star className="w-3 h-3 fill-current" />
-                                      {currentDiff.starRating.toFixed(2)}
-                                    </div>
-                                  )}
-
-                                  <span className={`px-2 py-px text-[9px] font-bold tracking-wider rounded-full shadow-sm ${status.className}`}>
-                                    {status.label}
-                                  </span>
-
-                                  <div className="flex items-center gap-2">
-                                    <Layers className="w-3 h-3 text-white/30" />
-                                    <div className="flex items-center gap-[2px]">
-                                      {diffs.map((d) => {
-                                        const isHighlighted = groupBy === "DIFFICULTY" 
-                                          ? d.id === item.representedBeatmap?.id 
-                                          : (isSelectedGroup && currentDiff?.id === d.id);
-                                        return (
-                                          <div
-                                            key={d.id}
-                                            className={`rounded-[1px] transition-all duration-300 ${isHighlighted ? "z-10 scale-110 opacity-100" : "opacity-30"}`}
-                                            style={{
-                                              width: isHighlighted ? "5px" : "4px",
-                                              height: isHighlighted ? "14px" : "10px",
-                                              backgroundColor: getStarRatingColor(d.starRating),
-                                              boxShadow: isHighlighted ? `0 0 8px ${getStarRatingColor(d.starRating)}` : undefined,
-                                            }}
-                                          />
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                layout
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                style={{ overflow: "hidden" }}
-                              >
-                                <div className="pt-2 pb-3 space-y-1.5 relative z-0 pl-[2px]">
-                                  {diffs.map((diff) => {
-                                    const isSel = diff.id === selectedBeatmap?.id;
-                                    const col = getStarRatingColor(diff.starRating);
-                                    return (
-                                      <button
-                                        key={diff.id}
-                                        id={`beatmap-${diff.id}`}
-                                        onClick={() => onSelectBeatmap(diff)}
-                                        className={`flex items-stretch text-left transition-all duration-200 cursor-pointer overflow-hidden group
-                                          ${isSel ? "w-full shadow-[0_0_15px_rgba(255,255,255,0.3)]" : "w-[95%] ml-auto hover:brightness-110 shadow-lg opacity-85"}`}
-                                        style={{
-                                          height: isSel ? "62px" : "52px",
-                                          backgroundColor: isSel ? `${col}66` : `${col}80`,
-                                          border: `1px solid ${col}A0`,
-                                          borderLeft: isSel ? `4px solid ${col}` : `1px solid ${col}A0`,
-                                          borderRadius: "8px 0 0 8px",
-                                        }}
-                                      >
-                                        <div className="w-12 shrink-0 flex items-center justify-center bg-current z-10" style={{ backgroundColor: col }}>
-                                          <div className="w-6 h-6 rounded-full bg-black/40 flex items-center justify-center text-white font-game-mono font-bold text-[10px]">
-                                            {diff.keyCount}K
-                                          </div>
-                                        </div>
-                                        <div className="flex-1 flex flex-col justify-center px-4 z-10 min-w-0">
-                                          <div className="flex items-baseline gap-2 truncate">
-                                            <span className={`text-[14px] font-game-display text-white truncate ${isSel ? "font-bold" : "font-semibold"}`}>
-                                              [{diff.keyCount}K] {diff.difficultyName}
-                                            </span>
-                                            <span className="text-[11px] font-game-body text-white/80 truncate shrink-0">
-                                              mapped by {diff.creator}
-                                            </span>
-                                          </div>
-                                          <div className="mt-0.5">
-                                            <span className="inline-flex px-2 py-px rounded-full text-[10px] font-game-mono font-bold text-black" style={{ backgroundColor: col }}>
-                                              ★ {diff.starRating.toFixed(2)}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))
+                  <ListRowView
+                    row={row}
+                    groupBy={groupBy}
+                    selectedBeatmap={selectedBeatmap}
+                    onSelectBeatmap={onSelectBeatmap}
+                    onToggleCategory={(label) => setCollapsedCategories((s) => toggle(s, label))}
+                    onToggleGroup={(id) => setCollapsedGroups((s) => toggle(s, id))}
+                  />
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ListRowView({
+  row,
+  groupBy,
+  selectedBeatmap,
+  onSelectBeatmap,
+  onToggleCategory,
+  onToggleGroup,
+}: {
+  row: ListRow;
+  groupBy: BeatmapListProps["groupBy"];
+  selectedBeatmap: Beatmap | null;
+  onSelectBeatmap: (b: Beatmap) => void;
+  onToggleCategory: (label: string) => void;
+  onToggleGroup: (id: string) => void;
+}) {
+  if (row.kind === "header") {
+    return (
+      <button
+        type="button"
+        onClick={() => onToggleCategory(row.label)}
+        className="ml-auto mr-0 mb-1 flex w-[96%] cursor-pointer items-center gap-4 rounded-l-lf-lg border border-white/10 bg-lf-surface/95 px-6 py-3 text-left transition-colors hover:bg-lf-surface-hover"
+      >
+        <div className={`h-6 w-1.5 rounded-full transition-colors ${row.collapsed ? "bg-white/20" : "bg-lf-accent"}`} />
+        <span className="font-game-display text-[15px] font-bold uppercase tracking-widest text-white">{row.label}</span>
+        <div className="ml-4 h-px flex-1 bg-white/5" />
+        <span className="font-game-mono text-[10px] font-bold text-white/40">
+          {row.count} {row.count === 1 ? "ITEM" : "ITEMS"}
+        </span>
+        <ChevronDown className={`h-5 w-5 text-white/30 transition-transform duration-300 ${row.collapsed ? "-rotate-90" : ""}`} />
+      </button>
+    );
+  }
+
+  if (row.kind === "diff") {
+    const { diff } = row;
+    const col = getStarRatingColor(diff.starRating);
+    return (
+      <button
+        type="button"
+        onClick={() => onSelectBeatmap(diff)}
+        className={`ml-auto flex cursor-pointer items-stretch overflow-hidden rounded-l-lf-md text-left transition-[width,filter] duration-200 hover:brightness-110 ${row.selected ? "w-full" : "w-[95%] opacity-90"}`}
+        style={{ height: row.selected ? 62 : 52, backgroundColor: row.selected ? `${col}66` : `${col}80`, border: `1px solid ${col}A0`, borderLeft: row.selected ? `4px solid ${col}` : `1px solid ${col}A0` }}
+      >
+        <div className="flex w-12 shrink-0 items-center justify-center" style={{ backgroundColor: col }}>
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black/40 font-game-mono text-[10px] font-bold text-white">{diff.keyCount}K</div>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center px-4">
+          <div className="flex items-baseline gap-2 truncate">
+            <span className={`truncate font-game-display text-[14px] text-white ${row.selected ? "font-bold" : "font-semibold"}`}>
+              [{diff.keyCount}K] {diff.difficultyName}
+            </span>
+            <span className="shrink-0 truncate font-game-body text-[11px] text-white/80">mapped by {diff.creator}</span>
+          </div>
+          <div className="mt-0.5">
+            <span className="inline-flex rounded-full px-2 py-px font-game-mono text-[10px] font-bold text-black" style={{ backgroundColor: col }}>
+              ★ {diff.starRating.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  const { item, selected, expanded, distance } = row;
+  const diffs = item.allDifficulties;
+  const status = STATUS[item.status] || STATUS.ranked;
+  const currentDiff = selected && selectedBeatmap && diffs.some((d) => d.id === selectedBeatmap.id) ? selectedBeatmap : item.representedBeatmap || diffs[0];
+  const color = currentDiff ? getStarRatingColor(currentDiff.starRating) : null;
+  const byDifficulty = groupBy === "DIFFICULTY";
+
+  return (
+    <div className="ml-auto transition-[width] duration-300 ease-out" style={{ width: widthFor(distance) }}>
+      <button
+        type="button"
+        id={`group-${item.id}`}
+        onClick={() => (selected ? onToggleGroup(item.id) : onSelectBeatmap(item.representedBeatmap || diffs[0]))}
+        aria-expanded={selected && !byDifficulty ? expanded : undefined}
+        className={`relative flex w-full cursor-pointer items-stretch overflow-hidden rounded-l-lf-lg text-left shadow-lg transition-[filter,opacity] duration-300 ${selected ? "" : "opacity-85 hover:brightness-110"}`}
+        style={{ minHeight: selected ? (byDifficulty ? 100 : 90) : byDifficulty ? 64 : 52, border: selected && color ? `1px solid ${color}` : undefined }}
+      >
+        {byDifficulty && currentDiff ? (
+          <div className={`flex shrink-0 flex-col items-center justify-center gap-1.5 ${selected ? "w-14" : "w-10 opacity-80"}`} style={{ backgroundColor: color || "rgba(255,255,255,0.1)" }}>
+            <span className="font-game-mono text-[10px] font-black text-black/70">{currentDiff.keyCount}K</span>
+            <Star className="h-3.5 w-3.5 fill-black/70 text-black/70" />
+            {selected && <ChevronRight className="h-5 w-5 text-black" />}
+          </div>
+        ) : (
+          selected && (
+            <div className="flex w-10 shrink-0 items-center justify-center" style={{ backgroundColor: color || "white" }}>
+              <ChevronRight className="h-6 w-6 text-black" />
+            </div>
+          )
+        )}
+
+        <div className="relative flex flex-1">
+          {item.coverUrl && <Image fill unoptimized src={item.coverUrl} alt="" className="object-cover" />}
+          <div className={`absolute inset-0 ${selected ? "bg-linear-to-r from-black/80 via-black/40 to-transparent" : "bg-linear-to-r from-black/90 via-black/60 to-black/20"}`} />
+          <div className={`relative flex w-full flex-col justify-center px-4 ${selected ? "py-4" : "p-3"}`}>
+            <h3 className={`truncate font-game-display text-[20px] leading-tight text-white drop-shadow-md ${selected ? "font-bold" : "font-semibold"}`}>{item.title}</h3>
+            <div className="mb-2 flex items-center gap-2 truncate">
+              <p className="truncate font-game-body text-[13px] text-white/90 drop-shadow-md">{item.artist}</p>
+              {currentDiff && <span className="shrink-0 truncate rounded bg-white/5 px-2 py-px font-game-display text-[11px] font-medium italic text-white/50">{currentDiff.difficultyName}</span>}
+            </div>
+            <div className="mt-auto flex items-center gap-3">
+              {currentDiff && (
+                <div className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-0.5 font-game-mono text-[11px] font-bold shadow-sm" style={{ backgroundColor: color || "rgba(255,255,255,0.1)", color: color ? "black" : "white" }}>
+                  <Star className="h-3 w-3 fill-current" />
+                  {currentDiff.starRating.toFixed(2)}
+                </div>
+              )}
+              <span className={`rounded-full px-2 py-px text-[9px] font-bold tracking-wider shadow-sm ${status.className}`}>{status.label}</span>
+              <div className="flex items-center gap-2">
+                <Layers className="h-3 w-3 text-white/30" />
+                <div className="flex items-center gap-[2px]">
+                  {diffs.map((d) => {
+                    const hi = byDifficulty ? d.id === item.representedBeatmap?.id : selected && currentDiff?.id === d.id;
+                    const c = getStarRatingColor(d.starRating);
+                    return <div key={d.id} className={`rounded-[1px] ${hi ? "opacity-100" : "opacity-30"}`} style={{ width: hi ? 5 : 4, height: hi ? 14 : 10, backgroundColor: c, boxShadow: hi ? `0 0 8px ${c}` : undefined }} />;
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </button>
     </div>
   );
 }
