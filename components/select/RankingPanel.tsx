@@ -31,8 +31,10 @@ function useLeaderboard(beatmapId: string, scope: Scope, token: string | null) {
   useEffect(() => {
     if (cached && Date.now() - cached.timestamp <= STALE_MS) return;
     let alive = true;
-    getLeaderboard(beatmapId, scope, token)
-      .then((data) => alive && setCache(key, data))
+    // Backend yang menggantung jangan bikin spinner abadi.
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 8000));
+    Promise.race([getLeaderboard(beatmapId, scope, token), timeout])
+      .then((data) => alive && setCache(key, Array.isArray(data) ? data : []))
       .catch(() => alive && setCache(key, []));
     return () => {
       alive = false;
