@@ -40,6 +40,7 @@ function Tile({ label, icon, bg, line, left, active, disabled, title, onClick }:
       type="button"
       onClick={onClick}
       disabled={disabled}
+      data-options-toggle={label === "Options" ? "" : undefined}
       aria-pressed={active}
       title={title}
       className={cn(

@@ -17,11 +17,11 @@ export function relativeTime(iso: string, now: number = Date.now()): string {
   return `${Math.floor(diff / (365 * DAY))}yr`;
 }
 
-/** Warna tile grade. S/A tile dan chip A-D diukur dari foto; SS tidak ada di foto (`?`, emas). */
+/** Warna tile grade, diukur dari piksel bersih di foto (S #02b5c3, A #88da20; B/C/D dari chip di foto skor); SS tidak ada di foto (`?`, emas). */
 export const GRADE_COLORS: Record<RankGrade, string> = {
   SS: "#f2d24b",
-  S: "#168d97",
-  A: "#77c120",
+  S: "#02b5c3",
+  A: "#88da20",
   B: "#e3b130",
   C: "#ea8356",
   D: "#ff5a5a",

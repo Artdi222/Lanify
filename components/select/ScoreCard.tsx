@@ -59,22 +59,22 @@ export default function ScoreCard({
     <button
       type="button"
       onClick={onClick}
-      className="group relative block h-[68px] w-[808px] cursor-pointer text-left transition-[filter] duration-150 hover:brightness-125"
+      className={cn("group relative block h-[68px] cursor-pointer text-left transition-[filter] duration-150 hover:brightness-125", best ? "w-[797px]" : "w-[808px]")}
     >
       <div className={cn("absolute inset-0 rounded-l-xl", best ? "bg-[#353b3c]" : "bg-[#1c1c1c]/60")} style={{ clipPath: SLANT }} />
 
       {best ? (
         <div
-          className="absolute left-0 top-0 flex h-full w-[58px] items-center justify-center rounded-l-xl bg-linear-to-b from-[#5fe1b6] to-[#43c4a0] font-game-display text-[17px] font-semibold text-black/80"
+          className="absolute left-0 top-0 flex h-full w-[57px] items-center justify-center rounded-l-xl bg-linear-to-b from-[#65fbc9] to-[#58c29f] font-game-display text-[17px] font-semibold text-black/80"
           style={{ clipPath: "polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
         >
           {rankLabel}
         </div>
       ) : (
-        <span className="absolute left-0 top-0 flex h-full w-[72px] items-center justify-center font-game-display text-[20px] font-semibold text-white">#{entry.position}</span>
+        <span className="absolute left-0 top-0 flex h-full w-[72px] items-center justify-end pr-3.5 font-game-display text-[20px] font-semibold text-white">#{entry.position}</span>
       )}
 
-      <div className={cn("absolute top-0 h-[68px] w-[68px] overflow-hidden rounded-[10px] bg-black/50", best ? "left-[44px]" : "left-[72px]")}>
+      <div className={cn("absolute top-0 h-[68px] w-[68px] overflow-hidden rounded-[10px] bg-black/50", best ? "left-[54px]" : "left-[72px]")}>
         {entry.avatarUrl ? (
           <img src={entry.avatarUrl} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -84,7 +84,7 @@ export default function ScoreCard({
         )}
       </div>
 
-      <div className={cn("absolute top-0 flex h-full min-w-0 flex-col justify-center", best ? "left-[124px]" : "left-[152px]")} style={{ width: 230 }}>
+      <div className={cn("absolute top-0 flex h-full min-w-0 flex-col justify-center", best ? "left-[134px]" : "left-[152px]")} style={{ width: 230 }}>
         <span className="font-game-display text-[14px] leading-none text-white/85">{relativeTime(entry.submittedAt)}</span>
         <span className="mt-1 truncate font-game-display text-[20px] font-semibold leading-tight text-white">{entry.username}</span>
       </div>
@@ -96,8 +96,8 @@ export default function ScoreCard({
         <Stat label="Accuracy">{entry.accuracy.toFixed(2)}%</Stat>
       </div>
 
-      <div className="absolute top-0 flex h-full w-[190px] flex-col items-end justify-center" style={{ left: 556 }}>
-        <span className="font-game-display text-[32px] font-light leading-none tabular-nums text-white">{entry.score.toLocaleString("en-US")}</span>
+      <div className="absolute top-0 flex h-full w-[190px] flex-col items-end justify-center" style={{ left: 565 }}>
+        <span className="font-game-display text-[30px] font-light leading-none tabular-nums text-white">{entry.score.toLocaleString("en-US")}</span>
         <span className="mt-1 flex items-center gap-2">
           {entry.pp ? <span className="font-game-display text-[12px] text-white/70">{Math.round(entry.pp)}pp</span> : null}
           <ModChips mods={entry.mods} />

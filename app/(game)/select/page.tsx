@@ -8,6 +8,7 @@ import BeatmapList, { GroupCategory } from "@/components/game/select/BeatmapList
 import BeatmapDetail from "@/components/game/select/BeatmapDetail";
 import SelectBackground from "@/components/select/SelectBackground";
 import SelectFooter from "@/components/select/SelectFooter";
+import OptionsMenu from "@/components/select/OptionsMenu";
 import { listBeatmaps } from "@/lib/api/beatmaps";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
@@ -388,6 +389,14 @@ export default function SongSelectPage() {
           </>
         )}
       </div>
+
+      {optionsOpen && (
+        <OptionsMenu
+          beatmap={selectedBeatmap}
+          onClose={() => setOptionsOpen(false)}
+          onPlay={() => selectedBeatmap && router.push(`/prepare/${selectedBeatmap.id}`)}
+        />
+      )}
 
       <SelectFooter
         onRandom={handleRandomBeatmap}

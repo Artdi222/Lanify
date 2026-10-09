@@ -12,6 +12,7 @@ import { useGameStore } from "@/lib/store/useGameStore";
 import { shortRank } from "@/lib/select/format";
 import { cn } from "@/lib/utils";
 import ScoreCard from "./ScoreCard";
+import { SHOW_DETAILS_EVENT } from "./OptionsMenu";
 import SplitSelect from "./SplitSelect";
 
 type Tab = "details" | "ranking";
@@ -93,6 +94,12 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
   const [scope, setScope] = useState<Scope>("GLOBAL");
   const { entries, loading } = useLeaderboard(beatmap.id, scope, token);
 
+  useEffect(() => {
+    const show = () => setTab("details");
+    window.addEventListener(SHOW_DETAILS_EVENT, show);
+    return () => window.removeEventListener(SHOW_DETAILS_EVENT, show);
+  }, []);
+
   const openScore = (entry: LeaderboardEntry) => {
     useGameStore.getState().setViewingScore(entry, beatmap);
     router.push("/result");
@@ -102,21 +109,29 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center gap-6 px-[22px] pt-[9px]">
-        <div className="flex gap-6 pb-1">
+      <div className="flex min-h-[52px] shrink-0 items-start gap-6 px-[22px] pt-[9px]">
+        <div className="flex gap-6 pb-1 pt-[5px]">
           <TabButton active={tab === "details"} onClick={() => setTab("details")}>Details</TabButton>
           <TabButton active={tab === "ranking"} onClick={() => setTab("ranking")}>Ranking</TabButton>
         </div>
         {tab === "ranking" && (
-          <div className="ml-auto flex items-center gap-3">
+          <div className="absolute left-[282px] top-[9px] flex items-center gap-[10px]">
             <SplitSelect<Scope>
               label="Scope"
               value={scope}
               options={[{ label: "Global", value: "GLOBAL" }, { label: "Local", value: "LOCAL" }]}
               onChange={setScope}
-              className="w-[200px]"
+              className="w-[205px]"
             />
             <SplitSelect<"SCORE"> label="Sort" value="SCORE" options={[{ label: "Score", value: "SCORE" }]} onChange={() => {}} disabled dim className="w-[198px]" />
+            <button
+              type="button"
+              disabled
+              title="Mods coming soon"
+              className="h-[43px] w-[172px] cursor-not-allowed rounded-xl bg-select-button font-game-display text-[17px] text-white"
+            >
+              Selected Mods
+            </button>
           </div>
         )}
       </div>
@@ -153,7 +168,7 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
           <span className="absolute left-[49px] top-2 font-game-display text-[14px] text-white/75">
             Personal Best ({shortRank(mine.position)} of {entries.length.toLocaleString("en-US")})
           </span>
-          <div className="absolute left-[14px] top-[28px]">
+          <div className="absolute left-[38px] top-[28px]">
             <ScoreCard entry={mine} variant="best" rankLabel={shortRank(mine.position)} onClick={() => openScore(mine)} />
           </div>
         </div>
