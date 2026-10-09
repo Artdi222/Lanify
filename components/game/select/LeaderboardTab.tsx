@@ -84,7 +84,7 @@ export default function LeaderboardTab({ beatmapId, beatmap, scope = 'GLOBAL', t
   return (
     <div className="flex flex-col h-full min-h-0">
       
-      <div className="overflow-y-auto custom-scrollbar flex-1 pb-4 px-3 flex flex-col gap-[10px]">
+      <div className="overflow-y-auto custom-scrollbar flex-1 pb-4 pl-3 pr-4 flex flex-col gap-2.5">
         {entries.map((entry, idx) => {
           const posColor = idx === 0 ? "#00e5ff" : idx === 1 ? "#c0c0c0" : idx === 2 ? "#cd7f32" : undefined;
           const gradeColor = GRADE_COLORS[entry.rank] || "#8888aa";
@@ -97,7 +97,7 @@ export default function LeaderboardTab({ beatmapId, beatmap, scope = 'GLOBAL', t
                 setViewingScore(entry, beatmap);
                 router.push("/result");
               }}
-              className="flex items-center gap-[10px] transition-all duration-200 hover:brightness-110 cursor-pointer group"
+              className="flex items-center gap-2.5 transition-all duration-200 hover:brightness-110 cursor-pointer group"
               style={{
                 background: "rgba(0, 0, 0, 0.35)",
                 borderRadius: "10px",
@@ -135,27 +135,30 @@ export default function LeaderboardTab({ beatmapId, beatmap, scope = 'GLOBAL', t
               </div>
 
               {/* Username block */}
-              <div className="flex-1 flex flex-col min-w-[80px]">
+              <div className="flex-1 flex flex-col min-w-20">
                 <span className="text-sm font-game-display font-bold truncate text-white" style={{ maxWidth: "100%" }}>
                   {entry.username}
                 </span>
               </div>
 
               {/* Fix #12: Max Combo - Solid White */}
-              <div className="flex flex-col items-center shrink-0 w-[90px]">
+              <div className="flex flex-col items-center shrink-0 w-22.5">
                 <span className="text-[10px] font-game-display uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>MAX COMBO</span>
                 <span className="text-base font-game-mono text-lanify-text" style={{ fontWeight: 700 }}>{entry.maxCombo}x</span>
               </div>
 
               {/* Fix #12: Accuracy - Solid White */}
-              <div className="flex flex-col items-center shrink-0 w-[90px]">
+              <div className="flex flex-col items-center shrink-0 w-22.5">
                 <span className="text-[10px] font-game-display uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>ACCURACY</span>
                 <span className="text-base font-game-mono text-lanify-text" style={{ fontWeight: 700 }}>{entry.accuracy.toFixed(2)}%</span>
               </div>
 
-              {/* Fix #11: Score Value */}
-              <div className="flex items-center shrink-0 w-[120px] justify-end pr-2">
-                <span className={`text-[22px] font-game-display font-extrabold tracking-wider tabular-nums ${idx === 0 ? "text-cyan-300 drop-shadow-[0_0_5px_rgba(0,229,255,0.5)]" : "text-white"}`}>
+              {/* Fix #11: Score & PP Value */}
+              <div className="flex flex-col items-end shrink-0 w-30 justify-center pr-2">
+                <span className={`text-[20px] font-game-display font-extrabold tracking-wider tabular-nums leading-none ${idx === 0 ? "text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.5)]" : "text-amber-100"}`}>
+                  {entry.pp ? Math.round(entry.pp).toLocaleString() : "0"}<span className="text-[12px] opacity-70 ml-0.5">pp</span>
+                </span>
+                <span className="text-[11px] font-game-mono text-white/50 tracking-wider mt-1">
                   {entry.score.toLocaleString()}
                 </span>
               </div>

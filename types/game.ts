@@ -125,6 +125,7 @@ export interface LeaderboardEntry {
   hitErrors: string | null;
   mods: string | null;
   submittedAt: string;
+  pp?: number;
 }
 
 /** Settings store shape */

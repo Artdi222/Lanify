@@ -25,6 +25,8 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
 
   // Real user stats
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
+  const [totalPp, setTotalPp] = useState<number | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +54,8 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
       getUserProfile(user.id)
         .then((res) => {
           setStats(res.stats);
+          setGlobalRank(res.globalRank);
+          setTotalPp(res.totalPp ?? 0);
         })
         .catch((err) => {
           console.error("Failed to load user stats:", err);
@@ -210,6 +214,12 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                       <p className="text-xs font-game-mono text-white/60 flex items-center gap-1.5 mt-1">
                         <Calendar className="w-3.5 h-3.5 text-blue-400" />
                         Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Recently"}
+                        {globalRank !== null && globalRank > 0 && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span className="text-amber-400 font-bold">#{globalRank.toLocaleString()} Global</span>
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -330,12 +340,12 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                       </div>
 
                       <div className="p-4 bg-[#0a1220] border border-white/5 rounded-2xl flex flex-col">
-                        <div className="flex items-center gap-2 text-blue-400 mb-1">
+                        <div className="flex items-center gap-2 text-amber-400 mb-1">
                           <Trophy className="w-4 h-4" />
-                          <span className="text-[11px] font-game-mono uppercase tracking-wider text-white/60">Total Score</span>
+                          <span className="text-[11px] font-game-mono uppercase tracking-wider text-white/60">Total PP</span>
                         </div>
                         <span className="text-xl font-game-display font-bold text-white">
-                          {stats?.totalScore ? stats.totalScore.toLocaleString() : "0"}
+                          {totalPp ? Math.round(totalPp).toLocaleString() : "0"} <span className="text-sm text-white/50">pp</span>
                         </span>
                       </div>
                     </div>

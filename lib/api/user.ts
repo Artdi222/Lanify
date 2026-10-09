@@ -2,12 +2,12 @@ import { apiClient } from "./client";
 import type { User } from "@/types/user";
 
 export interface UserStats {
-  totalScore: number;
   playCount: number;
   avgAccuracy: number;
 }
 
 export interface UserProfileResponse extends User {
+  globalRank: number;
   stats: UserStats;
 }
 
