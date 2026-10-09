@@ -2,13 +2,14 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import dynamic2 from "next/dynamic";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
+import { useProgressStore } from "@/lib/store/useProgressStore";
 import ScoreHUD from "@/components/game/ScoreHUD";
 import JudgementDisplay from "@/components/game/JudgementDisplay";
 import HealthBar from "@/components/game/HealthBar";
@@ -23,14 +24,20 @@ export default function PlayPage() {
   const router = useRouter();
   const params = useParams();
   const beatmapId = params.beatmapId as string;
-  const { status, currentBeatmap, retryGame, startResuming } = useGameStore();
-  const { backgroundDim, backgroundBlur } = useSettingsStore();
-  const { pauseMusic } = useMusicStore();
-  const [progress, setProgress] = useState(0);
+  const status = useGameStore((s) => s.status);
+  const currentBeatmap = useGameStore((s) => s.currentBeatmap);
+  const retryGame = useGameStore((s) => s.retryGame);
+  const startResuming = useGameStore((s) => s.startResuming);
+  const backgroundDim = useSettingsStore((s) => s.backgroundDim);
+  const backgroundBlur = useSettingsStore((s) => s.backgroundBlur);
+  const pauseMusic = useMusicStore((s) => s.pauseMusic);
+  // Stable function that writes song progress to its own store: a progress tick must not re-render this page.
+  const setProgress = useProgressStore((s) => s.setProgress);
 
-  // Stop music player if it's playing
+  // Stop music player if it's playing, and start the progress indicator from 0
   useEffect(() => {
     pauseMusic();
+    setProgress(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -89,7 +96,7 @@ export default function PlayPage() {
       <GameCanvas key={beatmapId} beatmapId={beatmapId} onProgress={setProgress} />
 
       {/* React HUD */}
-      <ScoreHUD progress={progress} />
+      <ScoreHUD />
       <JudgementDisplay />
       <HealthBar />
       <GuestIndicator />

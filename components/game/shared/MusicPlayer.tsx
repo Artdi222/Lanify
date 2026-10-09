@@ -38,7 +38,7 @@ export default function MusicPlayer() {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const currentSong = playlist[currentIndex];
-  const { status: gameStatus } = useGameStore();
+  const gameStatus = useGameStore((s) => s.status);
   const wasPlayingRef = useRef(false);
 
   // Hide on certain pages

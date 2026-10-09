@@ -10,6 +10,7 @@ import type {
   LeaderboardEntry,
 } from '@/types/game';
 import type { Beatmap } from '@/types/beatmap';
+import { applyJudgement, maxScoreUnits as computeMaxScoreUnits } from '@/lib/game/JudgementState';
 
 interface GameState {
   status: GameStatus;
@@ -28,6 +29,8 @@ interface GameState {
   latestJudgement: { type: JudgementType; time: number } | null;
   isReadOnly: boolean;
   retryTrigger: number;
+  /** Score denominator for the current chart, computed once in startGame (not per hit). */
+  maxScoreUnits: number;
 
   leaderboardCache: Record<string, { entries: LeaderboardEntry[]; timestamp: number }>;
 
@@ -40,7 +43,8 @@ interface GameState {
   startResuming: () => void;
   failGame: () => void;
   endGame: () => void;
-  updateJudgement: (type: JudgementType, errorMs: number, time: number, weight?: number) => void;
+  /** `count` applies several identical judgements at once (a hold's head + tail + ticks). */
+  updateJudgement: (type: JudgementType, errorMs: number, time: number, weight?: number, count?: number) => void;
   updateHp: (hp: number) => void;
   resetGame: () => void;
   retryGame: () => void;
@@ -58,33 +62,6 @@ const initialJudgements: JudgementCounts = {
   bad: 0,
   miss: 0,
 };
-
-function calculateAccuracy(judgements: JudgementCounts): number {
-  const weights = {
-    marvelous: 300,
-    perfect: 300,
-    great: 200,
-    good: 100,
-    bad: 50,
-    miss: 0,
-  };
-  const total =
-    judgements.marvelous +
-    judgements.perfect +
-    judgements.great +
-    judgements.good +
-    judgements.bad +
-    judgements.miss;
-  if (total === 0) return 100;
-  const weightedSum =
-    judgements.marvelous * weights.marvelous +
-    judgements.perfect * weights.perfect +
-    judgements.great * weights.great +
-    judgements.good * weights.good +
-    judgements.bad * weights.bad +
-    judgements.miss * weights.miss;
-  return (weightedSum / (total * 300)) * 100;
-}
 
 function calculateRank(accuracy: number): RankGrade {
   if (accuracy >= 100) return 'SS';
@@ -112,6 +89,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   latestJudgement: null,
   isReadOnly: false,
   retryTrigger: 0,
+  maxScoreUnits: 0,
 
   setBeatmaps: (beatmaps) => set({ beatmaps }),
   setSelectedBeatmap: (selectedBeatmap) => set({ selectedBeatmap, selectedBeatmapId: selectedBeatmap?.id || null }),
@@ -128,6 +106,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       accuracyHistory: [],
       hitErrors: [],
       currentBeatmap: beatmap,
+      maxScoreUnits: computeMaxScoreUnits(beatmap.notes),
       selectedBeatmapId: beatmap.id,
       latestJudgement: null,
       isReadOnly: false,
@@ -139,45 +118,22 @@ export const useGameStore = create<GameState>()((set, get) => ({
   failGame: () => set({ status: 'failed' }),
   endGame: () => set({ status: 'complete' }),
 
-  updateJudgement: (type, errorMs, time, weight = 1) => {
+  updateJudgement: (type, errorMs, time, weight = 1, count = 1) => {
     const state = get();
-    const key = type.toLowerCase() as keyof JudgementCounts;
-    const newJudgements = { ...state.judgements, [key]: state.judgements[key] + 1 };
+    const maxUnits = state.maxScoreUnits || computeMaxScoreUnits(state.currentBeatmap?.notes);
+    const next = applyJudgement(state, type, weight, count, maxUnits);
 
-    const isMiss = type === 'MISS';
-    const newCombo = isMiss ? 0 : state.combo + 1;
-    const newMaxCombo = Math.max(state.maxCombo, newCombo);
-    const newAccuracy = calculateAccuracy(newJudgements);
-
-    // HP calculation
-    const hpDelta = (isMiss ? -8 : type === 'BAD' ? -4 : type === 'GOOD' ? -1 : 2) * weight;
-    const newHp = Math.max(0, Math.min(100, state.hp + hpDelta));
-
-    // Max score is 1,000,000
-    const totalNotes = state.currentBeatmap?.notes?.reduce((acc, note) => {
-      if (!note.isHoldNote) return acc + 1;
-      return acc + 2 + (note.totalTicks || 0); // Head (1) + Tail (1) + Ticks
-    }, 0) || 1;
-    const maxPossibleScore = totalNotes * 320;
-
-    const currentScoreSum =
-      newJudgements.marvelous * 320 +
-      newJudgements.perfect * 300 +
-      newJudgements.great * 200 +
-      newJudgements.good * 100 +
-      newJudgements.bad * 50;
-
-    const newScore = Math.floor((currentScoreSum / maxPossibleScore) * 1000000);
+    // History is append-only and only read after the run (result page, score submit), so it is
+    // pushed in place instead of copying the whole array on every hit. A fresh array is created by
+    // startGame / retryGame / resetGame, so nothing from a previous run is ever mutated.
+    state.accuracyHistory.push({ time, accuracy: next.accuracy });
+    if (type !== 'MISS') {
+      for (let i = 0; i < count; i++) state.hitErrors.push({ time, errorMs });
+    }
 
     set({
-      judgements: newJudgements,
-      combo: newCombo,
-      maxCombo: newMaxCombo,
-      accuracy: newAccuracy,
-      hp: newHp,
-      score: newScore,
-      accuracyHistory: [...state.accuracyHistory, { time, accuracy: newAccuracy }],
-      hitErrors: isMiss ? state.hitErrors : [...state.hitErrors, { time, errorMs }],
+      ...next,
+      maxScoreUnits: maxUnits,
       latestJudgement: { type, time: Date.now() },
     });
   },
@@ -196,6 +152,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       accuracyHistory: [],
       hitErrors: [],
       currentBeatmap: null,
+      maxScoreUnits: 0,
       latestJudgement: null,
       isReadOnly: false,
     }),

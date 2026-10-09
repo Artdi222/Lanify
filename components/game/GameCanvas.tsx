@@ -9,6 +9,7 @@ import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
 import { getBeatmapUrl, getBeatmap } from "@/lib/api/beatmaps";
 import type { JudgementType } from "@/types/game";
+import { cloneNotes } from "@/lib/game/noteUtils";
 
 interface GameCanvasProps {
   beatmapId: string;
@@ -28,7 +29,14 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
   const [isInitialized, setIsInitialized] = useState(false);
   const archiveKeyRef = useRef<string | null>(null);
 
-  const { startGame, endGame, updateJudgement, failGame, status, currentBeatmap, retryTrigger } = useGameStore();
+  // Selectors, not the whole store: the score/combo/hp change on every hit and must not re-render this component.
+  const startGame = useGameStore((s) => s.startGame);
+  const endGame = useGameStore((s) => s.endGame);
+  const updateJudgement = useGameStore((s) => s.updateJudgement);
+  const failGame = useGameStore((s) => s.failGame);
+  const status = useGameStore((s) => s.status);
+  const currentBeatmap = useGameStore((s) => s.currentBeatmap);
+  const retryTrigger = useGameStore((s) => s.retryTrigger);
   const settings = useSettingsStore();
 
   useEffect(() => {
@@ -46,7 +54,7 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
       
       if (parsed) {
         // We need NEW note objects because the old ones are mutated
-        const freshNotes = JSON.parse(JSON.stringify(parsed.notes));
+        const freshNotes = cloneNotes(parsed.notes);
         engineRef.current.reset(freshNotes);
         engineRef.current.start();
         
@@ -60,33 +68,26 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryTrigger, isInitialized]);
 
-  // Unified tracking loop: Skip detection and Progress reporting
+  // Skip-intro detection and progress reporting at 10 Hz. This used to be a second requestAnimationFrame
+  // loop (every frame: an O(n) note scan, several setStates, and a progress update that re-rendered the
+  // whole play page); neither needs more than 10 Hz.
   useEffect(() => {
-    let frameId: number;
-    const loop = () => {
-      if (engineRef.current && status === "playing") {
-        // Skip detection
-        const currentTime = engineRef.current.getCurrentTime();
-        const next = engineRef.current.getNextNoteTime();
-        
-        if (next && next - currentTime > 10000) {
-          setNextNoteTime(next);
-          setShowSkip(true);
-        } else {
-          setShowSkip(false);
-        }
-
-        // Progress reporting
-        if (onProgress) {
-          onProgress(engineRef.current.getProgress());
-        }
+    const id = setInterval(() => {
+      const engine = engineRef.current;
+      if (!engine || status !== "playing") {
+        setShowSkip(false);
+        return;
+      }
+      const next = engine.getNextNoteTime();
+      if (next !== null && next - engine.getCurrentTime() > 10000) {
+        setNextNoteTime(next);
+        setShowSkip(true);
       } else {
         setShowSkip(false);
       }
-      frameId = requestAnimationFrame(loop);
-    };
-    frameId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frameId);
+      onProgress?.(engine.getProgress());
+    }, 100);
+    return () => clearInterval(id);
   }, [status, onProgress]);
 
   const handleSkip = useCallback(() => {
@@ -146,8 +147,8 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
     }
   }, [settings.backgroundBlur]);
 
-  const handleJudgement = useCallback((type: JudgementType, errorMs: number, time: number, weight?: number) => {
-    updateJudgement(type, errorMs, time, weight);
+  const handleJudgement = useCallback((type: JudgementType, errorMs: number, time: number, weight?: number, count?: number) => {
+    updateJudgement(type, errorMs, time, weight, count);
     const hp = useGameStore.getState().hp;
     if (hp <= 0) { failGame(); engineRef.current?.pause(); }
   }, [updateJudgement, failGame]);
@@ -210,7 +211,7 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
         if (!parsed) throw new Error(`Difficulty "${beatmap.difficultyName}" not found in archive`);
 
         // We need NEW note objects because they will be mutated by the engine
-        const notes = JSON.parse(JSON.stringify(parsed.notes));
+        const notes = cloneNotes(parsed.notes);
         const keybinds = beatmap.keyCount === 4 ? settings.keybinds["4k"] : settings.keybinds["7k"];
 
         if (destroyed) return;

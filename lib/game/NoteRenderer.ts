@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 import type { ParsedNote, ScrollDirection } from "@/types/game";
 import { ColumnFlashes } from "./ColumnFlash";
+import { advanceFirstVisible, holdEndKey } from "./noteUtils";
 
 const COLUMN_COLORS_4K = ["#3399ff", "#ffffff", "#ffffff", "#3399ff"];
 const COLUMN_COLORS_7K = [
@@ -66,8 +67,14 @@ export class NoteRenderer {
   // Per-column flash fade state (advanced once per frame by tickFlashes)
   private flashes: ColumnFlashes;
 
-  // Reusable Set to avoid allocation per frame
-  private holdEndTimes: Set<string> = new Set();
+  // Reusable Set to avoid allocation per frame (numeric keys: see holdEndKey)
+  private holdEndTimes: Set<number> = new Set();
+
+  // First chart index still worth rendering; advances monotonically so a frame never rescans the notes
+  // that are already behind the hit line. Reset when time goes backwards (retry/seek) or the chart changes.
+  private firstVisible = 0;
+  private lastRenderTime = -Infinity;
+  private lastNotes: ParsedNote[] | null = null;
 
   // Percy skin: maximum visual LN body length in pixels (Infinity = no cap)
   private percyMaxLengthPx: number;
@@ -365,7 +372,12 @@ export class NoteRenderer {
     const visibleEnd = currentTime + lookAheadMs;
     const visibleStart = currentTime - 500;
 
-    for (let ni = 0; ni < notes.length; ni++) {
+    if (currentTime < this.lastRenderTime || notes !== this.lastNotes) this.firstVisible = 0;
+    this.lastRenderTime = currentTime;
+    this.lastNotes = notes;
+    this.firstVisible = advanceFirstVisible(notes, this.firstVisible, visibleStart);
+
+    for (let ni = this.firstVisible; ni < notes.length; ni++) {
       const note = notes[ni];
       if (note.startTime > visibleEnd) break;
 
@@ -381,10 +393,9 @@ export class NoteRenderer {
       )
         continue;
 
-      const colKey = `${note.column}-`;
       if (note.isHoldNote) {
-        this.holdEndTimes.add(colKey + note.endTime);
-      } else if (this.holdEndTimes.has(colKey + note.startTime)) {
+        this.holdEndTimes.add(holdEndKey(note.column, note.endTime));
+      } else if (this.holdEndTimes.has(holdEndKey(note.column, note.startTime))) {
         continue;
       }
 
@@ -545,7 +556,8 @@ export class NoteRenderer {
 
   destroy(): void {
     this.laneContainer.destroy({ children: true });
-    this.backgroundContainer.destroy({ children: true });
+    // texture + baseTexture: the background image is owned by this renderer, free it with the sprite
+    this.backgroundContainer.destroy({ children: true, texture: true, baseTexture: true });
     this.noteTexture?.destroy(true);
     this.holdTexture?.destroy(true);
     this.notePool.length = 0;

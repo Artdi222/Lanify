@@ -11,6 +11,7 @@ interface GameEngineCallbacks {
     errorMs: number,
     time: number,
     weight?: number,
+    count?: number,
   ) => void;
   onComplete: () => void;
   onFail: () => void;
@@ -58,8 +59,8 @@ export class GameEngine {
       config.notes,
       config.od,
       (perfMs) => this.audioEngine.getTimeAt(perfMs),
-      (type, errorMs, time, weight) =>
-        this.callbacks.onJudgement(type, errorMs, time, weight),
+      (type, errorMs, time, weight, count) =>
+        this.callbacks.onJudgement(type, errorMs, time, weight, count),
       (column) => this.noteRenderer.flashColumn(column),
     );
   }
@@ -193,10 +194,13 @@ export class GameEngine {
 
   getNextNoteTime(): number | null {
     const currentTime = this.audioEngine.getCurrentTime();
-    const nextNote = this.notes.find(
-      (n) => !n.hit && n.startTime > currentTime,
-    );
-    return nextNote ? nextNote.startTime : null;
+    const notes = this.notes;
+    // Every note before lastMissCheckedIndex is already hit, so start there instead of at 0.
+    for (let i = this.lastMissCheckedIndex; i < notes.length; i++) {
+      const n = notes[i];
+      if (!n.hit && n.startTime > currentTime) return n.startTime;
+    }
+    return null;
   }
 
   setScrollSpeed(speed: number): void {

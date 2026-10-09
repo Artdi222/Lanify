@@ -1,13 +1,13 @@
 "use client";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { useProgressStore } from "@/lib/store/useProgressStore";
 import ProgressBar from "@/components/game/ProgressBar";
 
-interface ScoreHUDProps {
-  progress?: number;
-}
-
-export default function ScoreHUD({ progress = 0 }: ScoreHUDProps) {
-  const { score, accuracy, currentBeatmap } = useGameStore();
+export default function ScoreHUD() {
+  const score = useGameStore((s) => s.score);
+  const accuracy = useGameStore((s) => s.accuracy);
+  const currentBeatmap = useGameStore((s) => s.currentBeatmap);
+  const progress = useProgressStore((s) => s.progress);
   
   return (
     <div className="fixed inset-0 z-30 pointer-events-none">

@@ -2,11 +2,13 @@ import type { ParsedNote, JudgementType } from "@/types/game";
 import { JudgementEngine } from "./JudgementEngine";
 import { resolveEventTime } from "./AudioClock";
 
+/** `count` > 1 reports several identical judgements at once (a hold's head + tail + ticks). */
 type JudgementCallback = (
   type: JudgementType,
   errorMs: number,
   time: number,
   weight?: number,
+  count?: number,
 ) => void;
 type ColumnFlashCallback = (column: number) => void;
 
@@ -103,12 +105,10 @@ export class InputHandler {
     note.holdMissed = true;
     note.hit = true;
     note.tailHit = true;
-    const weight = 1 / (2 + (note.totalTicks ?? 0));
-    this.onJudgement("MISS", missWindow, currentTime, weight); // head
-    this.onJudgement("MISS", missWindow, currentTime, weight); // tail
-    for (let t = 0; t < (note.totalTicks ?? 0); t++) {
-      this.onJudgement("MISS", missWindow, currentTime, weight);
-    }
+    const totalTicks = note.totalTicks ?? 0;
+    const weight = 1 / (2 + totalTicks);
+    // head + tail + every tick, as one update
+    this.onJudgement("MISS", missWindow, currentTime, weight, 2 + totalTicks);
     this._advanceColumnPast(note.column);
   }
 
@@ -218,15 +218,11 @@ export class InputHandler {
     if (earlyMs <= this.missWindow * 1.5) {
       const type = earlyMs <= 50 ? "MARVELOUS" : "PERFECT";
       this.onJudgement(type, -earlyMs, currentTime, weight);
-      for (let i = 0; i < remainingTicks; i++) {
-        this.onJudgement("PERFECT", 0, currentTime, weight);
-      }
+      if (remainingTicks > 0) this.onJudgement("PERFECT", 0, currentTime, weight, remainingTicks);
       activeNote.tailHit = true;
     } else {
-      this.onJudgement("MISS", -earlyMs, currentTime, weight);
-      for (let i = 0; i < remainingTicks; i++) {
-        this.onJudgement("MISS", -earlyMs, currentTime, weight);
-      }
+      // missed tail + every remaining tick, as one update
+      this.onJudgement("MISS", -earlyMs, currentTime, weight, 1 + Math.max(0, remainingTicks));
       activeNote.holdMissed = true;
       activeNote.tailHit = true; // Still mark as finished to advance indices
     }
@@ -261,9 +257,7 @@ export class InputHandler {
         const ticksHit = note.ticksHit ?? 0;
         const weight = 1 / (2 + totalTicks);
         this.onJudgement("MARVELOUS", 0, currentTime, weight);
-        for (let j = 0; j < totalTicks - ticksHit; j++) {
-          this.onJudgement("PERFECT", 0, currentTime, weight);
-        }
+        if (totalTicks > ticksHit) this.onJudgement("PERFECT", 0, currentTime, weight, totalTicks - ticksHit);
         note.ticksHit = totalTicks;
       }
     }
