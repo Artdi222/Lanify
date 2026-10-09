@@ -1,5 +1,6 @@
 "use client";
 
+import BeatmapInfoPanel from "@/components/select/BeatmapInfoPanel";
 import { useState } from "react";
 import { Music, PlayCircle, User, Heart, Clock, Zap} from "lucide-react";
 import LeaderboardTab from "./LeaderboardTab";
@@ -51,101 +52,7 @@ export default function BeatmapDetail({ beatmap, allDiffs = [], selectedMods = [
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* ── TOP CARD: beatmap info with slightly transparent dark bg ── */}
-      <div className="relative shrink-0 overflow-hidden" style={{ minHeight: "220px" }}>
-        {/* Semi-transparent dark overlay so cover art behind bleeds through */}
-        <div className="absolute inset-0 bg-[#0a0a18]/85 backdrop-blur-sm" />
-        
-        {/* Status badge — top-left */}
-        <div className="absolute top-3 left-3 z-20">
-          <span
-            className="px-2.5 py-1 text-[10px] font-game-display font-bold tracking-widest rounded border border-current bg-black/50 shadow-sm"
-            style={{ color: status.color }}
-          >
-            {status.label}
-          </span>
-        </div>
-
-        {/* Content overlay */}
-        <div className="relative flex flex-col justify-between p-5 pt-10 z-10 h-full">
-          {/* Title / Artist */}
-          <div>
-            <h1 className="text-[24px] font-game-display font-bold text-white leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,1)] line-clamp-2">
-              {beatmap.title}
-            </h1>
-            <p className="text-[14px] font-game-body font-medium text-white/60 mb-2 line-clamp-1 italic">
-              {beatmap.artist}
-            </p>
-
-            {/* Meta row */}
-            <div className="flex items-center gap-2 flex-wrap mb-3">
-              <MetaPill
-                icon={<User className="w-[18px] h-[18px]" />}
-                label={beatmap.creator}
-              />
-              <MetaPill
-                icon={<PlayCircle className="w-[18px] h-[18px] text-cyan-400" />}
-                label={beatmap.playCount && beatmap.playCount > 1000 ? `${(beatmap.playCount / 1000).toFixed(1)}k` : (beatmap.playCount?.toString() || "0")}
-              />
-              <MetaPill
-                icon={<Heart className="w-[18px] h-[18px] text-pink-500" />}
-                label={beatmap.favoriteCount && beatmap.favoriteCount > 1000 ? `${(beatmap.favoriteCount / 1000).toFixed(1)}k` : (beatmap.favoriteCount?.toString() || "0")}
-              />
-              <MetaPill
-                icon={<Clock className="w-[18px] h-[18px] text-orange-400" />}
-                label={formatDuration(beatmap.lengthSeconds)}
-              />
-              <MetaPill
-                icon={<Zap className="w-[18px] h-[18px] text-yellow-400" />}
-                label={`${Math.round(beatmap.bpm)} BPM`}
-              />
-            </div>
-
-            {/* Difficulty + Mods info */}
-            <div className="flex items-center gap-2 flex-wrap mb-3">
-              <span
-                className="px-2 py-0.5 rounded text-[11px] font-game-mono font-bold border border-white/20"
-                style={{ backgroundColor: `${starColor}30`, color: starColor }}
-              >
-                ★ {beatmap.starRating.toFixed(2)}
-              </span>
-              <span 
-                className="px-2 py-0.5 text-[11px] font-game-mono font-bold rounded shadow-sm border border-white/20 bg-white/5 text-white"
-              >
-                {beatmap.keyCount}K
-              </span>
-              <span className="text-[11px] font-game-body text-white/40">
-                Diff {currentDiffIndex + 1}/{totalDiffs}
-              </span>
-              {selectedMods.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {selectedMods.map((mod) => (
-                    <span key={mod} className="px-1.5 py-0.5 text-[9px] font-game-mono font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                      {mod}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {selectedMods.length === 0 && (
-                <span className="text-[11px] font-game-body text-white/30 italic">No mods</span>
-              )}
-            </div>
-          </div>
-
-          {/* Stat pills */}
-          <div className="grid grid-cols-3 gap-1.5">
-            <StatPill label="NOTES" value={beatmap.noteCount?.toLocaleString() ?? "0"} color={starColor} />
-            <StatPill label="HOLDS" value={beatmap.holdCount?.toLocaleString() ?? "0"} color={starColor} />
-            <StatPill label="KEYS" value={`${beatmap.keyCount}K`} color={starColor} />
-            <StatPill label="OD" value={beatmap.od.toFixed(1)} color={starColor} />
-            <StatPill label="HP" value={beatmap.hp.toFixed(1)} color={starColor} />
-            <StatPill label="STARS" value={beatmap.starRating.toFixed(2)} color={starColor} />
-          </div>
-        </div>
-
-        {/* Bottom edge accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: starColor, boxShadow: `0 -2px 10px ${starColor}80` }} />
-      </div>
+      <BeatmapInfoPanel beatmap={beatmap} />
 
       {/* ── LEADERBOARD SECTION ── */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden mt-3">
