@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js";
 import type { ParsedNote, ScrollDirection } from "@/types/game";
+import { ColumnFlashes } from "./ColumnFlash";
 
 const COLUMN_COLORS_4K = ["#3399ff", "#ffffff", "#ffffff", "#3399ff"];
 const COLUMN_COLORS_7K = [
@@ -62,8 +63,8 @@ export class NoteRenderer {
   private activeHolds: HoldBodySprite[] = [];
   private holdCapSize: number = 0; // cap height in pixels for NineSlicePlane
 
-  // Flash dedup
-  private flashingColumns: Set<number> = new Set();
+  // Per-column flash fade state (advanced once per frame by tickFlashes)
+  private flashes: ColumnFlashes;
 
   // Reusable Set to avoid allocation per frame
   private holdEndTimes: Set<string> = new Set();
@@ -80,6 +81,7 @@ export class NoteRenderer {
   ) {
     this.app = app;
     this.keyCount = keyCount;
+    this.flashes = new ColumnFlashes(keyCount);
     this.scrollDirection = scrollDirection;
     this.scrollSpeed = scrollSpeed;
     this.percyMaxLengthPx = percyMaxLengthPx || 99999; // guard stale null from localStorage
@@ -311,25 +313,25 @@ export class NoteRenderer {
     }
   }
 
+  /**
+   * Light a column. Called straight from the key handler: it only sets a Pixi alpha, so the flash
+   * is drawn by the very next render with no React in between. A press while the column is still
+   * fading restarts the flash.
+   */
   flashColumn(column: number): void {
     const flash = this.columnFlashes[column];
-    if (!flash || !this.app?.ticker || this.flashingColumns.has(column)) return;
+    if (!flash || flash.destroyed) return;
+    this.flashes.trigger(column);
+    flash.alpha = this.flashes.alpha(column);
+  }
 
-    this.flashingColumns.add(column);
-    flash.alpha = 0.6;
-    const fadeOut = () => {
-      if (!this.app?.ticker || flash.destroyed) {
-        this.flashingColumns.delete(column);
-        return;
-      }
-      flash.alpha -= 0.05;
-      if (flash.alpha <= 0) {
-        flash.alpha = 0;
-        this.app.ticker.remove(fadeOut);
-        this.flashingColumns.delete(column);
-      }
-    };
-    this.app.ticker.add(fadeOut);
+  /** Advance all flash fades by one frame. Called once per frame from the game loop. */
+  tickFlashes(deltaMs: number): void {
+    if (!this.flashes.tick(deltaMs)) return;
+    for (let i = 0; i < this.columnFlashes.length; i++) {
+      const flash = this.columnFlashes[i];
+      if (!flash.destroyed) flash.alpha = this.flashes.alpha(i);
+    }
   }
 
   updateNotes(notes: ParsedNote[], currentTime: number): void {
@@ -550,7 +552,7 @@ export class NoteRenderer {
     this.activeNotes.length = 0;
     this.holdPool.length = 0;
     this.activeHolds.length = 0;
-    this.flashingColumns.clear();
+    this.flashes.reset();
     this.holdEndTimes.clear();
   }
 }

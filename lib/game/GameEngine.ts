@@ -119,6 +119,8 @@ export class GameEngine {
   }
 
   private gameLoop = (): void => {
+    // Flashes keep fading while paused, like the per-flash ticker callbacks they replace.
+    this.noteRenderer.tickFlashes(this.app.ticker.deltaMS);
     if (this.paused) return;
     this.audioEngine.syncClock();
     const currentTime = this.audioEngine.getCurrentTime();
