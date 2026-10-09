@@ -14,6 +14,7 @@ import { useState } from "react";
 
 import GameSlider from "./GameSlider";
 import OffsetWizard from "./OffsetWizard";
+import { FPS_LIMIT_OPTIONS, RENDER_SCALE_OPTIONS } from "@/lib/game/RenderSettings";
 
 export default function SettingsDrawer({ children }: { children?: React.ReactNode }) {
   const settings = useSettingsStore();
@@ -102,6 +103,41 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
             </div>
           </section>
 
+          {/* Graphics Settings */}
+          <section className="bg-white/5 p-6 rounded-2xl border border-white/5 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+            <h3 className="flex items-center gap-2 text-sm font-game-display font-bold text-cyan-400 tracking-[0.2em] uppercase mb-6">
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
+              Graphics
+            </h3>
+            <div className="flex flex-col gap-6">
+              <OptionRow
+                label="Frame Limit"
+                options={FPS_LIMIT_OPTIONS}
+                value={settings.maxFps}
+                onChange={settings.setMaxFps}
+              />
+              <OptionRow
+                label="Render Scale"
+                options={RENDER_SCALE_OPTIONS}
+                value={settings.renderScale}
+                onChange={settings.setRenderScale}
+              />
+              <OptionRow
+                label="Anti-aliasing"
+                options={[
+                  { label: "Off", value: 0 },
+                  { label: "On", value: 1 },
+                ]}
+                value={settings.antialias ? 1 : 0}
+                onChange={(v) => settings.setAntialias(v === 1)}
+              />
+              <p className="text-xs font-game-body text-white/40 leading-relaxed">
+                Applies the next time a map starts. Lower the render scale or turn anti-aliasing off if gameplay
+                stutters on a weak GPU.
+              </p>
+            </div>
+          </section>
+
           {/* Input Settings */}
           <section className="bg-white/5 p-6 rounded-2xl border border-white/5 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
             <h3 className="flex items-center gap-2 text-sm font-game-display font-bold text-cyan-400 tracking-[0.2em] uppercase mb-6">
@@ -173,6 +209,41 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
   );
 }
 
+
+function OptionRow({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly { label: string; value: number }[];
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-sm font-game-body text-white/70">{label}</span>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            aria-pressed={value === o.value}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-game-mono font-bold transition-all duration-200 cursor-pointer ${
+              value === o.value
+                ? "bg-cyan-500/20 border-cyan-400 text-cyan-200"
+                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function KeybindRow({
   label,

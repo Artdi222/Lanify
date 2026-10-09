@@ -136,6 +136,12 @@ export interface GameSettings {
   backgroundDim: number;
   backgroundBlur: number;
   volume: number;
+  /** Graphics (read when a map starts). */
+  antialias: boolean;
+  /** Render resolution multiplier; 0 = auto (device pixel ratio). */
+  renderScale: number;
+  /** Frame cap in fps; 0 = unlimited. */
+  maxFps: number;
   keybinds: {
     '4k': [string, string, string, string];
     '7k': [string, string, string, string, string, string, string];
@@ -156,6 +162,9 @@ export const DEFAULT_SETTINGS: GameSettings = {
   backgroundDim: 60,
   backgroundBlur: 0,
   volume: 0.8,
+  antialias: true,
+  renderScale: 0,
+  maxFps: 0,
   keybinds: {
     '4k': ['d', 'f', 'j', 'k'],
     '7k': ['s', 'd', 'f', ' ', 'j', 'k', 'l'],

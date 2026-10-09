@@ -10,6 +10,7 @@ import { useMusicStore } from "@/lib/store/useMusicStore";
 import { getBeatmapUrl, getBeatmap } from "@/lib/api/beatmaps";
 import type { JudgementType } from "@/types/game";
 import { cloneNotes } from "@/lib/game/noteUtils";
+import { resolveMaxFps, resolveResolution } from "@/lib/game/RenderSettings";
 
 interface GameCanvasProps {
   beatmapId: string;
@@ -170,10 +171,11 @@ export default function GameCanvas({ beatmapId, onReady, onProgress }: GameCanva
           height: window.innerHeight,
           backgroundColor: 0x000000,
           backgroundAlpha: 0,
-          antialias: true,
-          resolution: window.devicePixelRatio || 1,
+          antialias: settings.antialias,
+          resolution: resolveResolution(settings.renderScale, window.devicePixelRatio),
           autoDensity: true,
         });
+        app.ticker.maxFPS = resolveMaxFps(settings.maxFps);
         appRef.current = app;
         containerRef.current.appendChild(app.view as HTMLCanvasElement);
 
