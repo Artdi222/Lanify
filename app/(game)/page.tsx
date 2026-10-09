@@ -86,11 +86,11 @@ export default function MainMenuPage() {
           <AnimatePresence>
             {isMenuExpanded && (
               <motion.div
-                initial={{ opacity: 0, width: 0, x: -50 }}
-                animate={{ opacity: 1, width: "auto", x: -20 }}
-                exit={{ opacity: 0, width: 0, x: -50 }}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: -20 }}
+                exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative z-10 flex flex-row items-center gap-0 overflow-hidden py-4 pr-6"
+                className="relative z-10 flex flex-row items-center gap-0 py-4 pr-6"
               >
                 <SettingsDrawer>
                   <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-blue-900 -ml-12 pl-12 sm:pl-16">
