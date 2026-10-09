@@ -61,9 +61,9 @@ export default function SplitSelect<T extends string>({
         className={cn("flex h-[43px] w-full overflow-hidden rounded-xl text-left font-game-display text-[17px] transition-[filter] duration-150", disabled ? "cursor-default" : "cursor-pointer hover:brightness-125")}
       >
         <span className={cn("flex shrink-0 items-center px-4 font-semibold", dim ? "bg-select-tile-dim/80 text-white/50" : "bg-select-tile text-white")}>{label}</span>
-        <span className={cn("flex min-w-0 flex-1 items-center justify-between gap-2 px-4", dim ? "bg-select-tile-dim/60 text-white/45" : "bg-select-bar text-white")}>
+        <span className={cn("flex min-w-0 flex-1 items-center justify-between gap-2 px-4", dim ? "bg-select-tile-dim/60 text-white/45" : "bg-select-field text-white")}>
           <span className="truncate">{current}</span>
-          {!disabled && <ChevronDown className={cn("h-5 w-5 shrink-0 transition-transform duration-150", open && "rotate-180")} strokeWidth={2.5} aria-hidden />}
+          {!dim && <ChevronDown className={cn("h-5 w-5 shrink-0 transition-transform duration-150", open && "rotate-180", disabled && "opacity-40")} strokeWidth={2.5} aria-hidden />}
         </span>
       </button>
       {open && (

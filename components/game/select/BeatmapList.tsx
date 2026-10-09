@@ -149,8 +149,9 @@ export default function BeatmapList({
   return (
     <div className="flex h-full flex-col">
       {/* ── Header ───────────────────────────────────────── */}
-      <div className="relative z-20 shrink-0 pr-2 pt-2">
-        <div className="flex h-[72px]">
+      {/* Satu panel menyatukan search, star rating, dan dropdown; tepi kiri berundak diagonal seperti lazer */}
+      <div className="relative z-20 -ml-[30px] shrink-0 rounded-bl-2xl bg-select-bar/90 pb-[6px] pr-2 pt-2 shadow-[0_8px_24px_rgb(0_0_0/0.35)] backdrop-blur-sm">
+        <div className="ml-[55px] flex h-[72px]">
           <label className="relative flex min-w-0 flex-1 cursor-text flex-col justify-center rounded-l-xl bg-select-field px-4">
             <input
               type="text"
@@ -168,15 +169,15 @@ export default function BeatmapList({
         </div>
 
         {/* Baris 2-3 berada di atas panel gelap (#22282a) yang menjorok ke kiri */}
-        <div className="-ml-[30px] mt-[7px] rounded-l-2xl bg-select-bar py-[5px] pl-[25px]">
-          <div className="flex h-[38px] items-center gap-[3px]">
+        <div className="mt-[6px]">
+          <div className="ml-[40px] flex h-[38px] items-center gap-[3px]">
             <span className="flex h-full w-[113px] shrink-0 items-center justify-center rounded-l-xl bg-select-tile font-game-display text-[17px] font-semibold text-white">Star Rating</span>
             <div className="min-w-0 flex-1">
               <StarRangeSlider min={starMin} max={starMax} onChange={setStarRange} />
             </div>
           </div>
 
-          <div className="-ml-[25px] mt-[5px] flex items-center gap-4 pr-2">
+          <div className="ml-[22px] mt-[6px] flex items-center gap-3">
             <SplitSelect<SortKey> label="Sort" value={sortBy} options={SORT_OPTIONS} onChange={setSortBy} className="w-[235px]" />
             <SplitSelect<GroupKey> label="Group" value={groupBy} options={GROUP_OPTIONS} onChange={setGroupBy} className="w-[228px]" />
             <SplitSelect<"ALL"> label="Collection" value="ALL" options={[{ label: "All beatmaps", value: "ALL" }]} onChange={() => {}} disabled className="min-w-0 flex-1" />
