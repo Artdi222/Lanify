@@ -60,21 +60,17 @@ export default function MainMenuPage() {
         </span>
       </div>
 
-      <div className="relative z-10 flex h-full w-full flex-1 flex-row items-center justify-center px-4 pb-16">
+      <div className="relative z-10 flex h-full w-full flex-1 items-center justify-center px-4 pb-16">
         {/* Pita strip: sejajar dengan panel (container punya pb-16, jadi tengahnya naik 2rem) */}
-        <AnimatePresence>
-          {isMenuExpanded && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="pointer-events-none absolute inset-x-0 top-[calc(50%-2rem)] -z-10 h-24 -translate-y-1/2 bg-black/50 sm:h-32"
-            />
-          )}
-        </AnimatePresence>
-        <motion.div layout className="flex flex-row items-center justify-center gap-0">
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-[calc(50%-2rem)] -z-10 h-24 -translate-y-1/2 bg-black/50 transition-opacity duration-300 sm:h-32 ${isMenuExpanded ? "opacity-100" : "opacity-0"}`}
+        />
+
+        {/* Logo + strip: murni transform/opacity CSS supaya bisa dibalik di tengah animasi */}
+        <div
+          className={`relative transition-transform duration-[400ms] ease-lf-out ${isMenuExpanded ? "-translate-x-[11.5rem] sm:-translate-x-[15rem]" : "translate-x-0"}`}
+        >
           <motion.div
-            layout
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -83,42 +79,37 @@ export default function MainMenuPage() {
             <LogoButton pulsing={isPlaying} onClick={() => setIsMenuExpanded((v) => !v)} />
           </motion.div>
 
-          <AnimatePresence>
-            {isMenuExpanded && (
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: -20 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="relative z-10 flex flex-row items-center gap-0 py-4 pr-6"
-              >
-                <SettingsDrawer>
-                  <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-blue-900 -ml-12 pl-12 sm:pl-16">
-                    <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Settings</span>
-                  </SkewedPanel>
-                </SettingsDrawer>
+          <div
+            inert={!isMenuExpanded}
+            className={`absolute left-full top-1/2 z-10 flex -translate-y-1/2 flex-row items-center gap-0 py-4 pr-6 transition-[opacity,transform] duration-[400ms] ease-lf-out ${
+              isMenuExpanded ? "ml-[-20px] translate-x-0 opacity-100" : "pointer-events-none ml-[-20px] -translate-x-12 opacity-0"
+            }`}
+          >
+            <SettingsDrawer>
+              <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-blue-900 -ml-12 pl-12 sm:pl-16">
+                <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Settings</span>
+              </SkewedPanel>
+            </SettingsDrawer>
 
-                <SkewedPanel onClick={() => router.push("/select")} variant="primary" className="w-32 h-24 sm:w-40 sm:h-32">
-                  <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-white">Play</span>
-                </SkewedPanel>
+            <SkewedPanel onClick={() => router.push("/select")} variant="primary" className="w-32 h-24 sm:w-40 sm:h-32">
+              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-white">Play</span>
+            </SkewedPanel>
 
-                {isGuest ? (
-                  <SkewedPanel onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
-                    <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log In</span>
-                  </SkewedPanel>
-                ) : (
-                  <SkewedPanel onClick={() => logout()} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
-                    <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log Out</span>
-                  </SkewedPanel>
-                )}
-              </motion.div>
+            {isGuest ? (
+              <SkewedPanel onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
+                <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log In</span>
+              </SkewedPanel>
+            ) : (
+              <SkewedPanel onClick={() => logout()} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
+                <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log Out</span>
+              </SkewedPanel>
             )}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* Tip bawah-tengah */}
