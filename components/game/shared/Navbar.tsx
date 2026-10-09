@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { User as UserIcon, LogIn, LogOut, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import MusicPlayer from "./MusicPlayer";
+import SettingsDrawer from "./SettingsDrawer";
+import TopBarClock from "./TopBarClock";
+import { Icon } from "@/components/ui/icons/Icon";
 import RegisterModal from "./RegisterModal";
 import ProfilePanel from "./ProfilePanel";
 import { apiClient } from "@/lib/api/client";
@@ -14,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function GameNavbar() {
   const { user, isGuest, login, logout } = useAuthStore();
-  const [time, setTime] = useState("");
   const [mounted, setMounted] = useState(false);
 
   // Dropdown & Modal states
@@ -42,18 +44,6 @@ export default function GameNavbar() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    const clockInterval = setInterval(() => {
-      setTime(
-        new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
-      );
-    }, 1000);
-
-    return () => clearInterval(clockInterval);
   }, []);
 
   // Listen for open-auth-dropdown custom event
@@ -96,50 +86,57 @@ export default function GameNavbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-9 bg-[#060a12] border-b border-blue-900/30 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
-        {/* Left: Brand / Title */}
-        <div className="flex items-center gap-3">
-          <Link href="/" className="font-game-display font-bold text-xs tracking-widest text-blue-400 hover:text-white transition-colors">
-            LANIFY
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-stretch justify-between h-14 bg-lf-bg-raised text-lf-text transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
+        {/* Left: settings, home, ruleset */}
+        <div className="flex items-stretch">
+          <SettingsDrawer>
+            <button
+              aria-label="Settings"
+              className="m-[5px] flex w-[69px] cursor-pointer items-center justify-center rounded-lf-md transition-colors hover:bg-lf-surface-hover data-[state=open]:bg-lf-primary"
+            >
+              <Icon name="settings" size={26} />
+            </button>
+          </SettingsDrawer>
+          <Link href="/" aria-label="Home" className="flex w-20 items-center justify-center transition-colors hover:bg-lf-surface-hover">
+            <Icon name="home" size={26} />
           </Link>
+          {/* Ruleset: Lanify hanya punya mania, jadi satu ikon terpilih */}
+          <div className="relative flex w-14 items-center justify-center" aria-label="Mania">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lf-accent text-lf-bg">
+              <Icon name="ruleset-mania" size={28} title="Mania" />
+            </span>
+            <span className="absolute bottom-[3px] h-[3px] w-[25px] rounded-full bg-lf-text" />
+          </div>
         </div>
 
-        {/* Right: Music + Clock + Profile Button */}
-        <div className="flex items-center gap-3 font-game-mono">
+        {/* Right: chat, globe, music, user, clock, notifications */}
+        <div className="flex items-stretch rounded-bl-[14px] bg-lf-surface pl-2">
+          <button disabled title="Segera" aria-label="Chat" className="flex w-14 items-center justify-center text-lf-text-dim">
+            <Icon name="chat" size={26} />
+          </button>
+          <button disabled title="Segera" aria-label="Online" className="flex w-14 items-center justify-center text-lf-text-dim">
+            <Icon name="globe" size={26} />
+          </button>
           <MusicPlayer />
-          
-          <span className="text-[11px] text-cyan-50/70 tabular-nums tracking-widest">
-            {time || "00:00:00"}
-          </span>
+          <div className="mx-1 my-3 w-0.5 rounded-full bg-lf-text" />
 
-          <div className="w-px h-3 bg-white/20" />
-
-          {/* Profile Button - Rounded Rectangle */}
-          <div className="relative" ref={dropdownRef}>
+          {/* User: tombol dropdown login/profil */}
+          <div className="relative flex" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0c1424] hover:bg-blue-900/40 border border-blue-800/40 transition-all cursor-pointer group"
+              className="flex cursor-pointer items-center gap-3 px-3 transition-colors hover:bg-lf-surface-hover"
             >
-              {isGuest ? (
-                <>
-                  <div className="w-5 h-5 rounded-md bg-blue-950 border border-blue-500/30 flex items-center justify-center">
-                    <UserIcon className="w-3 h-3 text-blue-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <span className="text-xs font-game-body text-blue-200 group-hover:text-white transition-colors">Guest</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-5 h-5 rounded-md bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden">
-                    {user?.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-                    ) : (
-                      <UserIcon className="w-3 h-3 text-white" />
-                    )}
-                  </div>
-                  <span className="text-xs font-game-display tracking-wider text-white font-semibold">{user?.username}</span>
-                </>
-              )}
+              <span className="max-w-44 truncate text-[17px] font-game-body text-lf-text">
+                {isGuest ? "Guest" : user?.username}
+              </span>
+              <span className="flex h-[43px] w-[43px] items-center justify-center overflow-hidden rounded-lf-sm bg-lf-bg">
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatarUrl} alt={user.username} className="h-full w-full object-cover" />
+                ) : (
+                  <UserIcon className="h-5 w-5 text-lf-text-muted" />
+                )}
+              </span>
             </button>
 
             {/* Dropdown Menu - Anchored Right Below */}
@@ -291,6 +288,10 @@ export default function GameNavbar() {
               )}
             </AnimatePresence>
           </div>
+          <TopBarClock />
+          <button disabled title="Segera" aria-label="Notifications" className="flex w-14 items-center justify-center text-lf-text-dim">
+            <Icon name="bell" size={26} />
+          </button>
         </div>
       </nav>
 

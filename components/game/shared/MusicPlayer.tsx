@@ -8,7 +8,6 @@ import {
   SkipForward, 
   SkipBack, 
   Music, 
-  ChevronDown, 
   Volume2,
   ListMusic
 } from "lucide-react";
@@ -17,6 +16,7 @@ import { useGameStore } from "@/lib/store/useGameStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { Icon } from "@/components/ui/icons/Icon";
 
 export default function MusicPlayer() {
   const pathname = usePathname();
@@ -84,19 +84,15 @@ export default function MusicPlayer() {
   if (shouldHide) return null;
 
   return (
-    <div className="relative flex items-center h-full mr-4" ref={containerRef}>
+    <div className="relative flex items-center h-full" ref={containerRef}>
       {/* Mini Player */}
-      <button 
+      <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 px-3 h-7 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer max-w-[200px]"
+        aria-label={currentSong ? `Now playing: ${currentSong.title}` : "Now playing"}
+        title={currentSong?.title ?? "Not Playing"}
+        className={`flex h-full w-14 cursor-pointer items-center justify-center transition-colors hover:bg-lf-surface-hover ${isPlaying ? "text-lf-accent" : "text-lf-text"}`}
       >
-        <Music className={`w-3.5 h-3.5 text-lanify-accent ${isPlaying ? "animate-pulse" : ""}`} />
-        <div className="flex flex-col items-start min-w-0">
-          <span className="text-[10px] font-game-display font-bold text-white truncate w-full">
-            {currentSong ? currentSong.title : "Not Playing"}
-          </span>
-        </div>
-        <ChevronDown className={`w-3 h-3 text-white/30 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} />
+        <Icon name="music" size={26} />
       </button>
 
       {/* Expanded Card */}
