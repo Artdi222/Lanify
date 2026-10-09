@@ -4,16 +4,10 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowLeft,
-  Play,
-  Shuffle,
-  SlidersHorizontal,
-} from "lucide-react";
-import Link from "next/link";
 import BeatmapList, { GroupCategory } from "@/components/game/select/BeatmapList";
 import BeatmapDetail from "@/components/game/select/BeatmapDetail";
+import SelectBackground from "@/components/select/SelectBackground";
+import SelectFooter from "@/components/select/SelectFooter";
 import { listBeatmaps } from "@/lib/api/beatmaps";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
@@ -63,6 +57,7 @@ export default function SongSelectPage() {
   }, [selectedBeatmap?.id]);
 
   const [search, setSearch] = useState("");
+  const [optionsOpen, setOptionsOpen] = useState(false);
   
   const { 
     selectionSortBy: sortBy, 
@@ -370,165 +365,47 @@ export default function SongSelectPage() {
   }, [selectedBeatmap, flatBeatmaps, groupedCategories, groupBy, router, changeSelection]);
 
   return (
-    <div className="relative flex-1 w-full flex flex-col overflow-hidden bg-lanify-bg">
-      {/* Background: selected beatmap art, heavily dimmed */}
-      {/* Background: selected beatmap art, heavily dimmed */}
-      <AnimatePresence>
-        {selectedBeatmap?.coverUrl ? (
-          <motion.div
-            key={selectedBeatmap.coverUrl}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-            style={{ 
-              backgroundImage: `url(${selectedBeatmap.coverUrl})`,
-              filter: 'brightness(0.4)',
-              transform: 'scale(1.05)',
-            }}
-          />
-        ) : (
-          <motion.div 
-            key="fallback"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-linear-to-br from-lanify-bg via-lanify-surface to-lanify-bg z-0" 
-            style={{ transform: 'scale(1.05)' }}
-          />
-        )}
-      </AnimatePresence>
+    <div className="relative flex-1 w-full flex flex-col overflow-hidden bg-select-bar">
+      <SelectBackground coverUrl={selectedBeatmap?.coverUrl ?? null} />
 
-      {/* Main Content: Only show when mounted to prevent hydration mismatch, but maintain layout */}
-      <div className={`relative z-10 flex flex-1 min-h-0 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div className={`absolute inset-x-0 top-0 bottom-[67px] z-10 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
         {mounted && (
           <>
-            {/* ─── LEFT PANEL (40%) — flush left ─────────────────── */}
-            <div className="w-[40%] shrink-0 flex flex-col">
-              {/* Beatmap detail card + leaderboard — fills available height */}
-              <div className="flex-1 min-h-0 flex flex-col">
-                <BeatmapDetail beatmap={selectedBeatmap} allDiffs={allDiffs} />
-              </div>
+            {/* Kiri: info beatmap + leaderboard */}
+            <div className="absolute inset-y-0 left-0 flex w-[min(890px,48vw)] min-w-[520px] flex-col">
+              <BeatmapDetail beatmap={selectedBeatmap} allDiffs={allDiffs} />
             </div>
 
-            {/* ─── GAP between panels ─── */}
-            <div className="w-[15%] shrink-0" />
-
-            {/* ─── RIGHT PANEL (45%) — flush right ────────────────── */}
-            <div className="w-[45%] flex flex-col min-w-0">
-              {/* Song list panel — fills available height */}
-              <div className="flex-1 min-h-0 flex flex-col">
-                <BeatmapList
-                  beatmaps={beatmaps}
-                  selectedBeatmap={selectedBeatmap}
-                  onSelectBeatmap={handleSelectBeatmap}
-                  loading={loading}
-                  search={search}
-                  setSearch={setSearch}
-                  sortBy={sortBy}
-                  setSortBy={setSortBy}
-                  starMin={starMin}
-                  starMax={starMax}
-                  setStarRange={setSelectionStarRange}
-                  groupBy={groupBy}
-                  setGroupBy={setGroupBy}
-                  groupedCategories={groupedCategories}
-                />
-              </div>
+            {/* Kanan: pencarian + daftar, kartu bleed sampai tepi kanan */}
+            <div className="absolute inset-y-0 right-0 flex w-[min(880px,46vw)] min-w-[520px] flex-col">
+              <BeatmapList
+                beatmaps={beatmaps}
+                selectedBeatmap={selectedBeatmap}
+                onSelectBeatmap={handleSelectBeatmap}
+                loading={loading}
+                search={search}
+                setSearch={setSearch}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                starMin={starMin}
+                starMax={starMax}
+                setStarRange={setSelectionStarRange}
+                groupBy={groupBy}
+                setGroupBy={setGroupBy}
+                groupedCategories={groupedCategories}
+              />
             </div>
           </>
         )}
       </div>
 
-
-      {/* ─── BOTTOM PANEL ────────────────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 h-20 bg-[#0a0a18] border-t border-white/10 flex items-center px-6 z-20 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        {/* Bottom-Left Corner — Controls */}
-        <div className="flex-1 flex items-center gap-3">
-          <Link href="/">
-            <button className="h-12 px-8 rounded-xl bg-blue-900 hover:bg-blue-700 text-white font-game-display font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-blue-900/40 border border-blue-500/30">
-              <ArrowLeft className="w-5 h-5" /> BACK
-            </button>
-          </Link>
-
-          <motion.button
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 0 15px rgba(255,255,255,0.1)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center justify-center h-12 w-16 rounded-xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 text-lanify-text-secondary hover:text-white transition-all cursor-pointer"
-          >
-            <span className="text-xs font-game-display font-bold">MODS</span>
-            <span className="text-[9px] font-game-mono leading-none mt-0.5">
-              4K/7K
-            </span>
-          </motion.button>
-
-          <motion.button
-            onClick={handleRandomBeatmap}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 0 15px rgba(255,255,255,0.1)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center justify-center h-12 px-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 text-lanify-text-secondary hover:text-white transition-all cursor-pointer"
-          >
-            <Shuffle className="w-4 h-4 mb-0.5" />
-            <span className="text-[9px] font-game-display font-bold tracking-widest leading-none">
-              RANDOM
-            </span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 0 15px rgba(255,255,255,0.1)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center justify-center h-12 px-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 text-lanify-text-secondary hover:text-white transition-all cursor-pointer"
-          >
-            <SlidersHorizontal className="w-4 h-4 mb-0.5" />
-            <span className="text-[9px] font-game-display font-bold tracking-widest leading-none">
-              OPTIONS
-            </span>
-          </motion.button>
-        </div>
-
-        {/* Center — Removed Play Button */}
-        <div className="shrink-0 flex justify-center"></div>
-
-        {/* Right Empty Space to balance flex layout */}
-        <div className="flex-1" />
-      </div>
-
-      {/* Play button — 1/4 circle at exact bottom right */}
-      <motion.button
-        onClick={() =>
-          selectedBeatmap && router.push(`/prepare/${selectedBeatmap.id}`)
-        }
-        disabled={!selectedBeatmap}
-        whileHover={
-          selectedBeatmap ? { scale: 1.05, filter: "brightness(1.1)" } : {}
-        }
-        whileTap={selectedBeatmap ? { scale: 0.95 } : {}}
-        className={`absolute bottom-0 right-0 w-44 h-44 rounded-tl-full flex items-center justify-center pt-10 pl-10 z-30 transition-all shadow-[-10px_-10px_30px_rgba(0,0,0,0.4)]
-          ${
-            selectedBeatmap
-              ? "bg-lanify-accent text-lanify-bg cursor-pointer shadow-[0_0_40px_rgba(0,229,255,0.4)]"
-              : "bg-white/10 text-white/20 cursor-not-allowed border border-white/5"
-          }`}
-      >
-        <div className="flex flex-col items-center justify-center">
-          <Play
-            className={`w-12 h-12 ml-2 ${selectedBeatmap ? "fill-lanify-bg" : "fill-white/20"}`}
-          />
-          <span className="text-xl font-game-display font-bold mt-1 tracking-widest">
-            PLAY
-          </span>
-        </div>
-      </motion.button>
+      <SelectFooter
+        onRandom={handleRandomBeatmap}
+        onOptions={() => setOptionsOpen((v) => !v)}
+        onPlay={() => selectedBeatmap && router.push(`/prepare/${selectedBeatmap.id}`)}
+        optionsOpen={optionsOpen}
+        canPlay={!!selectedBeatmap}
+      />
     </div>
   );
 }
