@@ -1,5 +1,6 @@
 import type { ParsedNote, JudgementType } from "@/types/game";
 import { JudgementEngine } from "./JudgementEngine";
+import { resolveEventTime } from "./AudioClock";
 
 type JudgementCallback = (
   type: JudgementType,
@@ -20,7 +21,8 @@ export class InputHandler {
   private judgementEngine: JudgementEngine;
   private onJudgement: JudgementCallback;
   private onColumnFlash: ColumnFlashCallback;
-  private getCurrentTime: () => number;
+  /** Song time (ms) for a point on the performance.now() timeline, e.g. an event's timeStamp. */
+  private getTimeAt: (perfMs: number) => number;
   private active: boolean = false;
 
   private handleKeyDown: (e: KeyboardEvent) => void;
@@ -33,7 +35,7 @@ export class InputHandler {
     keybinds: string[],
     notes: ParsedNote[],
     od: number,
-    getCurrentTime: () => number,
+    getTimeAt: (perfMs: number) => number,
     onJudgement: JudgementCallback,
     onColumnFlash: ColumnFlashCallback,
   ) {
@@ -42,7 +44,7 @@ export class InputHandler {
     this.missWindow = this.judgementEngine.getMissWindow();
     this.onJudgement = onJudgement;
     this.onColumnFlash = onColumnFlash;
-    this.getCurrentTime = getCurrentTime;
+    this.getTimeAt = getTimeAt;
 
     keybinds.forEach((key, idx) => {
       this.keyMap.set(key.toLowerCase(), idx);
@@ -142,7 +144,8 @@ export class InputHandler {
 
     this.onColumnFlash(column);
 
-    const currentTime = this.getCurrentTime();
+    // Judge at when the key was actually pressed, not when this handler got to run.
+    const currentTime = this.getTimeAt(resolveEventTime(e.timeStamp, performance.now()));
     const missWindow = this.missWindow;
     const columnNotes = this.notesByColumn[column];
 
@@ -205,7 +208,7 @@ export class InputHandler {
     activeNote.isActiveHold = false;
     activeNote.tailHit = true;
 
-    const currentTime = this.getCurrentTime();
+    const currentTime = this.getTimeAt(resolveEventTime(e.timeStamp, performance.now()));
     const earlyMs = activeNote.endTime - currentTime;
     const totalTicks = activeNote.totalTicks ?? 0;
     const ticksHit = activeNote.ticksHit ?? 0;

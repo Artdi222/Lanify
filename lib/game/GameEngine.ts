@@ -57,7 +57,7 @@ export class GameEngine {
       config.keybinds,
       config.notes,
       config.od,
-      () => this.audioEngine.getCurrentTime(),
+      (perfMs) => this.audioEngine.getTimeAt(perfMs),
       (type, errorMs, time, weight) =>
         this.callbacks.onJudgement(type, errorMs, time, weight),
       (column) => this.noteRenderer.flashColumn(column),

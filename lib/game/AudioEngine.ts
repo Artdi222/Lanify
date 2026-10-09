@@ -178,8 +178,19 @@ export class AudioEngine {
       return current + this.globalOffset;
     }
 
-    const timeSinceStart = performance.now() - this.startTimestamp;
-    return timeSinceStart + this.globalOffset;
+    return this.getTimeAt(performance.now());
+  }
+
+  /**
+   * Song time (ms) at a point on the `performance.now()` timeline, e.g. `KeyboardEvent.timeStamp`.
+   * Same clock as getCurrentTime() but side-effect free (never starts audio), so the input
+   * handler can judge a press at when it happened rather than when its handler ran.
+   */
+  getTimeAt(perfMs: number): number {
+    if (!this.howl) return 0;
+    if (!this.playing) return this.pauseTime;
+    if (!this.audioStarted) return -this.leadInMs + (perfMs - this.startTimestamp) + this.globalOffset;
+    return perfMs - this.startTimestamp + this.globalOffset;
   }
 
   seek(timeMs: number): void {

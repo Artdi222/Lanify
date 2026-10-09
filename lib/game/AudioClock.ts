@@ -39,6 +39,22 @@ export function anchorFromLatency(seekMs: number, perfNowMs: number, latencyMs: 
   return perfNowMs - (seekMs - latencyMs);
 }
 
+/**
+ * The `performance.now()` time an input event actually happened, from `event.timeStamp`.
+ *
+ * A key press that arrives while the main thread is busy waits in the queue, so judging it
+ * at "when the handler runs" adds that wait to the player's timing error. `timeStamp` is
+ * when the browser received it. It is only trusted if it looks like a point on the
+ * performance timeline in the recent past; otherwise (0, NaN, future, epoch-based, stale)
+ * the handler time `nowMs` is used, which is the previous behaviour.
+ */
+export function resolveEventTime(eventTimeStamp: number, nowMs: number, maxAgeMs = 250): number {
+  if (!Number.isFinite(eventTimeStamp) || eventTimeStamp <= 0) return nowMs;
+  const age = nowMs - eventTimeStamp;
+  if (age < 0 || age > maxAgeMs) return nowMs;
+  return eventTimeStamp;
+}
+
 function median(values: number[]): number {
   const s = [...values].sort((a, b) => a - b);
   const mid = s.length >> 1;

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { AnchorFilter, anchorFromLatency, anchorFromOutputTimestamp } from "./AudioClock";
+import { AnchorFilter, anchorFromLatency, anchorFromOutputTimestamp, resolveEventTime } from "./AudioClock";
 
 /** Deterministic PRNG so noise-based tests never flake. */
 function rng(seed: number) {
@@ -122,5 +122,35 @@ describe("AnchorFilter", () => {
     const errs = driftErrors(10);
     expect(errs[Math.floor(errs.length * 0.95)]).toBeLessThan(2.5);
     expect(errs[errs.length - 1]).toBeLessThan(3.5);
+  });
+});
+
+describe("resolveEventTime", () => {
+  const now = 50_000;
+
+  test("uses the event timestamp when it is recent (event waited in the queue)", () => {
+    expect(resolveEventTime(49_965, now)).toBe(49_965);
+    expect(resolveEventTime(now, now)).toBe(now);
+  });
+
+  test("falls back to now for a timestamp in the future", () => {
+    expect(resolveEventTime(now + 5, now)).toBe(now);
+  });
+
+  test("falls back to now for missing or invalid timestamps", () => {
+    expect(resolveEventTime(0, now)).toBe(now);
+    expect(resolveEventTime(-3, now)).toBe(now);
+    expect(resolveEventTime(Number.NaN, now)).toBe(now);
+    expect(resolveEventTime(Number.POSITIVE_INFINITY, now)).toBe(now);
+  });
+
+  test("falls back to now for an epoch-based timestamp (not on the performance timeline)", () => {
+    expect(resolveEventTime(1_760_000_000_000, now)).toBe(now);
+  });
+
+  test("falls back to now when the event is implausibly old", () => {
+    expect(resolveEventTime(now - 251, now)).toBe(now);
+    expect(resolveEventTime(now - 250, now)).toBe(now - 250);
+    expect(resolveEventTime(now - 400, now, 500)).toBe(now - 400);
   });
 });
