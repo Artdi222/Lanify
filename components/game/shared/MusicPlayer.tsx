@@ -90,9 +90,9 @@ export default function MusicPlayer() {
         onClick={() => setExpanded(!expanded)}
         aria-label={currentSong ? `Now playing: ${currentSong.title}` : "Now playing"}
         title={currentSong?.title ?? "Not Playing"}
-        className={`flex h-full w-14 cursor-pointer items-center justify-center transition-colors hover:bg-lf-surface-hover ${isPlaying ? "text-lf-accent" : "text-lf-text"}`}
+        className={`flex h-full w-12 cursor-pointer items-center justify-center transition-colors hover:bg-lf-surface-hover ${isPlaying ? "text-lf-accent" : "text-lf-text"}`}
       >
-        <Icon name="music" size={26} />
+        <Icon name="music" size={22} />
       </button>
 
       {/* Expanded Card */}

@@ -146,13 +146,13 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
             className="absolute inset-0 bg-black/75"
           />
 
-          {/* Sliding Panel - 50% width of screen, full height below 56px navbar */}
+          {/* Sliding Panel - 50% width of screen, full height below 48px navbar */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-full sm:w-[50vw] h-[calc(100vh-56px)] bg-[#070b14] border-t-2 border-x-2 border-blue-600/60 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-full sm:w-[50vw] h-[calc(100vh-48px)] bg-[#070b14] border-t-2 border-x-2 border-blue-600/60 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Close Button Header */}
             <div className="absolute top-4 right-6 z-30">

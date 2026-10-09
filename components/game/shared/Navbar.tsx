@@ -86,39 +86,39 @@ export default function GameNavbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-stretch justify-between h-14 bg-lf-bg-raised text-lf-text transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex items-stretch justify-between h-12 bg-lf-bg-raised text-lf-text transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
         {/* Left: settings, home, ruleset */}
         <div className="flex items-stretch">
           <SettingsDrawer>
             <button
               aria-label="Settings"
-              className="m-[5px] flex w-[69px] cursor-pointer items-center justify-center rounded-lf-md transition-colors hover:bg-lf-surface-hover data-[state=open]:bg-lf-primary"
+              className="m-1 flex w-[58px] cursor-pointer items-center justify-center rounded-lf-md transition-colors hover:bg-lf-surface-hover data-[state=open]:bg-lf-primary"
             >
-              <Icon name="settings" size={26} />
+              <Icon name="settings" size={22} />
             </button>
           </SettingsDrawer>
-          <Link href="/" aria-label="Home" className="flex w-20 items-center justify-center transition-colors hover:bg-lf-surface-hover">
-            <Icon name="home" size={26} />
+          <Link href="/" aria-label="Home" className="flex w-[68px] items-center justify-center transition-colors hover:bg-lf-surface-hover">
+            <Icon name="home" size={22} />
           </Link>
           {/* Ruleset: Lanify hanya punya mania, jadi satu ikon terpilih */}
-          <div className="relative flex w-14 items-center justify-center" aria-label="Mania">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-lf-accent text-lf-bg">
-              <Icon name="ruleset-mania" size={28} title="Mania" />
+          <div className="relative flex w-12 items-center justify-center" aria-label="Mania">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-lf-accent text-lf-bg">
+              <Icon name="ruleset-mania" size={24} title="Mania" />
             </span>
-            <span className="absolute bottom-[3px] h-[3px] w-[25px] rounded-full bg-lf-text" />
+            <span className="absolute bottom-[3px] h-[2px] w-[21px] rounded-full bg-lf-text" />
           </div>
         </div>
 
         {/* Right: chat, globe, music, user, clock, notifications */}
-        <div className="flex items-stretch rounded-bl-[14px] bg-lf-surface pl-2">
-          <button disabled title="Segera" aria-label="Chat" className="flex w-14 items-center justify-center text-lf-text-dim">
-            <Icon name="chat" size={26} />
+        <div className="flex items-stretch">
+          <button disabled title="Segera" aria-label="Chat" className="flex w-12 items-center justify-center text-lf-text-dim">
+            <Icon name="chat" size={22} />
           </button>
-          <button disabled title="Segera" aria-label="Online" className="flex w-14 items-center justify-center text-lf-text-dim">
-            <Icon name="globe" size={26} />
+          <button disabled title="Segera" aria-label="Online" className="flex w-12 items-center justify-center text-lf-text-dim">
+            <Icon name="globe" size={22} />
           </button>
           <MusicPlayer />
-          <div className="mx-1 my-3 w-0.5 rounded-full bg-lf-text" />
+          <div className="mx-1 my-2.5 w-0.5 rounded-full bg-lf-text" />
 
           {/* User: tombol dropdown login/profil */}
           <div className="relative flex" ref={dropdownRef}>
@@ -126,10 +126,10 @@ export default function GameNavbar() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex cursor-pointer items-center gap-3 px-3 transition-colors hover:bg-lf-surface-hover"
             >
-              <span className="max-w-44 truncate text-[17px] font-game-body text-lf-text">
+              <span className="max-w-44 truncate text-[15px] font-game-body text-lf-text">
                 {isGuest ? "Guest" : user?.username}
               </span>
-              <span className="flex h-[43px] w-[43px] items-center justify-center overflow-hidden rounded-lf-sm bg-lf-bg">
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lf-sm bg-lf-bg">
                 {user?.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={user.avatarUrl} alt={user.username} className="h-full w-full object-cover" />
@@ -289,8 +289,8 @@ export default function GameNavbar() {
             </AnimatePresence>
           </div>
           <TopBarClock />
-          <button disabled title="Segera" aria-label="Notifications" className="flex w-14 items-center justify-center text-lf-text-dim">
-            <Icon name="bell" size={26} />
+          <button disabled title="Segera" aria-label="Notifications" className="flex w-12 items-center justify-center text-lf-text-dim">
+            <Icon name="bell" size={22} />
           </button>
         </div>
       </nav>

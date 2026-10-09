@@ -20,7 +20,7 @@ export default function GameLayout({
     <div className="h-full bg-lanify-bg text-lanify-text font-game-body flex flex-col overflow-hidden">
       {!hideNavbar && <GameNavbar />}
       
-      <main className={`flex-1 flex flex-col min-h-0 relative ${!hideNavbar ? "mt-14" : ""}`}>
+      <main className={`flex-1 flex flex-col min-h-0 relative ${!hideNavbar ? "mt-12" : ""}`}>
         <AnimatePresence mode="popLayout">
           <motion.div
             key={pathname}
