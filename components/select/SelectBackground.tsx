@@ -17,7 +17,7 @@ export default function SelectBackground({ coverUrl }: { coverUrl: string | null
           style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
         />
       </AnimatePresence>
-      <div className="absolute inset-y-0 left-0 w-[58%] bg-linear-to-r from-black/60 via-black/30 to-transparent" />
+      <div className="absolute inset-y-0 left-0 w-[58%] bg-linear-to-r from-black/30 via-black/10 to-transparent" />
     </div>
   );
 }

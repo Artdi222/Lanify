@@ -1,0 +1,163 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Lock, Trophy } from "lucide-react";
+import type { Beatmap } from "@/types/beatmap";
+import type { LeaderboardEntry } from "@/types/game";
+import { formatDuration } from "@/types/game";
+import { getLeaderboard } from "@/lib/api/leaderboard";
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useGameStore } from "@/lib/store/useGameStore";
+import { shortRank } from "@/lib/select/format";
+import { cn } from "@/lib/utils";
+import ScoreCard from "./ScoreCard";
+import SplitSelect from "./SplitSelect";
+
+type Tab = "details" | "ranking";
+type Scope = "GLOBAL" | "LOCAL";
+
+const STALE_MS = 5 * 60 * 1000;
+/** Setiap baris bergeser 13 px ke kiri (diagonal ala lazer); dijepit supaya kartu jauh tidak keluar layar. */
+const SHIFT_PER_ROW = 13;
+const MAX_SHIFT_ROWS = 9;
+
+function useLeaderboard(beatmapId: string, scope: Scope, token: string | null) {
+  const key = `${beatmapId}-${scope}-${token || ""}`;
+  const cached = useGameStore((s) => s.leaderboardCache[key]);
+  const setCache = useGameStore((s) => s.setLeaderboardCache);
+
+  useEffect(() => {
+    if (cached && Date.now() - cached.timestamp <= STALE_MS) return;
+    let alive = true;
+    getLeaderboard(beatmapId, scope, token)
+      .then((data) => alive && setCache(key, data))
+      .catch(() => alive && setCache(key, []));
+    return () => {
+      alive = false;
+    };
+  }, [beatmapId, scope, token, key, cached, setCache]);
+
+  return { entries: cached?.entries ?? [], loading: !cached };
+}
+
+function TabButton({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn("relative cursor-pointer px-1 pb-1 font-game-display text-[17px] font-semibold transition-colors", active ? "text-white" : "text-white/55 hover:text-white/80")}
+    >
+      {children}
+      <span className={cn("absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-white transition-opacity", active ? "opacity-100" : "opacity-0")} />
+    </button>
+  );
+}
+
+function Details({ beatmap }: { beatmap: Beatmap }) {
+  const rows: [string, string][] = [
+    ["Mapper", beatmap.creator],
+    ["Difficulty", `[${beatmap.keyCount}K] ${beatmap.difficultyName}`],
+    ["Length", formatDuration(beatmap.lengthSeconds)],
+    ["BPM", String(Math.round(beatmap.bpm))],
+    ["Notes", beatmap.noteCount.toLocaleString("en-US")],
+    ["Hold Notes", beatmap.holdCount.toLocaleString("en-US")],
+    ["Overall Difficulty", beatmap.od.toFixed(1)],
+    ["HP Drain", beatmap.hp.toFixed(1)],
+  ];
+  return (
+    <dl className="mx-[22px] mt-3 max-w-[560px] rounded-xl bg-select-bar/85 p-4">
+      {rows.map(([k, v]) => (
+        <div key={k} className="flex justify-between border-b border-white/5 py-2 font-game-display text-[16px] last:border-0">
+          <dt className="text-white/60">{k}</dt>
+          <dd className="font-semibold text-white">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Message({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="mx-[22px] mt-6 flex max-w-[420px] flex-col items-center gap-3 rounded-xl bg-select-bar/80 px-6 py-8 text-center font-game-display text-[16px] text-white/80">
+      {icon}
+      {children}
+    </div>
+  );
+}
+
+export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
+  const router = useRouter();
+  const { isGuest, token, user } = useAuthStore();
+  const [tab, setTab] = useState<Tab>("ranking");
+  const [scope, setScope] = useState<Scope>("GLOBAL");
+  const { entries, loading } = useLeaderboard(beatmap.id, scope, token);
+
+  const openScore = (entry: LeaderboardEntry) => {
+    useGameStore.getState().setViewingScore(entry, beatmap);
+    router.push("/result");
+  };
+
+  const mine = !isGuest && user ? entries.find((e) => e.userId === user.id) : undefined;
+
+  return (
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center gap-6 px-[22px] pt-[9px]">
+        <div className="flex gap-6 pb-1">
+          <TabButton active={tab === "details"} onClick={() => setTab("details")}>Details</TabButton>
+          <TabButton active={tab === "ranking"} onClick={() => setTab("ranking")}>Ranking</TabButton>
+        </div>
+        {tab === "ranking" && (
+          <div className="ml-auto flex items-center gap-3">
+            <SplitSelect<Scope>
+              label="Scope"
+              value={scope}
+              options={[{ label: "Global", value: "GLOBAL" }, { label: "Local", value: "LOCAL" }]}
+              onChange={setScope}
+              className="w-[200px]"
+            />
+            <SplitSelect<"SCORE"> label="Sort" value="SCORE" options={[{ label: "Score", value: "SCORE" }]} onChange={() => {}} disabled dim className="w-[198px]" />
+          </div>
+        )}
+      </div>
+
+      {tab === "details" ? (
+        <Details beatmap={beatmap} />
+      ) : isGuest ? (
+        <Message icon={<Lock className="h-6 w-6 text-white/50" aria-hidden />}>
+          Login to see rankings
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))}
+            className="cursor-pointer rounded-lg bg-select-tile px-5 py-2 font-semibold text-white transition-[filter] hover:brightness-125"
+          >
+            Sign In
+          </button>
+        </Message>
+      ) : loading ? (
+        <div className="mx-[22px] mt-10 h-6 w-6 animate-spin rounded-full border-2 border-white/70 border-t-transparent" role="status" aria-label="Loading scores" />
+      ) : entries.length === 0 ? (
+        <Message icon={<Trophy className="h-6 w-6 text-white/40" aria-hidden />}>No scores yet. Be the first to play!</Message>
+      ) : (
+        <div className={cn("no-scrollbar mt-[10px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden", mine ? "pb-[150px]" : "pb-6")}>
+          {entries.slice(0, 50).map((entry, i) => (
+            <div key={entry.id} className="mb-1 h-[68px]" style={{ transform: `translateX(${60 - SHIFT_PER_ROW * Math.min(i, MAX_SHIFT_ROWS)}px)` }}>
+              <ScoreCard entry={entry} onClick={() => openScore(entry)} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "ranking" && mine && !isGuest && (
+        <div className="absolute inset-x-0 bottom-0 h-[141px] rounded-tr-[14px] bg-select-band/90" style={{ width: "min(850px, 100%)" }}>
+          <span className="absolute left-[49px] top-2 font-game-display text-[14px] text-white/75">
+            Personal Best ({shortRank(mine.position)} of {entries.length.toLocaleString("en-US")})
+          </span>
+          <div className="absolute left-[14px] top-[28px]">
+            <ScoreCard entry={mine} variant="best" rankLabel={shortRank(mine.position)} onClick={() => openScore(mine)} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

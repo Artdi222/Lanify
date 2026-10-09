@@ -157,15 +157,6 @@ export default function SongSelectPage() {
     changeSelection(random);
   };
 
-  const allDiffs = useMemo(() => {
-    if (!selectedBeatmap) return [];
-    return beatmaps.filter(
-      (b) =>
-        b.title === selectedBeatmap.title &&
-        b.artist === selectedBeatmap.artist,
-    );
-  }, [selectedBeatmap, beatmaps]);
-
   // --- Keyboard Navigation Logic ---
   const groupedCategories = useMemo<GroupCategory[]>(() => {
     const lowerSearch = search.toLowerCase();
@@ -373,7 +364,7 @@ export default function SongSelectPage() {
           <>
             {/* Kiri: info beatmap + leaderboard */}
             <div className="absolute inset-y-0 left-0 flex w-[min(890px,48vw)] min-w-[520px] flex-col">
-              <BeatmapDetail beatmap={selectedBeatmap} allDiffs={allDiffs} />
+              <BeatmapDetail beatmap={selectedBeatmap} />
             </div>
 
             {/* Kanan: pencarian + daftar, kartu bleed sampai tepi kanan */}
