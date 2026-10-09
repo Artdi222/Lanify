@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ChevronLeft, Settings, Shuffle, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LogoButton } from "@/components/menu/LogoButton";
 
 /** Footer layar select: ukuran dan warna dari foto (docs/ui-spec/song-select.md, bagian Footer). */
 
@@ -106,13 +105,17 @@ export default function SelectFooter({
       </div>
 
       {/* Logo = tombol Play, terpotong di pojok kanan-bawah seperti lazer */}
-      <LogoButton
+      <button
+        type="button"
         aria-label="Play"
         disabled={!canPlay}
         onClick={onPlay}
-        circleClassName="h-[330px] w-[330px] text-6xl sm:h-[330px] sm:w-[330px] sm:text-7xl"
-        className="absolute -bottom-[175px] -right-[115px] z-30 disabled:cursor-not-allowed disabled:opacity-60"
-      />
+        className="group absolute -bottom-[150px] -right-[110px] z-30 h-[330px] w-[330px] cursor-pointer focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className="absolute inset-0 rounded-full border-[6px] border-white bg-linear-to-br from-lf-primary-hover to-lf-primary shadow-lf-glow transition-transform duration-200 ease-lf-out group-hover:scale-105 group-active:scale-95" />
+        {/* Hanya kuadran kiri-atas yang terlihat, jadi label ditaruh di situ */}
+        <span className="absolute left-[34px] top-[58px] font-game-display text-[54px] font-bold leading-none tracking-wide text-white drop-shadow">Lanify</span>
+      </button>
     </>
   );
 }

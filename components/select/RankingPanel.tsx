@@ -82,7 +82,7 @@ function Details({ beatmap }: { beatmap: Beatmap }) {
 
 function Message({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="mx-[22px] mt-6 flex max-w-[420px] flex-col items-center gap-3 rounded-xl bg-select-bar/80 px-6 py-8 text-center font-game-display text-[16px] text-white/80">
+    <div className="mx-[22px] mt-6 flex max-w-[820px] flex-col items-center gap-4 rounded-2xl bg-select-bar/85 px-8 py-14 text-center font-game-display text-[20px] font-semibold text-white/85">
       {icon}
       {children}
     </div>
@@ -141,7 +141,7 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
       {tab === "details" ? (
         <Details beatmap={beatmap} />
       ) : isGuest ? (
-        <Message icon={<Lock className="h-6 w-6 text-white/50" aria-hidden />}>
+        <Message icon={<Lock className="h-10 w-10 text-white/50" aria-hidden />}>
           Login to see rankings
           <button
             type="button"
@@ -154,7 +154,7 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
       ) : loading ? (
         <div className="mx-[22px] mt-10 h-6 w-6 animate-spin rounded-full border-2 border-white/70 border-t-transparent" role="status" aria-label="Loading scores" />
       ) : entries.length === 0 ? (
-        <Message icon={<Trophy className="h-6 w-6 text-white/40" aria-hidden />}>No scores yet. Be the first to play!</Message>
+        <Message icon={<Trophy className="h-10 w-10 text-white/40" aria-hidden />}>No scores yet. Be the first to play!</Message>
       ) : (
         <div className={cn("no-scrollbar mt-[10px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden", mine ? "pb-[150px]" : "pb-6")}>
           {entries.slice(0, 50).map((entry, i) => (

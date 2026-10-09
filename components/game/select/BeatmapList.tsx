@@ -201,7 +201,7 @@ export default function BeatmapList({
               {virtualizer.getVirtualItems().map((v) => {
                 const row = rows[v.index];
                 return (
-                  <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute left-0 top-0 w-full pb-1.5" style={{ transform: `translateY(${v.start}px)` }}>
+                  <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute left-0 top-0 w-full pb-1.5 transition-transform duration-300 ease-out" style={{ transform: `translateY(${v.start}px)` }}>
                     <div className="transition-[margin-left] duration-300 ease-out" style={{ marginLeft: offsets[v.index] }}>
                       {row.kind === "header" ? (
                         <HeaderCard label={row.label} count={row.count} collapsed={row.collapsed} onClick={() => setCollapsedCategories((s) => toggle(s, row.label))} />

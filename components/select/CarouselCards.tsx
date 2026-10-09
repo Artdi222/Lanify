@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Beatmap } from "@/types/beatmap";
 import { difficultyColor, starTextColor } from "@/lib/select/difficultyColor";
 import { cn } from "@/lib/utils";
+import { Icon } from "@/components/ui/icons/Icon";
 
 /** Kartu daftar beatmap (spec: docs/ui-spec/song-select.md, "Kanan: daftar beatmap"). */
 
@@ -15,9 +16,9 @@ const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   pending: { label: "PENDING", bg: "#ffcc22", fg: "#2a2000" },
 };
 
-/** Cincin ruleset kecil (lingkaran putih bergaris tebal) di samping pill status dan di tile difficulty. */
-function Ring({ className, color = "#fff" }: { className?: string; color?: string }) {
-  return <span aria-hidden className={cn("inline-block h-4 w-4 shrink-0 rounded-full border-[3px]", className)} style={{ borderColor: color }} />;
+/** Ikon ruleset mania di samping pill status dan di tile difficulty (lazer menampilkan ikon ruleset di sini). */
+function Ring({ size = 18, color = "#fff" }: { size?: number; color?: string }) {
+  return <Icon name="ruleset-mania" size={size} strokeWidth={2.4} className="shrink-0" style={{ color }} />;
 }
 
 /** 10 slot: ★ penuh sebanyak floor(SR), satu ★ redup bila pecahan >= .25, sisanya titik. */
@@ -130,7 +131,7 @@ export function DiffCard({ diff, selected, onClick }: { diff: Beatmap; selected:
       }}
     >
       <span className="flex w-[30px] shrink-0 items-center justify-center" style={{ backgroundColor: color }}>
-        <Ring className="h-[15px] w-[15px]" color="rgb(0 0 0 / 0.55)" />
+        <Ring size={18} color="rgb(0 0 0 / 0.6)" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 pl-3 pr-4">
         <span className="truncate leading-none">
