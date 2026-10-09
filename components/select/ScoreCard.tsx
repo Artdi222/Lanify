@@ -89,14 +89,14 @@ export default function ScoreCard({
         <span className="mt-1 truncate font-game-display text-[20px] font-semibold leading-tight text-white">{entry.username}</span>
       </div>
 
-      <div className="absolute top-0 flex h-full items-center gap-7" style={{ left: 388 }}>
+      <div className="absolute top-0 flex h-full items-center gap-7" style={{ left: 372 }}>
         <Stat label="Max combo" valueClass={fullCombo ? "text-select-fc" : undefined}>
           {entry.maxCombo}x
         </Stat>
         <Stat label="Accuracy">{entry.accuracy.toFixed(2)}%</Stat>
       </div>
 
-      <div className="absolute top-0 flex h-full w-[190px] flex-col items-end justify-center" style={{ left: 565 }}>
+      <div className="absolute top-0 flex h-full w-[190px] flex-col items-end justify-center" style={{ left: 538 }}>
         <span className="font-game-display text-[30px] font-light leading-none tabular-nums text-white">{entry.score.toLocaleString("en-US")}</span>
         <span className="mt-1 flex items-center gap-2">
           {entry.pp ? <span className="font-game-display text-[12px] text-white/70">{Math.round(entry.pp)}pp</span> : null}

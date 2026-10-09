@@ -186,7 +186,7 @@ export default function BeatmapList({
 
       {/* ── Daftar (virtualized) ─────────────────────────── */}
       <div className="relative z-10 mt-2 min-h-0 flex-1">
-        <div ref={scrollRef} className="no-scrollbar h-full overflow-y-auto overflow-x-hidden pb-[40vh] pt-[30vh]">
+        <div ref={scrollRef} className="no-scrollbar h-full overflow-y-auto overflow-x-hidden pb-[40vh] pt-[12vh]">
           {loading ? (
             <div className="flex h-48 items-center justify-center">
               <div className="h-7 w-7 animate-spin rounded-full border-4 border-white border-t-transparent" role="status" aria-label="Loading beatmaps" />
