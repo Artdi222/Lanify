@@ -13,6 +13,7 @@ import { Settings, ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
 
 import GameSlider from "./GameSlider";
+import OffsetWizard from "./OffsetWizard";
 
 export default function SettingsDrawer({ children }: { children?: React.ReactNode }) {
   const settings = useSettingsStore();
@@ -97,6 +98,7 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
                 suffix="ms"
                 onChange={settings.setGlobalOffset}
               />
+              <OffsetWizard />
             </div>
           </section>
 
