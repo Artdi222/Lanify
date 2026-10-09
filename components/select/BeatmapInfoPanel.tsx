@@ -30,7 +30,7 @@ function Stat({ label, value, ratio, color, width }: { label: string; value: str
 
 function Meta({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <span className="flex items-center gap-2.5 font-game-display text-[17px] text-white">
+    <span className="flex items-center gap-2.5 font-game-display text-[17px] font-medium text-white">
       <span className="text-white/90">{icon}</span>
       {children}
     </span>
@@ -44,13 +44,13 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
 
   return (
     <div className="shrink-0">
-      <div className="bg-[#1f2029]/70 px-[22px] pb-3 pt-[18px]">
+      <div className="bg-[#1f2029]/55 px-[22px] pb-3 pt-[18px]">
         <span className="inline-flex h-[19px] items-center rounded-full px-2.5 font-game-display text-[11px] font-bold tracking-wide" style={{ backgroundColor: status.bg, color: status.fg }}>
           {status.label}
         </span>
-        <h1 className="mt-2 line-clamp-1 font-game-display text-[32px] font-normal leading-[1.15] text-white">{beatmap.title}</h1>
+        <h1 className="mt-2 line-clamp-1 font-game-display text-[32px] font-light leading-[1.15] text-white">{beatmap.title}</h1>
         <p className="line-clamp-1 font-game-display text-[18px] font-semibold leading-tight text-white">{beatmap.artist}</p>
-        <div className="mt-3 flex items-center gap-8">
+        <div className="mt-3 flex items-center gap-9">
           <Meta icon={<Play className="h-[18px] w-[18px]" aria-hidden />}>{n(beatmap.playCount)}</Meta>
           <Meta icon={<Heart className="h-[22px] w-[22px]" aria-hidden />}>{n(beatmap.favoriteCount)}</Meta>
           <Meta icon={<Clock className="h-[22px] w-[22px]" aria-hidden />}>{formatDuration(beatmap.lengthSeconds).padStart(5, "0")}</Meta>
@@ -69,7 +69,7 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
         <span className="line-clamp-1 font-game-display text-[17px] font-semibold" style={{ color }}>
           [{beatmap.keyCount}K] {beatmap.difficultyName}
         </span>
-        <span className="shrink-0 font-game-display text-[17px] text-white/55">mapped by</span>
+        <span className="shrink-0 font-game-display text-[17px]" style={{ color, opacity: 0.8 }}>mapped by</span>
         <span className="shrink-0 font-game-display text-[17px] font-semibold text-[#8fd3ff]">{beatmap.creator}</span>
       </div>
 

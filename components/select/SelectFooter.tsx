@@ -13,8 +13,8 @@ function BackButton() {
       href="/"
       className="group absolute bottom-[18px] left-[22px] z-10 flex h-16 w-[328px] -skew-x-[10deg] items-center justify-center rounded-lg border border-white/25 bg-select-back shadow-lg transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]"
     >
-      <span className="flex skew-x-[10deg] items-center gap-5 font-game-display text-xl text-white">
-        <ChevronLeft className="h-6 w-6" strokeWidth={3} aria-hidden />
+      <span className="flex skew-x-[10deg] items-center gap-5 pr-[22px] font-game-display text-xl text-white">
+        <ChevronLeft className="h-7 w-7" strokeWidth={3.5} aria-hidden />
         Back
       </span>
     </Link>
@@ -43,13 +43,13 @@ function Tile({ label, icon, bg, line, left, active, disabled, title, onClick }:
       aria-pressed={active}
       title={title}
       className={cn(
-        "group absolute bottom-0 h-[85px] w-40 -skew-x-[10deg] cursor-pointer rounded-t-xl text-white shadow-lg transition-[transform,filter,background-color] duration-150",
+        "group absolute bottom-0 flex h-[85px] w-40 -skew-x-[10deg] cursor-pointer items-start justify-center rounded-t-xl text-white shadow-lg transition-[transform,filter,background-color] duration-150",
         disabled ? "cursor-not-allowed opacity-50" : "hover:-translate-y-1.5 hover:brightness-125",
         active && "-translate-y-1.5 brightness-125",
       )}
       style={{ left, backgroundColor: active ? "var(--color-select-options-icon)" : bg }}
     >
-      <span className="flex skew-x-[10deg] flex-col items-center gap-1 pt-3">
+      <span className="flex skew-x-[10deg] flex-col items-center gap-[13px] pt-[11px]">
         <span className="h-6 w-6">{icon}</span>
         <span className="font-game-display text-[17px] leading-none">{label}</span>
       </span>
