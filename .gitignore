@@ -43,3 +43,6 @@ next-env.d.ts
 # Agent
 AGENTS.md
 CLAUDE.md
+
+# build verifikasi terpisah dari next dev
+/.next-verify/
