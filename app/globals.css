@@ -50,6 +50,60 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
+/* ─── Lanify design system (Fase 2) ───
+   Token baru, additive: layar lama tetap memakai token di atas sampai dipindah di Fase 3.
+   Referensi: docs/design-system.md */
+@theme {
+  /* Palet biru/cyan */
+  --color-lf-bg: #060b14;
+  --color-lf-bg-raised: #0a1424;
+  --color-lf-surface: #0f1c30;
+  --color-lf-surface-hover: #15284a;
+  --color-lf-border: #1f3a66;
+  --color-lf-primary: #2563eb;
+  --color-lf-primary-hover: #3b82f6;
+  --color-lf-accent: #00e5ff;
+  --color-lf-text: #f1f6ff;
+  --color-lf-text-muted: #8fa3c4;
+  --color-lf-text-dim: #5a6e8f;
+  --color-lf-success: #22e39a;
+  --color-lf-warning: #ffc53d;
+  --color-lf-danger: #ff4d5e;
+
+  /* Radius & bayangan */
+  --radius-lf-sm: 4px;
+  --radius-lf-md: 8px;
+  --radius-lf-lg: 14px;
+  --shadow-lf-panel: 0 8px 24px rgb(0 0 0 / 0.45);
+  --shadow-lf-glow: 0 0 16px rgb(0 229 255 / 0.35);
+
+  /* Tipografi */
+  --text-lf-caption: 0.75rem;
+  --text-lf-body: 0.875rem;
+  --text-lf-title: 1.25rem;
+  --text-lf-display: 2.5rem;
+
+  /* Animasi */
+  --ease-lf-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-lf-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+:root {
+  --lf-dur-fast: 120ms;
+  --lf-dur-base: 200ms;
+  --lf-dur-slow: 400ms;
+  --lf-skew: -12deg;
+}
+
+/* Animasi dekoratif tak berujung (kelas .lf-ambient) berhenti saat tab tidak aktif,
+   saat gameplay, atau bila reduced motion (lihat lib/motion/ambientMotion.ts). */
+:root[data-lf-motion="paused"] .lf-ambient,
+:root[data-lf-motion="paused"] .lf-ambient *,
+:root[data-lf-motion="paused"] .animate-breathe,
+:root[data-lf-motion="paused"] [class*="animate-music-bar-"] {
+  animation-play-state: paused !important;
+}
+
 :root {
   --background: oklch(0.98 0.01 240);
   --foreground: oklch(0.2 0.05 240);

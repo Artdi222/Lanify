@@ -15,6 +15,7 @@ import { useState } from "react";
 import GameSlider from "./GameSlider";
 import OffsetWizard from "./OffsetWizard";
 import { FPS_LIMIT_OPTIONS, RENDER_SCALE_OPTIONS } from "@/lib/game/RenderSettings";
+import { REDUCE_MOTION_OPTIONS } from "@/lib/motion/ambientMotion";
 
 export default function SettingsDrawer({ children }: { children?: React.ReactNode }) {
   const settings = useSettingsStore();
@@ -123,6 +124,12 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
                 onChange={settings.setRenderScale}
               />
               <OptionRow
+                label="Reduce Motion"
+                options={REDUCE_MOTION_OPTIONS}
+                value={settings.reduceMotion ?? "system"}
+                onChange={settings.setReduceMotion}
+              />
+              <OptionRow
                 label="Anti-aliasing"
                 options={[
                   { label: "Off", value: 0 },
@@ -210,16 +217,16 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
 }
 
 
-function OptionRow({
+function OptionRow<T extends string | number>({
   label,
   options,
   value,
   onChange,
 }: {
   label: string;
-  options: readonly { label: string; value: number }[];
-  value: number;
-  onChange: (value: number) => void;
+  options: readonly { label: string; value: T }[];
+  value: T;
+  onChange: (value: T) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">

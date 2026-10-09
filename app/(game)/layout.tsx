@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import GameNavbar from "@/components/game/shared/Navbar";
+import AmbientMotionController from "@/components/ui/AmbientMotionController";
 
 export default function GameLayout({
   children,
@@ -15,6 +16,7 @@ export default function GameLayout({
   const hideNavbar = isPlayPage || isResultPage;
 
   return (
+    <AmbientMotionController>
     <div className="h-full bg-lanify-bg text-lanify-text font-game-body flex flex-col overflow-hidden">
       {!hideNavbar && <GameNavbar />}
       
@@ -33,5 +35,6 @@ export default function GameLayout({
         </AnimatePresence>
       </main>
     </div>
+    </AmbientMotionController>
   );
 }

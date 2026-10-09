@@ -142,6 +142,8 @@ export interface GameSettings {
   renderScale: number;
   /** Frame cap in fps; 0 = unlimited. */
   maxFps: number;
+  /** Animasi dekoratif: 'system' ikut prefers-reduced-motion. */
+  reduceMotion: 'system' | 'on' | 'off';
   keybinds: {
     '4k': [string, string, string, string];
     '7k': [string, string, string, string, string, string, string];
@@ -165,6 +167,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   antialias: true,
   renderScale: 0,
   maxFps: 0,
+  reduceMotion: 'system',
   keybinds: {
     '4k': ['d', 'f', 'j', 'k'],
     '7k': ['s', 'd', 'f', ' ', 'j', 'k', 'l'],

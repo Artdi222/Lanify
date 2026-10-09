@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, LogIn, LogOut, Settings as SettingsIcon } from "lucide-react";
 import SettingsDrawer from "@/components/game/shared/SettingsDrawer";
+import { SkewedPanel } from "@/components/ui/SkewedPanel";
+import { useAmbientPaused } from "@/components/ui/AmbientMotionController";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
@@ -23,6 +25,7 @@ export default function MainMenuPage() {
   const [mounted, setMounted] = useState(false);
   const [isMenuExpanded, setIsMenuExpanded] = useState(false);
   const [tip, setTip] = useState("");
+  const ambientPaused = useAmbientPaused();
   const [particles, setParticles] = useState<Array<{
     width: number;
     height: number;
@@ -100,7 +103,7 @@ export default function MainMenuPage() {
 
       {/* Subtle animated particles - now crisp dots instead of blur */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {particles.map((p, i) => (
+        {!ambientPaused && particles.map((p, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full bg-blue-400/20"
@@ -163,48 +166,29 @@ export default function MainMenuPage() {
               >
                 {/* Settings */}
                 <SettingsDrawer>
-                  <button 
-                    className="flex flex-col items-center justify-center w-40 h-24 sm:w-52 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 -ml-12 pl-12 sm:pl-16"
-                  >
-                    <div className="flex flex-col items-center gap-2 skew-x-12">
-                      <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Settings</span>
-                    </div>
-                  </button>
+                  <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-blue-900 -ml-12 pl-12 sm:pl-16">
+                    <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Settings</span>
+                  </SkewedPanel>
                 </SettingsDrawer>
 
                 {/* PLAY BUTTON - CLEAN AND BOLD */}
-                <button
-                  onClick={() => router.push("/select")}
-                  className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-blue-600 hover:bg-blue-500 border-y-2 border-r-2 border-blue-500 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12"
-                >
-                  <div className="flex flex-col items-center gap-2 skew-x-12">
-                    <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] sm:text-sm font-game-display font-bold text-white uppercase tracking-wider">Play</span>
-                  </div>
-                </button>
+                <SkewedPanel onClick={() => router.push("/select")} variant="primary" className="w-32 h-24 sm:w-40 sm:h-32">
+                  <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white text-white group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-white">Play</span>
+                </SkewedPanel>
 
                 {/* Login / Logout */}
                 {isGuest ? (
-                  <button
-                    onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))}
-                    className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900/60 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 pr-2"
-                  >
-                    <div className="flex flex-col items-center gap-2 skew-x-12">
-                      <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Log In</span>
-                    </div>
-                  </button>
+                  <SkewedPanel onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
+                    <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log In</span>
+                  </SkewedPanel>
                 ) : (
-                  <button
-                    onClick={() => logout()}
-                    className="flex flex-col items-center justify-center w-32 h-24 sm:w-40 sm:h-32 bg-[#0a1424] border-y-2 border-r-2 border-blue-500 hover:bg-blue-900/60 transition-colors cursor-pointer group shadow-lg shrink-0 -skew-x-12 pr-2"
-                  >
-                    <div className="flex flex-col items-center gap-2 skew-x-12">
-                      <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                      <span className="text-[10px] sm:text-sm font-game-display font-bold text-blue-400 group-hover:text-white uppercase tracking-wider">Log Out</span>
-                    </div>
-                  </button>
+                  <SkewedPanel onClick={() => logout()} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
+                    <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
+                    <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log Out</span>
+                  </SkewedPanel>
                 )}
               </motion.div>
             )}
