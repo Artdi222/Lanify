@@ -274,7 +274,7 @@ export default function BeatmapList({
               {category.label && (
                 <button
                   onClick={() => toggleCategory(category.label)}
-                  className="relative z-10 w-[96%] ml-auto mr-0 px-6 py-3 mb-3 bg-[#111122]/95 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center gap-4 text-left transition-all hover:bg-[#1a1a2e] active:scale-[0.98] group/header"
+                  className="relative z-10 w-[96%] ml-auto mr-0 px-6 py-3 mb-3 bg-[#111122]/95 border border-white/10 shadow-2xl flex items-center gap-4 text-left transition-all hover:bg-[#1a1a2e] active:scale-[0.98] group/header"
                   style={{ borderRadius: "12px 0 0 12px" }}
                 >
                   <div className={`w-1.5 h-6 rounded-full transition-colors ${collapsedCategories.has(category.label) ? "bg-white/20" : "bg-cyan-500"}`} />
@@ -533,7 +533,7 @@ export default function BeatmapList({
                                         key={diff.id}
                                         id={`beatmap-${diff.id}`}
                                         onClick={() => onSelectBeatmap(diff)}
-                                        className={`flex items-stretch text-left transition-all duration-200 cursor-pointer overflow-hidden group backdrop-blur-md
+                                        className={`flex items-stretch text-left transition-all duration-200 cursor-pointer overflow-hidden group
                                           ${isSel ? "w-full shadow-[0_0_15px_rgba(255,255,255,0.3)]" : "w-[95%] ml-auto hover:brightness-110 shadow-lg opacity-85"}`}
                                         style={{
                                           height: isSel ? "62px" : "52px",
