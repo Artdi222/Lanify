@@ -117,7 +117,7 @@ export function DiffCard({ diff, selected, onClick }: { diff: Beatmap; selected:
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex h-[58px] w-full cursor-pointer items-stretch overflow-hidden rounded-l-[10px] text-left transition-[filter,box-shadow] duration-200",
+        "animate-in fade-in-0 slide-in-from-right-6 duration-300 relative flex h-[58px] w-full cursor-pointer items-stretch overflow-hidden rounded-l-[10px] text-left transition-[filter,box-shadow]",
         selected ? "shadow-[0_0_16px_var(--glow)]" : "hover:brightness-110",
       )}
       style={{

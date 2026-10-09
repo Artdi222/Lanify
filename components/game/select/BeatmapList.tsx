@@ -111,9 +111,22 @@ export default function BeatmapList({
   );
   const offsets = useMemo(() => rowOffsets(rows.map((r) => ({ kind: r.kind, selected: r.kind === "header" ? false : r.selected }))), [rows]);
 
+  // Penanda scroll putih tipis di tepi kanan (foto). Hanya indikator; scroll lewat roda/trackpad/keyboard.
+  const [thumb, setThumb] = useState({ top: 0, height: 0 });
+  const updateThumb = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollTop, clientHeight, scrollHeight } = el;
+    if (scrollHeight <= clientHeight + 1) return setThumb((t) => (t.height === 0 ? t : { top: 0, height: 0 }));
+    const height = Math.max(40, (clientHeight * clientHeight) / scrollHeight);
+    const top = (scrollTop / (scrollHeight - clientHeight)) * (clientHeight - height);
+    setThumb({ top, height });
+  };
+
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
+    onChange: updateThumb,
     estimateSize: (i) => ROW_ESTIMATE[rows[i].kind],
     getItemKey: (i) => rows[i].key,
     overscan: 8,
@@ -125,8 +138,10 @@ export default function BeatmapList({
     if (!selectedId || lastScrolledId.current === selectedId) return;
     const idx = selectedRowIndex(rows);
     if (idx < 0) return;
+    // Scroll pertama (restore seleksi saat halaman dibuka) instan; berikutnya halus.
+    const first = lastScrolledId.current === null;
     lastScrolledId.current = selectedId;
-    virtualizer.scrollToIndex(idx, { align: "center" });
+    virtualizer.scrollToIndex(idx, { align: "center", behavior: first ? "auto" : "smooth" });
   }, [selectedId, rows, virtualizer]);
 
   const matchCount = groupedCategories.reduce((acc, cat) => acc + cat.items.length, 0);
@@ -170,49 +185,52 @@ export default function BeatmapList({
       </div>
 
       {/* ── Daftar (virtualized) ─────────────────────────── */}
-      <div ref={scrollRef} className="no-scrollbar relative z-10 mt-2 min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-[40vh] pt-1">
-        {loading ? (
-          <div className="flex h-48 items-center justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-4 border-white border-t-transparent" role="status" aria-label="Loading beatmaps" />
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center text-white/60">
-            <Music className="mb-3 h-10 w-10 opacity-60" aria-hidden />
-            <p className="font-game-display text-[17px]">No results</p>
-          </div>
-        ) : (
-          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
-            {virtualizer.getVirtualItems().map((v) => {
-              const row = rows[v.index];
-              return (
-                <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute left-0 top-0 w-full pb-1.5" style={{ transform: `translateY(${v.start}px)` }}>
-                  <div className="transition-[margin-left] duration-300 ease-out" style={{ marginLeft: offsets[v.index] }}>
-                    {row.kind === "header" ? (
-                      <HeaderCard label={row.label} count={row.count} collapsed={row.collapsed} onClick={() => setCollapsedCategories((s) => toggle(s, row.label))} />
-                    ) : row.kind === "diff" ? (
-                      <DiffCard diff={row.diff} selected={row.selected} onClick={() => onSelectBeatmap(row.diff)} />
-                    ) : (
-                      <SetCard
-                        title={row.item.title}
-                        artist={row.item.artist}
-                        coverUrl={row.item.coverUrl}
-                        status={row.item.status}
-                        difficulties={groupBy === "DIFFICULTY" && row.item.representedBeatmap ? [row.item.representedBeatmap] : row.item.allDifficulties}
-                        selected={row.selected}
-                        expanded={row.expanded}
-                        onClick={() =>
-                          row.selected && groupBy !== "DIFFICULTY"
-                            ? setCollapsedGroups((s) => toggle(s, row.item.id))
-                            : onSelectBeatmap(row.item.representedBeatmap || row.item.allDifficulties[0])
-                        }
-                      />
-                    )}
+      <div className="relative z-10 mt-2 min-h-0 flex-1">
+        <div ref={scrollRef} className="no-scrollbar h-full overflow-y-auto overflow-x-hidden pb-[40vh] pt-1">
+          {loading ? (
+            <div className="flex h-48 items-center justify-center">
+              <div className="h-7 w-7 animate-spin rounded-full border-4 border-white border-t-transparent" role="status" aria-label="Loading beatmaps" />
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex h-48 flex-col items-center justify-center text-white/60">
+              <Music className="mb-3 h-10 w-10 opacity-60" aria-hidden />
+              <p className="font-game-display text-[17px]">No results</p>
+            </div>
+          ) : (
+            <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+              {virtualizer.getVirtualItems().map((v) => {
+                const row = rows[v.index];
+                return (
+                  <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute left-0 top-0 w-full pb-1.5" style={{ transform: `translateY(${v.start}px)` }}>
+                    <div className="transition-[margin-left] duration-300 ease-out" style={{ marginLeft: offsets[v.index] }}>
+                      {row.kind === "header" ? (
+                        <HeaderCard label={row.label} count={row.count} collapsed={row.collapsed} onClick={() => setCollapsedCategories((s) => toggle(s, row.label))} />
+                      ) : row.kind === "diff" ? (
+                        <DiffCard diff={row.diff} selected={row.selected} onClick={() => onSelectBeatmap(row.diff)} />
+                      ) : (
+                        <SetCard
+                          title={row.item.title}
+                          artist={row.item.artist}
+                          coverUrl={row.item.coverUrl}
+                          status={row.item.status}
+                          difficulties={groupBy === "DIFFICULTY" && row.item.representedBeatmap ? [row.item.representedBeatmap] : row.item.allDifficulties}
+                          selected={row.selected}
+                          expanded={row.expanded}
+                          onClick={() =>
+                            row.selected && groupBy !== "DIFFICULTY"
+                              ? setCollapsedGroups((s) => toggle(s, row.item.id))
+                              : onSelectBeatmap(row.item.representedBeatmap || row.item.allDifficulties[0])
+                          }
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
+        {thumb.height > 0 && <div aria-hidden className="pointer-events-none absolute right-[5px] w-1.5 rounded-full bg-white/90" style={{ top: thumb.top, height: thumb.height }} />}
       </div>
     </div>
   );
