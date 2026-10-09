@@ -2,6 +2,8 @@ import { Clock, Heart, Metronome, Play } from "lucide-react";
 import type { Beatmap } from "@/types/beatmap";
 import { formatDuration } from "@/types/game";
 import { difficultyColor, starTextColor } from "@/lib/select/difficultyColor";
+import { cn } from "@/lib/utils";
+import { SHEAR } from "./shear";
 
 /** Panel info kiri-atas layar select. Ukuran dari foto: docs/ui-spec/song-select.md ("Kiri-atas"). */
 
@@ -52,15 +54,21 @@ function Stat({
 
 function Meta({
   icon,
+  pill,
+  className,
   children,
 }: {
   icon: React.ReactNode;
+  /** foto: play count dan favorit masing-masing di pill gelap miring; durasi/BPM tanpa pill */
+  pill?: boolean;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <span className="flex items-center gap-2.5 font-game-display text-[17px] font-medium text-white">
-      <span className="text-white/90">{icon}</span>
-      {children}
+    <span className={cn("relative flex h-full items-center gap-2.5 px-4 font-game-display text-[17px] font-medium text-white", className)}>
+      {pill && <span className={cn(SHEAR, "absolute inset-0 rounded-[10px] bg-[#1e2127]")} />}
+      <span className="relative text-white/90">{icon}</span>
+      <span className="relative">{children}</span>
     </span>
   );
 }
@@ -74,8 +82,18 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
   );
 
   return (
-    <div className="shrink-0">
-      <div className="bg-linear-to-r from-[#1f2029]/80 via-[#1f2029]/55 to-transparent px-[22px] pb-3 pt-[18px]">
+    <div className="relative shrink-0">
+      {/* Satu latar miring (tan 0.2) untuk ketiga bagian supaya tepi kanannya satu garis seperti foto: x≈930 di atas, ≈876 di bawah.
+          Pita warna diukur dari foto: judul #22262d, baris meta #282933, strip difficulty #262b2e, statistik #23282a. */}
+      <div
+        aria-hidden
+        className={cn(SHEAR, "absolute inset-y-0 -left-[60px] -right-[16px] rounded-r-2xl shadow-[0_8px_24px_rgb(0_0_0/0.3)]")}
+        style={{
+          background:
+            "linear-gradient(to bottom, rgb(34 38 45 / 0.95) 0 90px, rgb(40 41 50 / 0.95) 90px 159px, rgb(38 43 46 / 0.95) 159px 202px, rgb(35 40 42 / 0.95) 202px)",
+        }}
+      />
+      <div className="relative h-[159px] px-[22px] pt-[18px]">
         <span
           className="inline-flex h-[19px] items-center rounded-full px-2.5 font-game-display text-[11px] font-bold tracking-wide"
           style={{ backgroundColor: status.bg, color: status.fg }}
@@ -88,11 +106,12 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
         <p className="line-clamp-1 font-game-display text-[18px] font-semibold leading-tight text-white">
           {beatmap.artist}
         </p>
-        <div className="mt-3 flex items-center gap-9">
-          <Meta icon={<Play className="h-[18px] w-[18px]" aria-hidden />}>
+        {/* posisi dari foto: pill play x -10..131 (ikon di 22), pill favorit 137..247, durasi mulai 253 */}
+        <div className="absolute -left-[10px] top-[115px] flex h-[39px] items-center gap-[6px]">
+          <Meta pill className="w-[141px] pl-[32px]" icon={<Play className="h-[18px] w-[18px]" aria-hidden />}>
             {n(beatmap.playCount)}
           </Meta>
-          <Meta icon={<Heart className="h-[22px] w-[22px]" aria-hidden />}>
+          <Meta pill className="w-[110px]" icon={<Heart className="h-[22px] w-[22px]" aria-hidden />}>
             {n(beatmap.favoriteCount)}
           </Meta>
           <Meta icon={<Clock className="h-[22px] w-[22px]" aria-hidden />}>
@@ -104,9 +123,8 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
         </div>
       </div>
 
-      {/* Baris difficulty + statistik = satu panel; sudut kanan membulat atas-bawah seperti lazer */}
-      <div className="overflow-hidden rounded-r-2xl shadow-[0_8px_24px_rgb(0_0_0/0.3)]">
-        <div className="flex h-10 items-center gap-2 bg-select-panel/90 px-[22px]">
+      <div className="relative">
+        <div className="flex h-[43px] items-center gap-2 px-[22px]">
           <span
             className="inline-flex h-[26px] items-center gap-1 rounded-full px-2.5 font-game-display text-[14px] font-bold"
             style={{
@@ -134,7 +152,7 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
           </span>
         </div>
 
-        <div className="flex h-[70px] items-start justify-between bg-[#23282a]/90 px-[22px] pt-3">
+        <div className="flex h-[67px] items-start justify-between px-[22px] pt-3">
           <div className="flex gap-3">
             <Stat
               label="Notes"

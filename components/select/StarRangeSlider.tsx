@@ -1,6 +1,8 @@
 "use client";
 
 import { spectrumGradient } from "@/lib/select/difficultyColor";
+import { cn } from "@/lib/utils";
+import { SHEAR, UNSHEAR } from "./shear";
 
 const MAX = 10;
 const HANDLE = 46;
@@ -56,7 +58,9 @@ export default function StarRangeSlider({ min, max, onChange }: { min: number; m
   const pct = (v: number) => `calc(${v / MAX} * (100% - ${2 * HANDLE}px))`;
 
   return (
-    <div className="relative h-[38px] w-full select-none overflow-hidden rounded-[10px] border-2 border-[#4aa3ff]/90 touch-none" style={{ background: GRADIENT }}>
+    <div className={cn(SHEAR, "relative h-full w-full select-none overflow-hidden rounded-[10px] border-[1.5px] border-[#66ccff] touch-none")} style={{ background: GRADIENT }}>
+      {/* foto: spektrum diredam ~22% ke abu gelap */}
+      <div className="absolute inset-0 bg-[rgb(40_44_52/0.22)]" />
       <div className="absolute inset-y-0 left-0 bg-black/55" style={{ width: `calc(${pct(min)} + ${HANDLE / 2}px)` }} />
       <div className="absolute inset-y-0 right-0 bg-black/55" style={{ width: `calc(100% - ${pct(max)} - ${HANDLE + HANDLE / 2}px)` }} />
       <div
@@ -68,10 +72,10 @@ export default function StarRangeSlider({ min, max, onChange }: { min: number; m
         aria-valuenow={min}
         onPointerDown={drag("min")}
         onKeyDown={key("min")}
-        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-l-lg bg-[#4290fb] font-game-display text-[17px] font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-l-lg bg-[#4290fb] font-game-display text-[17px] font-semibold text-[#10243f] outline-none focus-visible:ring-2 focus-visible:ring-white"
         style={{ left: pct(min), width: HANDLE }}
       >
-        {min.toFixed(1)}
+        <span className={UNSHEAR}>{min.toFixed(1)}</span>
       </div>
       <div
         role="slider"
@@ -82,10 +86,10 @@ export default function StarRangeSlider({ min, max, onChange }: { min: number; m
         aria-valuenow={max}
         onPointerDown={drag("max")}
         onKeyDown={key("max")}
-        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-r-lg bg-select-field font-game-display text-[19px] font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-r-lg bg-[#444] font-game-display text-[19px] font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white"
         style={{ left: `calc(${HANDLE}px + ${pct(max)})`, width: HANDLE }}
       >
-        {max >= MAX ? "∞" : max.toFixed(1)}
+        <span className={UNSHEAR}>{max >= MAX ? "∞" : max.toFixed(1)}</span>
       </div>
     </div>
   );

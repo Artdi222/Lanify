@@ -1,30 +1,29 @@
 import { describe, expect, test } from "bun:test";
-import { CURVE, rowOffsets } from "./curve";
+import { CURVE, rowOffset } from "./curve";
 
 const card = (selected = false) => ({ kind: "card" as const, selected });
 const diff = (selected = false) => ({ kind: "diff" as const, selected });
 
-describe("rowOffsets", () => {
-  test("tanpa seleksi semua baris di base, header di nilai header", () => {
-    expect(rowOffsets([{ kind: "header" }, card(), card()])).toEqual([CURVE.header, CURVE.base, CURVE.base]);
+describe("rowOffset", () => {
+  test("header dan kartu terpilih memakai posisi tetap, tidak tergantung jarak", () => {
+    expect(rowOffset({ kind: "header" }, 300)).toBe(CURVE.header);
+    expect(rowOffset(card(true), 300)).toBe(CURVE.selectedSet);
+    expect(rowOffset(diff(true), 0)).toBe(CURVE.selectedDiff);
   });
-  test("set terpilih paling kiri, difficulty terpilih sedikit lebih kanan", () => {
-    const o = rowOffsets([card(), card(true), diff(), diff(true), diff()]);
-    expect(o[1]).toBe(CURVE.selectedSet);
-    expect(o[3]).toBe(CURVE.selectedDiff);
+  test("cocok dengan titik foto (x layar - 1040) dalam ±10 px", () => {
+    const photo: [number, number][] = [[5, 140], [123, 150], [187, 160], [251, 170], [283, 173], [315, 185], [405, 220]];
+    for (const [d, x] of photo) expect(Math.abs(rowOffset(diff(), d) - x)).toBeLessThanOrEqual(10);
   });
-  test("baris lain bertambah per jarak ke seleksi terdekat (kedua arah)", () => {
-    const o = rowOffsets([card(), card(), card(), card(true), card(), card()]);
-    expect(o[2]).toBe(CURVE.base);
-    expect(o[4]).toBe(CURVE.base);
-    expect(o[1]).toBe(CURVE.base + CURVE.step);
-    expect(o[5]).toBe(CURVE.base + CURVE.step);
-    expect(o[0]).toBe(CURVE.base + 2 * CURVE.step);
+  test("simetris atas-bawah dan naik monoton menjauhi tengah", () => {
+    expect(rowOffset(card(), -190)).toBe(rowOffset(card(), 190));
+    let prev = -Infinity;
+    for (let d = 0; d <= 600; d += 20) {
+      const o = rowOffset(diff(), d);
+      expect(o).toBeGreaterThanOrEqual(prev);
+      prev = o;
+    }
   });
-  test("memakai seleksi terdekat bila ada dua (set dan difficulty) dan dibatasi max", () => {
-    const rows = [card(true), diff(), diff(true), ...Array.from({ length: 30 }, () => card())];
-    const o = rowOffsets(rows);
-    expect(o[1]).toBe(CURVE.base);
-    expect(o[rows.length - 1]).toBe(CURVE.max);
+  test("dibatasi max", () => {
+    expect(rowOffset(card(), 5000)).toBe(CURVE.max);
   });
 });

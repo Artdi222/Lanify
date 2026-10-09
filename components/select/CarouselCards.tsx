@@ -124,14 +124,15 @@ export function DiffCard({ diff, selected, onClick }: { diff: Beatmap; selected:
       style={{
         ["--glow" as string]: `${color}88`,
         border: selected ? `2px solid ${color}` : undefined,
-        // Badan hampir netral (diukur: 6.75 -> #393f51, 3.62 -> #494c42); rona difficulty hanya di sisi kiri. Terpilih lebih terang (#766e75).
+        // Opak, rona difficulty memudar ke kanan. Di-fit dari 5 baris foto (warna strip diketahui): kiri ~25% di atas #3a4347,
+        // tengah ~14.5% di atas #343d40, ujung ~8%. Terpilih (satu sampel, 4.26): kiri bernuansa warna, kanan abu terang #79737a.
         background: selected
-          ? `linear-gradient(to right, color-mix(in srgb, ${color} 20%, rgb(122 118 124 / 0.94)), rgb(122 118 124 / 0.9))`
-          : `linear-gradient(to right, color-mix(in srgb, ${color} 24%, rgb(38 42 46 / 0.9)), rgb(38 42 46 / 0.88) 65%)`,
+          ? `linear-gradient(to right, color-mix(in srgb, ${color} 15%, #585056), color-mix(in srgb, ${color} 8%, #625b60) 25%, #79737a)`
+          : `linear-gradient(to right, color-mix(in srgb, ${color} 25%, #3a4347), color-mix(in srgb, ${color} 14.5%, #343d40) 55%, color-mix(in srgb, ${color} 8%, #32393d))`,
       }}
     >
-      <span className="flex w-[30px] shrink-0 items-center justify-center" style={{ backgroundColor: color }}>
-        <Ring size={18} color="rgb(0 0 0 / 0.6)" />
+      <span className="flex w-4 shrink-0 items-center justify-center" style={{ backgroundColor: color }}>
+        <Ring size={12} color="rgb(0 0 0 / 0.85)" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 pl-3 pr-4">
         <span className="truncate leading-none">

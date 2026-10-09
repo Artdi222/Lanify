@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import ScoreCard from "./ScoreCard";
 import { SHOW_DETAILS_EVENT } from "./OptionsMenu";
 import SplitSelect from "./SplitSelect";
+import { SHEAR, UNSHEAR } from "./shear";
 
 type Tab = "details" | "ranking";
 type Scope = "GLOBAL" | "LOCAL";
@@ -49,10 +50,10 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
     <button
       type="button"
       onClick={onClick}
-      className={cn("relative cursor-pointer px-1 pb-1 font-game-display text-[17px] font-semibold transition-colors", active ? "text-white" : "text-white/55 hover:text-white/80")}
+      className={cn("relative cursor-pointer px-1 pb-1 font-game-display text-[17px] font-semibold transition-colors", active ? "text-white" : "text-[#dae7ee]/80 hover:text-white")}
     >
       {children}
-      <span className={cn("absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-white transition-opacity", active ? "opacity-100" : "opacity-0")} />
+      <span className={cn("absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-[#66ccff] transition-opacity", active ? "opacity-100" : "opacity-0")} />
     </button>
   );
 }
@@ -130,9 +131,9 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
               type="button"
               disabled
               title="Mods coming soon"
-              className="h-[43px] w-[172px] cursor-not-allowed rounded-xl bg-select-button font-game-display text-[17px] text-white"
+              className={cn(SHEAR, "h-[38px] w-[172px] cursor-not-allowed rounded-[10px] bg-select-button font-game-display text-[17px] text-white")}
             >
-              Selected Mods
+              <span className={cn(UNSHEAR, "inline-block")}>Selected Mods</span>
             </button>
           </div>
         )}

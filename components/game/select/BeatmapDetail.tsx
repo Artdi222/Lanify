@@ -18,7 +18,7 @@ export default function BeatmapDetail({ beatmap }: { beatmap: Beatmap | null }) 
     );
   }
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-y-clip">
       <BeatmapInfoPanel beatmap={beatmap} />
       <RankingPanel beatmap={beatmap} key={beatmap.id} />
     </div>

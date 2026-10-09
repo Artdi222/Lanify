@@ -5,9 +5,11 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { Music, Search } from "lucide-react";
 import type { Beatmap } from "@/types/beatmap";
 import { buildRows, isSelectedItem, selectedRowIndex, type Row } from "@/lib/select/rows";
-import { rowOffsets } from "@/lib/select/curve";
+import { rowOffset } from "@/lib/select/curve";
 import SplitSelect from "@/components/select/SplitSelect";
 import StarRangeSlider from "@/components/select/StarRangeSlider";
+import { SHEAR, UNSHEAR } from "@/components/select/shear";
+import { cn } from "@/lib/utils";
 import { DiffCard, HeaderCard, SetCard } from "@/components/select/CarouselCards";
 
 /** Kolom kanan layar select: header (search, star rating, sort/group/collection) + daftar virtualized. Spec: docs/ui-spec/song-select.md. */
@@ -109,7 +111,6 @@ export default function BeatmapList({
     () => buildRows<Beatmap, BeatmapGroupItem>(groupedCategories, { groupBy, selectedId, collapsedCategories, collapsedGroups }),
     [groupedCategories, groupBy, selectedId, collapsedCategories, collapsedGroups],
   );
-  const offsets = useMemo(() => rowOffsets(rows.map((r) => ({ kind: r.kind, selected: r.kind === "header" ? false : r.selected }))), [rows]);
 
   // Penanda scroll putih tipis di tepi kanan (foto). Hanya indikator; scroll lewat roda/trackpad/keyboard.
   const [thumb, setThumb] = useState({ top: 0, height: 0 });
@@ -149,45 +150,46 @@ export default function BeatmapList({
   return (
     <div className="flex h-full flex-col">
       {/* ── Header ───────────────────────────────────────── */}
-      {/* Satu panel menyatukan search, star rating, dan dropdown; tepi kiri berundak diagonal seperti lazer */}
-      <div className="relative z-20 -ml-[30px] shrink-0 rounded-bl-2xl bg-select-bar/90 pb-[6px] pr-2 pt-2 shadow-[0_8px_24px_rgb(0_0_0/0.35)] backdrop-blur-sm">
-        <div className="ml-[55px] flex h-[72px]">
-          <label className="relative flex min-w-0 flex-1 cursor-text flex-col justify-center rounded-l-xl bg-select-field px-4">
+      {/* Seperti lazer: semua kotak miring (tan 0.2) dan tepi kiri/kanannya jatuh di satu garis miring, jadi tiap baris
+          bergeser ke kiri sebanyak 0.2 x jarak vertikalnya. Panel belakang ikut miring dan bleed ke kanan. */}
+      <div className="relative z-20 -ml-[30px] shrink-0 pb-[4px] pt-[9px]">
+        <div className={cn(SHEAR, "absolute inset-y-0 left-[6px] -right-[40px] rounded-bl-2xl bg-select-bar/90 shadow-[0_8px_24px_rgb(0_0_0/0.35)] backdrop-blur-sm")} />
+        <div className="relative ml-[25px] mr-[10px] flex h-[66px]">
+          <label className={cn(SHEAR, "relative flex min-w-0 flex-1 cursor-text flex-col justify-center rounded-l-[10px] bg-select-field px-4")}>
             <input
               type="text"
               placeholder="search..."
               aria-label="Search beatmaps"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent font-game-display text-[24px] text-white outline-none placeholder:text-white/45"
+              className={cn(UNSHEAR, "w-full bg-transparent font-game-display text-[24px] text-white outline-none placeholder:text-[#98a5ab]")}
             />
-            <span className="font-game-display text-[12px] font-semibold text-select-match">{matchCount} matches</span>
+            <span className={cn(UNSHEAR, "font-game-display text-[12px] font-semibold text-select-match")}>{matchCount} matches</span>
           </label>
-          <span className="flex w-[62px] shrink-0 items-center justify-center rounded-r-xl bg-select-tile text-white">
-            <Search className="h-6 w-6" strokeWidth={2.5} aria-hidden />
+          <span className={cn(SHEAR, "flex w-[65px] shrink-0 items-center justify-center rounded-r-[10px] bg-select-tile text-white")}>
+            <Search className={cn(UNSHEAR, "h-6 w-6")} strokeWidth={2.5} aria-hidden />
           </span>
         </div>
 
-        {/* Baris 2-3 berada di atas panel gelap (#22282a) yang menjorok ke kiri */}
-        <div className="mt-[6px]">
-          <div className="ml-[40px] flex h-[38px] items-center gap-[3px]">
-            <span className="flex h-full w-[113px] shrink-0 items-center justify-center rounded-l-xl bg-select-tile font-game-display text-[17px] font-semibold text-white">Star Rating</span>
-            <div className="min-w-0 flex-1">
-              <StarRangeSlider min={starMin} max={starMax} onChange={setStarRange} />
-            </div>
+        <div className="relative ml-[12px] mr-[21px] mt-[11px] flex h-[39px] items-center gap-[3px]">
+          <span className={cn(SHEAR, "flex h-full w-[116px] shrink-0 items-center justify-center rounded-l-[10px] bg-select-tile font-game-display text-[17px] font-semibold text-white")}>
+            <span className={UNSHEAR}>Star Rating</span>
+          </span>
+          <div className="h-full min-w-0 flex-1">
+            <StarRangeSlider min={starMin} max={starMax} onChange={setStarRange} />
           </div>
+        </div>
 
-          <div className="ml-[22px] mt-[6px] flex items-center gap-3">
-            <SplitSelect<SortKey> label="Sort" value={sortBy} options={SORT_OPTIONS} onChange={setSortBy} className="w-[235px]" />
-            <SplitSelect<GroupKey> label="Group" value={groupBy} options={GROUP_OPTIONS} onChange={setGroupBy} className="w-[228px]" />
-            <SplitSelect<"ALL"> label="Collection" value="ALL" options={[{ label: "All beatmaps", value: "ALL" }]} onChange={() => {}} disabled className="min-w-0 flex-1" />
-          </div>
+        <div className="relative ml-[2px] mr-[32px] mt-[9px] flex items-center gap-2">
+          <SplitSelect<SortKey> label="Sort" value={sortBy} options={SORT_OPTIONS} onChange={setSortBy} className="w-[240px]" />
+          <SplitSelect<GroupKey> label="Group" value={groupBy} options={GROUP_OPTIONS} onChange={setGroupBy} className="w-[238px]" />
+          <SplitSelect<"ALL"> label="Collection" value="ALL" options={[{ label: "All beatmaps", value: "ALL" }]} onChange={() => {}} disabled className="min-w-0 flex-1" />
         </div>
       </div>
 
       {/* ── Daftar (virtualized) ─────────────────────────── */}
       <div className="relative z-10 mt-2 min-h-0 flex-1">
-        <div ref={scrollRef} className="no-scrollbar h-full overflow-y-auto overflow-x-hidden pb-[40vh] pt-[12vh]">
+        <div ref={scrollRef} className="no-scrollbar h-full overflow-y-auto overflow-x-hidden pb-[40vh] pt-2">
           {loading ? (
             <div className="flex h-48 items-center justify-center">
               <div className="h-7 w-7 animate-spin rounded-full border-4 border-white border-t-transparent" role="status" aria-label="Loading beatmaps" />
@@ -201,9 +203,11 @@ export default function BeatmapList({
             <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
               {virtualizer.getVirtualItems().map((v) => {
                 const row = rows[v.index];
+                // jarak tengah kartu ke tengah area daftar (pt-2 = 8 px di atas isi)
+                const distance = 8 + v.start + v.size / 2 - (virtualizer.scrollOffset ?? 0) - (virtualizer.scrollRect?.height ?? 0) / 2;
                 return (
                   <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute left-0 top-0 w-full pb-1.5 transition-transform duration-300 ease-out" style={{ transform: `translateY(${v.start}px)` }}>
-                    <div className="transition-[margin-left] duration-300 ease-out" style={{ marginLeft: offsets[v.index] }}>
+                    <div className="transition-[margin-left] duration-150 ease-out" style={{ marginLeft: rowOffset(row.kind === "header" ? row : { kind: row.kind, selected: row.selected }, distance) }}>
                       {row.kind === "header" ? (
                         <HeaderCard label={row.label} count={row.count} collapsed={row.collapsed} onClick={() => setCollapsedCategories((s) => toggle(s, row.label))} />
                       ) : row.kind === "diff" ? (
