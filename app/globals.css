@@ -88,6 +88,34 @@
   --ease-lf-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* Layar song select: warna diukur dari foto lazer (docs/ui-spec/song-select.md).
+   Netral abu-abu kehijauan; warna identitas ada di -back. */
+@theme {
+  --color-select-bar: #22282a;
+  --color-select-field: #2e3538;
+  --color-select-tile: #333b3e;
+  --color-select-tile-dim: #101315;
+  --color-select-button: #394246;
+  --color-select-band: #282c2f;
+  --color-select-panel: #24282c;
+  --color-select-back: #de31ae;
+  --color-select-status-ranked: #b3ff66;
+  --color-select-match: #ffcc22;
+  --color-select-converts: #66ccff;
+  --color-select-mods: #425048;
+  --color-select-mods-line: #4d614b;
+  --color-select-mods-icon: #b3ff66;
+  --color-select-random: #3c4c54;
+  --color-select-random-line: #405965;
+  --color-select-random-icon: #66ccff;
+  --color-select-options: #3f4554;
+  --color-select-options-line: #474865;
+  --color-select-options-icon: #a67cff;
+  --color-select-grade-s: #168d97;
+  --color-select-grade-a: #77c120;
+  --color-select-fc: #b5ff3a;
+}
+
 :root {
   --lf-dur-fast: 120ms;
   --lf-dur-base: 200ms;
