@@ -370,7 +370,6 @@ export default function SongSelectPage() {
             {/* Kanan: pencarian + daftar, kartu bleed sampai tepi kanan */}
             <div className="absolute inset-y-0 right-0 flex w-[min(880px,46vw)] min-w-[520px] flex-col">
               <BeatmapList
-                beatmaps={beatmaps}
                 selectedBeatmap={selectedBeatmap}
                 onSelectBeatmap={handleSelectBeatmap}
                 loading={loading}
