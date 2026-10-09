@@ -20,6 +20,7 @@ export default function MainMenuPage() {
   const { isGuest, logout } = useAuthStore();
   const globalOffset = useSettingsStore((s) => s.globalOffset);
   const isPlaying = useMusicStore((s) => s.isPlaying);
+  const coverUrl = useMusicStore((s) => s.playlist[s.currentIndex]?.coverUrl);
   const [mounted, setMounted] = useState(false);
   const [isMenuExpanded, setIsMenuExpanded] = useState(false);
   const [tip, setTip] = useState("");
@@ -34,6 +35,23 @@ export default function MainMenuPage() {
     <div className={`relative flex-1 flex flex-col overflow-hidden bg-lf-bg selection:bg-lf-accent/30 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
       <MenuBackground />
 
+      {/* Cover beatmap yang terakhir dipilih menggantikan background prosedural */}
+      <AnimatePresence>
+        {coverUrl && (
+          <motion.div
+            key={coverUrl}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="pointer-events-none absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${coverUrl})` }}
+          >
+            <div className="absolute inset-0 bg-black/60" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Pill info kiri atas */}
       <div className="absolute left-2 top-3 z-20 flex items-center gap-2 rounded-lf-lg bg-lf-bg-raised/80 px-4 py-2.5 text-lf-body text-lf-text">
         <span className="text-lf-text-muted">Global Offset</span>
@@ -42,19 +60,18 @@ export default function MainMenuPage() {
         </span>
       </div>
 
-      {/* Pita strip: hanya saat menu terbuka */}
-      <AnimatePresence>
-        {isMenuExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="pointer-events-none absolute inset-x-0 top-1/2 z-0 h-32 -translate-y-1/2 bg-black/50 sm:h-36"
-          />
-        )}
-      </AnimatePresence>
-
-      <div className="relative z-10 flex h-full w-full max-w-6xl flex-1 flex-row items-center justify-center px-4 pb-16 mx-auto">
+      <div className="relative z-10 flex h-full w-full flex-1 flex-row items-center justify-center px-4 pb-16">
+        {/* Pita strip: sejajar dengan panel (container punya pb-16, jadi tengahnya naik 2rem) */}
+        <AnimatePresence>
+          {isMenuExpanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pointer-events-none absolute inset-x-0 top-[calc(50%-2rem)] -z-10 h-24 -translate-y-1/2 bg-black/50 sm:h-32"
+            />
+          )}
+        </AnimatePresence>
         <motion.div layout className="flex flex-row items-center justify-center gap-0">
           <motion.div
             layout
