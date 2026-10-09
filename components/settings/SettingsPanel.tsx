@@ -137,7 +137,7 @@ export default function SettingsPanel() {
       render: () => (
         <SettingRow
           label="Anti-aliasing"
-          hint="Berlaku saat map berikutnya dimulai. Turunkan render scale atau matikan anti-aliasing bila gameplay tersendat di GPU lemah."
+          hint="Applies the next time a map starts. Lower the render scale or turn anti-aliasing off if gameplay stutters on a weak GPU."
           stacked
         >
           <OptionPills options={[{ label: "Off", value: 0 }, { label: "On", value: 1 }]} value={s.antialias ? 1 : 0} onChange={(v) => s.setAntialias(v === 1)} />
@@ -160,7 +160,7 @@ export default function SettingsPanel() {
           }}
           onBlur={() => setConfirmReset(false)}
         >
-          {confirmReset ? "Klik lagi untuk konfirmasi" : "Reset all settings"}
+          {confirmReset ? "Click again to confirm" : "Reset all settings"}
         </ActionButton>
       ),
     },
@@ -210,7 +210,7 @@ export default function SettingsPanel() {
         </header>
 
         <div ref={scrollRef} onScroll={onScroll} className="no-scrollbar relative flex-1 overflow-y-auto px-5 pt-4">
-          {groups.length === 0 && <p className="py-8 text-center text-lf-body text-lf-text-muted">Tidak ada setting yang cocok.</p>}
+          {groups.length === 0 && <p className="py-8 text-center text-lf-body text-lf-text-muted">No settings match your search.</p>}
           {groups.map((g) => (
             <section key={g.id} data-category={g.id} className="mb-6">
               <h3 className="mb-3 font-game-display text-lf-title">{g.label}</h3>

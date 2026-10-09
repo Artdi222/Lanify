@@ -21,7 +21,7 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
         className="data-[side=left]:inset-y-auto data-[side=left]:top-12 data-[side=left]:h-[calc(100dvh-3rem)] data-[side=left]:w-[min(46rem,100vw)] data-[side=left]:sm:max-w-none gap-0 border-r border-lf-border bg-lf-surface p-0 shadow-lf-panel"
       >
         <SheetTitle className="sr-only">Settings</SheetTitle>
-        <SheetDescription className="sr-only">Konfigurasi gameplay, input, audio, grafis, dan antarmuka.</SheetDescription>
+        <SheetDescription className="sr-only">Configure gameplay, input, audio, graphics, and interface settings.</SheetDescription>
         <SettingsPanel />
       </SheetContent>
     </Sheet>
