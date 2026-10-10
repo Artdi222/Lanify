@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { User } from "lucide-react";
 import type { LeaderboardEntry } from "@/types/game";
-import { GRADE_COLORS, relativeTime } from "@/lib/select/format";
+import { GRADE_COLORS, relativeTimeLong } from "@/lib/select/format";
 import { cn } from "@/lib/utils";
 import { SHEAR, UNSHEAR } from "./shear";
 
@@ -85,7 +85,7 @@ export default function ScoreCard({
       </div>
 
       <div className={cn("absolute top-0 flex h-full min-w-0 flex-col justify-center", best ? "left-[134px]" : "left-[152px]")} style={{ width: 230 }}>
-        <span className="font-game-display text-[14px] leading-none text-white/85">{relativeTime(entry.submittedAt)}</span>
+        <span className="font-game-display text-[14px] leading-none text-white/85">{relativeTimeLong(entry.submittedAt)}</span>
         <span className="mt-1 truncate font-game-display text-[20px] font-semibold leading-tight text-white">{entry.username}</span>
       </div>
 
