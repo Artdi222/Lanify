@@ -113,8 +113,8 @@ export default function SelectFooter({
         className="group absolute -bottom-[150px] -right-[110px] z-30 h-[330px] w-[330px] cursor-pointer focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className="absolute inset-0 rounded-full border-[6px] border-white bg-linear-to-br from-lf-primary-hover to-lf-primary shadow-lf-glow transition-transform duration-200 ease-lf-out group-hover:scale-105 group-active:scale-95" />
-        {/* Hanya kuadran kiri-atas yang terlihat, jadi label ditaruh di situ */}
-        <span className="absolute left-[34px] top-[58px] font-game-display text-[54px] font-bold leading-none tracking-wide text-white drop-shadow">Lanify</span>
+        {/* Terlihat ±220x180 px (x 0..220 tombol); label dipusatkan di area itu */}
+        <span className="absolute left-[45px] top-[80px] w-[200px] text-center font-game-display text-[54px] font-bold leading-none tracking-wide text-white drop-shadow">Play</span>
       </button>
     </>
   );
