@@ -15,6 +15,8 @@ import { BeatmapLoader } from "@/lib/game/BeatmapLoader";
 import { getStarRatingColor } from "@/types/game";
 import type { Beatmap } from "@/types/beatmap";
 
+const MIN_LOADER_MS = 2500;
+
 /** Player loader: loads as soon as it opens, then enters the game. Spec: docs/ui-spec/loader.md. */
 export default function PreparePage() {
   const router = useRouter();
@@ -40,7 +42,8 @@ export default function PreparePage() {
         setBeatmap(bm);
         useGameStore.getState().setSelectedBeatmapId(beatmapId);
         const signedUrl = BeatmapLoader.hasCache(bm.filePath) ? "" : (await getBeatmapUrl(beatmapId, "")).url;
-        await BeatmapLoader.load(bm.filePath, signedUrl);
+        // Hold the loader on screen so it never flashes past when the beatmap is cached.
+        await Promise.all([BeatmapLoader.load(bm.filePath, signedUrl), new Promise((r) => setTimeout(r, MIN_LOADER_MS))]);
         if (cancelled) return;
         router.push(`/play/${beatmapId}`);
       } catch (err) {
