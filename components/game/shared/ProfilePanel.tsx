@@ -199,10 +199,10 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                     <div className={LABEL}>Global Ranking</div>
                     <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{rank}</div>
                   </div>
-                  {profile?.countryRank != null && savedCountry === null && (
+                  {(
                     <div>
                       <div className={LABEL}>Country Ranking</div>
-                      <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">#{profile.countryRank.toLocaleString("en-US")}</div>
+                      <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">{profile?.countryRank != null && savedCountry === null ? `#${profile.countryRank.toLocaleString("en-US")}` : "-"}</div>
                     </div>
                   )}
                   <div>

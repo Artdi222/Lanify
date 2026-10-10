@@ -39,11 +39,13 @@ export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: 
               <UserIcon className="h-9 w-9 text-lf-text-muted" />
             )}
           </span>
-          <div className="absolute bottom-2 left-[107px] right-3 min-w-0">
-            {profile?.country && (
-              <span className="mb-1 block" title={countryName(profile.country)}>
+          <div className="absolute inset-y-[10px] left-[107px] right-3 flex min-w-0 flex-col justify-between">
+            {profile?.country ? (
+              <span className="block" title={countryName(profile.country)}>
                 <Flag code={profile.country} height={22} />
               </span>
+            ) : (
+              <span className="font-game-body text-xs text-white/60">Set country in player info</span>
             )}
             <span className="block truncate font-game-display text-base font-bold text-white">{user.username}</span>
           </div>
@@ -53,12 +55,10 @@ export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: 
             <div className="font-game-body text-xs text-white/70">Global Ranking</div>
             <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-"}</div>
           </div>
-          {profile?.countryRank != null && (
-            <div>
-              <div className="font-game-body text-xs text-white/70">Country Ranking</div>
-              <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">#{profile.countryRank.toLocaleString("en-US")}</div>
-            </div>
-          )}
+          <div>
+            <div className="font-game-body text-xs text-white/70">Country Ranking</div>
+            <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">{profile?.countryRank != null ? `#${profile.countryRank.toLocaleString("en-US")}` : "-"}</div>
+          </div>
         </div>
       </button>
 
