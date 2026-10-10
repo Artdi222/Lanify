@@ -3,18 +3,19 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { User as UserIcon, LogOut, Shield } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
 import MusicPlayer from "./MusicPlayer";
 import SettingsDrawer from "./SettingsDrawer";
 import TopBarClock from "./TopBarClock";
 import { Icon } from "@/components/ui/icons/Icon";
 import RegisterModal from "./RegisterModal";
 import AccountPanel from "@/components/auth/AccountPanel";
+import AccountCard from "@/components/profile/AccountCard";
 import ProfilePanel from "./ProfilePanel";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GameNavbar() {
-  const { user, isGuest, logout } = useAuthStore();
+  const { user, isGuest } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   // Dropdown & Modal states
@@ -23,15 +24,6 @@ export default function GameNavbar() {
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Banner color placeholder
-  const bannerColors = [
-    "from-blue-700 to-indigo-900",
-    "from-cyan-700 to-blue-900",
-    "from-purple-700 to-pink-950",
-    "from-emerald-700 to-teal-950",
-  ];
-  const [bannerColor] = useState(() => bannerColors[Math.floor(Math.random() * bannerColors.length)]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -121,7 +113,7 @@ export default function GameNavbar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className={isGuest ? "fixed right-0 top-12 z-50 w-[min(506px,100vw)] bg-lf-bg-raised shadow-lf-panel" : "absolute right-0 top-full mt-2 w-72 bg-[#090e17] border border-blue-900/50 rounded-2xl shadow-2xl p-4 z-50"}
+                  className="fixed right-0 top-12 z-50 w-[min(506px,100vw)] bg-lf-bg-raised shadow-lf-panel"
                 >
                   {isGuest ? (
                     <AccountPanel
@@ -132,71 +124,13 @@ export default function GameNavbar() {
                       }}
                     />
                   ) : (
-                    /* Logged-In Dropdown Profile Card (NO ROLE BADGE) */
-                    <div className="space-y-3">
-                      <div className="text-[11px] font-game-mono text-white/50 uppercase tracking-widest">
-                        Signed in
-                      </div>
-
-                      {/* Profile Card Button - Click to open 50% width panel */}
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          setIsProfilePanelOpen(true);
-                        }}
-                        className="w-full text-left rounded-xl overflow-hidden border border-blue-800/40 bg-[#060a12] hover:border-blue-500 transition-all cursor-pointer group"
-                      >
-                        {/* Banner */}
-                        <div className={`h-12 ${user?.bannerUrl ? 'bg-black' : `bg-linear-to-r ${bannerColor}`} relative`}>
-                          {user?.bannerUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={user.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-80" />
-                          )}
-                        </div>
-
-                        {/* Profile Info Overlay */}
-                        <div className="p-3 pt-0 flex items-center gap-3 relative">
-                          <div className="-mt-5 w-12 h-12 rounded-xl bg-[#040810] overflow-hidden flex items-center justify-center shrink-0 shadow-md">
-                            {user?.avatarUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-                            ) : (
-                              <UserIcon className="w-6 h-6 text-blue-400" />
-                            )}
-                          </div>
-
-                          <div className="overflow-hidden flex-1">
-                            <h4 className="text-sm font-game-display font-bold text-white group-hover:text-blue-300 transition-colors truncate">
-                              {user?.username}
-                            </h4>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Admin Dashboard button if admin role */}
-                      {user?.role === "admin" && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs font-game-body font-semibold transition-all cursor-pointer"
-                        >
-                          <Shield className="w-4 h-4 text-amber-400" />
-                          Admin Dashboard
-                        </Link>
-                      )}
-
-                      {/* Log Out Button */}
-                      <button
-                        onClick={() => {
-                          logout();
-                          setIsDropdownOpen(false);
-                        }}
-                        className="flex items-center justify-center gap-2 w-full py-2 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-900/40 text-red-300 text-xs font-game-body font-semibold transition-all cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        Log Out
-                      </button>
-                    </div>
+                    <AccountCard
+                      onDone={() => setIsDropdownOpen(false)}
+                      onOpenProfile={() => {
+                        setIsDropdownOpen(false);
+                        setIsProfilePanelOpen(true);
+                      }}
+                    />
                   )}
                 </motion.div>
               )}

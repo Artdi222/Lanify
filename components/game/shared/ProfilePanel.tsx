@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Calendar, Edit3, Save, Upload, Loader2, Trophy, Target, Activity } from "lucide-react";
+import { X, User, Pencil, Save, Upload, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { getUserProfile, updateProfile, type UserStats } from "@/lib/api/user";
+import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
+import { useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
 
 interface ProfilePanelProps {
@@ -13,83 +14,58 @@ interface ProfilePanelProps {
   onClose: () => void;
 }
 
+const LABEL = "font-game-body text-xs text-white/70";
+const FILE_BUTTON =
+  "flex w-full cursor-pointer items-center gap-2 rounded-lf-sm border-2 border-dashed border-white/20 bg-black/30 px-3 py-2 font-game-body text-sm text-white/80 transition-colors hover:border-lf-accent";
+
+function uploadedUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/beatmaps/bg?path=${encodeURIComponent(path)}`;
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-8 font-game-body text-sm">
+      <span className="text-white/75">{label}</span>
+      <span className="text-white">{value}</span>
+    </div>
+  );
+}
+
+/** "player info" sheet. Spec: docs/ui-spec/profile.md. */
 export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
   const { user, token, login } = useAuthStore();
+  const profile = useUserProfile(user?.id, isOpen);
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState(user?.username || "");
+  const [username, setUsername] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Real user stats
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [globalRank, setGlobalRank] = useState<number | null>(null);
-  const [totalPp, setTotalPp] = useState<number | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
-
-  // Random color for banner placeholder
-  const bannerColors = [
-    "from-blue-700 via-indigo-800 to-purple-950",
-    "from-cyan-700 via-blue-900 to-slate-950",
-    "from-purple-700 via-pink-900 to-slate-950",
-    "from-emerald-700 via-teal-900 to-slate-950",
-  ];
-  const [bannerColor] = useState(() => bannerColors[Math.floor(Math.random() * bannerColors.length)]);
+  const avatarSrc = useMemo(() => (avatarFile ? URL.createObjectURL(avatarFile) : user?.avatarUrl), [avatarFile, user?.avatarUrl]);
+  const bannerSrc = useMemo(() => (bannerFile ? URL.createObjectURL(bannerFile) : user?.bannerUrl), [bannerFile, user?.bannerUrl]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.username) setUsername(user.username);
-  }, [user]);
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
-  // Fetch real player stats from backend
-  useEffect(() => {
-    if (isOpen && user?.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsLoadingStats(true);
-      getUserProfile(user.id)
-        .then((res) => {
-          setStats(res.stats);
-          setGlobalRank(res.globalRank);
-          setTotalPp(res.totalPp ?? 0);
-        })
-        .catch((err) => {
-          console.error("Failed to load user stats:", err);
-        })
-        .finally(() => {
-          setIsLoadingStats(false);
-        });
-    }
-  }, [isOpen, user?.id]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
-
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+  const startEditing = () => {
+    setUsername(user?.username ?? "");
+    setAvatarFile(null);
+    setBannerFile(null);
+    setIsEditing(true);
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickImage = (setFile: (f: File | null) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
-
-    setBannerFile(file);
-    setBannerPreview(URL.createObjectURL(file));
+    setFile(file);
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -98,23 +74,9 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
 
     setIsSaving(true);
     try {
-      let avatarUrl = user.avatarUrl;
-      let bannerUrl = user.bannerUrl;
+      const avatarUrl = avatarFile ? uploadedUrl(await uploadToSupabase(avatarFile)) : user.avatarUrl;
+      const bannerUrl = bannerFile ? uploadedUrl(await uploadToSupabase(bannerFile)) : user.bannerUrl;
 
-      // Upload avatar image to Backblaze B2 bucket if selected
-      if (avatarFile) {
-        const path = await uploadToSupabase(avatarFile);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-        avatarUrl = `${apiUrl}/beatmaps/bg?path=${encodeURIComponent(path)}`;
-      }
-
-      if (bannerFile) {
-        const path = await uploadToSupabase(bannerFile);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-        bannerUrl = `${apiUrl}/beatmaps/bg?path=${encodeURIComponent(path)}`;
-      }
-
-      // Update backend user profile
       const updatedUser = await updateProfile(token, {
         username: username !== user.username ? username : undefined,
         avatarUrl: avatarUrl || undefined,
@@ -124,8 +86,6 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
       login(token, updatedUser);
       toast.success("Profile updated successfully!");
       setIsEditing(false);
-      setAvatarFile(null);
-      setBannerFile(null);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
@@ -133,226 +93,100 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
     }
   };
 
+  const rank = profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-";
+  const pp = profile ? `${Math.round(profile.totalPp ?? 0).toLocaleString("en-US")}pp` : "-";
+  const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "recently";
+
   return (
     <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 pointer-events-auto">
-          {/* Solid dimmed backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/75"
-          />
+      {isOpen && user && (
+        <div className="fixed inset-x-0 bottom-0 top-12 z-40">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/60" />
 
-          {/* Sliding Panel - 50% width of screen, full height below 48px navbar */}
           <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 260 }}
-            className="fixed bottom-0 left-1/2 -translate-x-1/2 z-10 w-full sm:w-[50vw] h-[calc(100vh-48px)] bg-[#070b14] border-t-2 border-x-2 border-blue-600/60 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.18 }}
+            className="absolute inset-y-0 left-1/2 flex w-[min(1632px,100%)] -translate-x-1/2 flex-col bg-lf-surface shadow-lf-panel"
           >
-            {/* Close Button Header */}
-            <div className="absolute top-4 right-6 z-30">
-              <button
-                onClick={onClose}
-                className="p-2 text-white/70 hover:text-white bg-black/60 hover:bg-black/80 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
+            <header className="flex h-[77px] shrink-0 items-center gap-4 bg-lf-bg-raised px-12">
+              <User className="h-8 w-8 text-white" aria-hidden />
+              <h1 className="font-game-display text-[22px] text-white">player info</h1>
+              <button type="button" onClick={onClose} aria-label="Close" className="ml-auto cursor-pointer rounded-full p-2 text-white/70 transition-colors hover:text-white">
+                <X className="h-5 w-5" />
               </button>
+            </header>
+            <div className="shrink-0 bg-lf-bg-raised px-12 pb-0 font-game-body text-sm text-white">
+              <span className="inline-block border-b-[3px] border-lf-primary pb-1">info</span>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {/* Banner Area */}
-              <div className={`relative h-48 sm:h-56 ${bannerPreview || user?.bannerUrl ? 'bg-black' : `bg-linear-to-r ${bannerColor}`}`}>
-                {bannerPreview || user?.bannerUrl ? (
+            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+              <div className="relative h-48 bg-linear-to-r from-lf-primary/50 to-lf-bg lg:h-[350px]">
+                {bannerSrc && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={bannerPreview || user?.bannerUrl || ""} alt="Banner" className="w-full h-full object-cover opacity-80" />
-                ) : (
-                  <div className="absolute inset-0 bg-black/20" />
+                  <img src={bannerSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 )}
               </div>
 
-              {/* Body Content */}
-              <div className="px-6 sm:px-8 py-6 space-y-6">
-                {/* Player Details Card */}
-                <div className="p-5 bg-[#0a1220] border border-white/5 rounded-2xl space-y-4">
-                  {/* Action Row Header */}
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <span className="text-xs font-game-mono text-blue-400 uppercase tracking-widest">
-                      PLAYER DETAILS
-                    </span>
-
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-game-body font-semibold transition-all cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      {isEditing ? "Cancel" : "Edit Profile"}
-                    </button>
-                  </div>
-
-                  {/* Player Profile Info (Avatar, Name, Join Date) */}
-                  <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#040810] border border-blue-500/20 overflow-hidden flex items-center justify-center shadow-xl shrink-0">
-                      {avatarPreview || user?.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarPreview || user?.avatarUrl || ""} alt={user?.username} className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-10 h-10 text-blue-400" />
-                      )}
-                    </div>
-
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl font-game-display font-bold text-white tracking-wide">
-                        {user?.username || "Player"}
-                      </h1>
-                      <p className="text-xs font-game-mono text-white/60 flex items-center gap-1.5 mt-1">
-                        <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                        Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Recently"}
-                        {globalRank !== null && globalRank > 0 && (
-                          <>
-                            <span className="mx-1">•</span>
-                            <span className="text-amber-400 font-bold">#{globalRank.toLocaleString()} Global</span>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Edit Profile Section */}
-                {isEditing && (
-                  <motion.form
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    onSubmit={handleSaveProfile}
-                    className="p-5 bg-[#0c1424] border border-blue-900/40 rounded-2xl space-y-4"
-                  >
-                    <h3 className="text-xs font-game-display font-bold text-white tracking-wide uppercase">
-                      Edit Profile Info
-                    </h3>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                          Username
-                        </label>
-                        <input
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-[#060a12] border border-blue-900/50 text-white text-xs font-game-body focus:outline-none focus:border-blue-400"
-                        />
-                      </div>
-
-                      {/* Avatar File Upload */}
-                      <div>
-                        <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                          Avatar Picture
-                        </label>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                          accept="image/*"
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-[#060a12] border border-dashed border-blue-900/70 hover:border-blue-400 text-white/70 hover:text-white text-xs font-game-body transition-colors cursor-pointer"
-                        >
-                          <Upload className="w-4 h-4 text-blue-400" />
-                          {avatarFile ? avatarFile.name : "Choose avatar image file..."}
-                        </button>
-                      </div>
-
-                      {/* Banner File Upload */}
-                      <div>
-                        <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                          Banner Picture
-                        </label>
-                        <input
-                          type="file"
-                          ref={bannerInputRef}
-                          onChange={handleBannerChange}
-                          accept="image/*"
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => bannerInputRef.current?.click()}
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl bg-[#060a12] border border-dashed border-blue-900/70 hover:border-blue-400 text-white/70 hover:text-white text-xs font-game-body transition-colors cursor-pointer"
-                        >
-                          <Upload className="w-4 h-4 text-blue-400" />
-                          {bannerFile ? bannerFile.name : "Choose banner image file..."}
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-game-display font-semibold text-xs cursor-pointer transition-colors disabled:opacity-50"
-                    >
-                      {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      Save Profile
-                    </button>
-                  </motion.form>
-                )}
-
-                {/* Real Player Statistics Grid */}
-                <div>
-                  <div className="text-xs font-game-mono text-white/50 uppercase tracking-wider mb-3">
-                    Statistics
-                  </div>
-
-                  {isLoadingStats ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
-                    </div>
+              <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[270px] pr-12">
+                <span className="absolute -top-16 left-[70px] flex h-28 w-28 items-center justify-center overflow-hidden rounded-xl bg-lf-bg shadow-lf-panel">
+                  {avatarSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="p-4 bg-[#0a1220] border border-white/5 rounded-2xl flex flex-col">
-                        <div className="flex items-center gap-2 text-emerald-400 mb-1">
-                          <Activity className="w-4 h-4" />
-                          <span className="text-[11px] font-game-mono uppercase tracking-wider text-white/60">Play Count</span>
-                        </div>
-                        <span className="text-xl font-game-display font-bold text-white">
-                          {stats?.playCount ?? 0}
-                        </span>
-                      </div>
-
-                      <div className="p-4 bg-[#0a1220] border border-white/5 rounded-2xl flex flex-col">
-                        <div className="flex items-center gap-2 text-cyan-400 mb-1">
-                          <Target className="w-4 h-4" />
-                          <span className="text-[11px] font-game-mono uppercase tracking-wider text-white/60">Avg Accuracy</span>
-                        </div>
-                        <span className="text-xl font-game-display font-bold text-white">
-                          {stats?.avgAccuracy ? `${stats.avgAccuracy.toFixed(2)}%` : "0.00%"}
-                        </span>
-                      </div>
-
-                      <div className="p-4 bg-[#0a1220] border border-white/5 rounded-2xl flex flex-col">
-                        <div className="flex items-center gap-2 text-amber-400 mb-1">
-                          <Trophy className="w-4 h-4" />
-                          <span className="text-[11px] font-game-mono uppercase tracking-wider text-white/60">Total PP</span>
-                        </div>
-                        <span className="text-xl font-game-display font-bold text-white">
-                          {totalPp ? Math.round(totalPp).toLocaleString() : "0"} <span className="text-sm text-white/50">pp</span>
-                        </span>
-                      </div>
-                    </div>
+                    <User className="h-12 w-12 text-lf-text-muted" />
                   )}
-                </div>
-
+                </span>
+                <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
+                <button
+                  type="button"
+                  onClick={() => (isEditing ? setIsEditing(false) : startEditing())}
+                  aria-label={isEditing ? "Cancel editing" : "Edit profile"}
+                  className="ml-3 cursor-pointer rounded-lf-sm p-1.5 text-white/60 transition-colors hover:text-white"
+                >
+                  {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                </button>
               </div>
+
+              {isEditing && (
+                <form onSubmit={handleSaveProfile} className="mx-[70px] mt-6 max-w-xl space-y-3">
+                  <input value={username} onChange={(e) => setUsername(e.target.value)} minLength={3} maxLength={50} required placeholder="username" className="block h-11 w-full rounded-lf-sm border-2 border-transparent bg-black/40 px-4 font-game-body text-base text-white outline-hidden focus:border-lf-accent" />
+                  <label className={FILE_BUTTON}>
+                    <Upload className="h-4 w-4 text-lf-accent" />
+                    {avatarFile ? avatarFile.name : "Choose avatar image..."}
+                    <input type="file" accept="image/*" onChange={pickImage(setAvatarFile)} className="hidden" />
+                  </label>
+                  <label className={FILE_BUTTON}>
+                    <Upload className="h-4 w-4 text-lf-accent" />
+                    {bannerFile ? bannerFile.name : "Choose banner image..."}
+                    <input type="file" accept="image/*" onChange={pickImage(setBannerFile)} className="hidden" />
+                  </label>
+                  <button type="submit" disabled={isSaving} className="flex cursor-pointer items-center gap-2 rounded-lf-sm bg-lf-primary px-5 py-2 font-game-display text-sm font-bold text-white transition-[filter] hover:brightness-110 disabled:opacity-60">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Save
+                  </button>
+                </form>
+              )}
+
+              <div className="flex flex-wrap items-start justify-between gap-8 px-[70px] py-9">
+                <div className="flex gap-16">
+                  <div>
+                    <div className={LABEL}>Global Ranking</div>
+                    <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{rank}</div>
+                  </div>
+                  <div>
+                    <div className={LABEL}>Performance</div>
+                    <div className="font-game-display text-[30px] font-bold leading-9 text-white">{pp}</div>
+                  </div>
+                </div>
+                <div className="w-72 space-y-1.5">
+                  <Stat label="Hit Accuracy" value={profile ? `${profile.stats.avgAccuracy.toFixed(2)}%` : "-"} />
+                  <Stat label="Play Count" value={profile ? profile.stats.playCount.toLocaleString("en-US") : "-"} />
+                </div>
+              </div>
+
+              <p className="px-[70px] pb-8 font-game-body text-[13px] text-white/70">Joined {joined}</p>
             </div>
           </motion.div>
         </div>
