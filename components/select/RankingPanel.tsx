@@ -157,7 +157,7 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
       ) : entries.length === 0 ? (
         <Message icon={<Trophy className="h-10 w-10 text-white/40" aria-hidden />}>No scores yet. Be the first to play!</Message>
       ) : (
-        <div className={cn("no-scrollbar mt-[10px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden", mine ? "pb-[150px]" : "pb-6")}>
+        <div className={cn("no-scrollbar mt-[8px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-[2px]", mine ? "pb-[150px]" : "pb-6")}>
           {entries.slice(0, 50).map((entry, i) => (
             <div key={entry.id} className="mb-1 h-[68px]" style={{ transform: `translateX(${60 - SHIFT_PER_ROW * Math.min(i, MAX_SHIFT_ROWS)}px)` }}>
               <ScoreCard entry={entry} onClick={() => openScore(entry)} />
@@ -167,7 +167,9 @@ export default function RankingPanel({ beatmap }: { beatmap: Beatmap }) {
       )}
 
       {tab === "ranking" && mine && !isGuest && (
-        <div className="absolute inset-x-0 bottom-0 h-[141px] rounded-tr-[14px] bg-select-band/90" style={{ width: "min(850px, 100%)" }}>
+        <div className="absolute inset-x-0 bottom-0 h-[141px]" style={{ width: "min(841px, 100%)" }}>
+          {/* foto: tepi kanan band miring (853 di atas -> 837 di bawah) */}
+          <div className={cn(SHEAR, "absolute inset-y-0 -left-[40px] right-0 rounded-tr-[14px] bg-select-band/90")} />
           <span className="absolute left-[49px] top-2 font-game-display text-[14px] text-white/75">
             Personal Best ({shortRank(mine.position)} of {entries.length.toLocaleString("en-US")})
           </span>

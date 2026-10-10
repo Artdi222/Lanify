@@ -3,11 +3,10 @@ import { User } from "lucide-react";
 import type { LeaderboardEntry } from "@/types/game";
 import { GRADE_COLORS, relativeTime } from "@/lib/select/format";
 import { cn } from "@/lib/utils";
+import { SHEAR, UNSHEAR } from "./shear";
 
-/** Kartu skor leaderboard (spec: docs/ui-spec/song-select.md, "Kiri-bawah"). Tinggi 68, pitch 72, tepi kanan miring. */
+/** Kartu skor leaderboard (spec: docs/ui-spec/song-select.md, "Kiri-bawah"). Tinggi 68, pitch 72. Seperti foto: badan, tile rank (PB) dan tile grade miring (tan 0.2) dengan sudut membulat; avatar tidak miring. */
 
-const SLANT = "polygon(0 0, 100% 0, calc(100% - 13px) 100%, 0 100%)";
-const TILE_SLANT = "polygon(13px 0, 100% 0, calc(100% - 13px) 100%, 0 100%)";
 
 const MOD_GROUPS: [RegExp, string][] = [
   [/^(EZ|NF|HT|DC)$/i, "#b3ff66"], // difficulty reduction (hijau, foto Mods)
@@ -61,20 +60,21 @@ export default function ScoreCard({
       onClick={onClick}
       className={cn("group relative block h-[68px] cursor-pointer text-left transition-[filter] duration-150 hover:brightness-125", best ? "w-[797px]" : "w-[808px]")}
     >
-      <div className={cn("absolute inset-0 rounded-l-xl", best ? "bg-[#353b3c]" : "bg-[#1c1c1c]/60")} style={{ clipPath: SLANT }} />
+      <div className={cn(SHEAR, "absolute inset-x-0 inset-y-[2px] rounded-[10px]", best ? "bg-[#353b3c]" : "bg-[#1c1c1c]/60")} />
+      {/* segmen skor sedikit lebih terang (foto), menempel ke tile grade */}
+      <div className={cn(SHEAR, "absolute inset-y-0 right-[40px] w-[230px] rounded-[10px] bg-white/[0.06]")} />
 
       {best ? (
         <div
-          className="absolute left-0 top-0 flex h-full w-[57px] items-center justify-center rounded-l-xl bg-linear-to-b from-[#65fbc9] to-[#58c29f] font-game-display text-[17px] font-semibold text-black/80"
-          style={{ clipPath: "polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%)" }}
+          className={cn(SHEAR, "absolute left-0 top-0 flex h-full w-[57px] items-center justify-center rounded-[10px] bg-linear-to-b from-[#65fbc9] to-[#58c29f] font-game-display text-[17px] font-semibold text-black/80")}
         >
-          {rankLabel}
+          <span className={UNSHEAR}>{rankLabel}</span>
         </div>
       ) : (
         <span className="absolute left-0 top-0 flex h-full w-[72px] items-center justify-end pr-3.5 font-game-display text-[20px] font-semibold text-white">#{entry.position}</span>
       )}
 
-      <div className={cn("absolute top-0 h-[68px] w-[68px] overflow-hidden rounded-[10px] bg-black/50", best ? "left-[54px]" : "left-[72px]")}>
+      <div className={cn("absolute -top-[1px] h-[70px] w-[68px] overflow-hidden rounded-[10px] bg-black/50 shadow-[0_2px_6px_rgb(0_0_0/0.35)]", best ? "left-[54px]" : "left-[72px]")}>
         {entry.avatarUrl ? (
           <img src={entry.avatarUrl} alt="" className="h-full w-full object-cover" />
         ) : (
@@ -105,10 +105,10 @@ export default function ScoreCard({
       </div>
 
       <div
-        className="absolute right-0 top-0 flex h-full w-[58px] items-center justify-center font-game-display text-[26px] font-medium text-white/90"
-        style={{ backgroundColor: gradeColor, clipPath: TILE_SLANT, textShadow: "0 1px 2px rgb(0 0 0 / 0.25)" }}
+        className={cn(SHEAR, "absolute right-0 top-0 flex h-full w-[58px] items-center justify-center rounded-[10px] font-game-display text-[26px] font-medium text-white/90")}
+        style={{ backgroundColor: gradeColor, textShadow: "0 1px 2px rgb(0 0 0 / 0.25)" }}
       >
-        {entry.rank}
+        <span className={UNSHEAR}>{entry.rank}</span>
       </div>
     </button>
   );
