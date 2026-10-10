@@ -39,10 +39,10 @@ export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: 
               <UserIcon className="h-9 w-9 text-lf-text-muted" />
             )}
           </span>
-          <div className="absolute inset-y-[10px] left-[107px] right-3 flex min-w-0 flex-col justify-between">
+          <div className="absolute bottom-[10px] left-[107px] right-3 flex min-w-0 flex-col gap-1">
             {profile?.country ? (
               <span className="block" title={countryName(profile.country)}>
-                <Flag code={profile.country} height={22} />
+                <Flag code={profile.country} height={30} />
               </span>
             ) : (
               <span className="font-game-body text-xs text-white/60">Set country in player info</span>

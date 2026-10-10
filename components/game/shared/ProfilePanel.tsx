@@ -138,13 +138,13 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                 )}
               </div>
 
-              <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[270px] pr-12">
-                <span className="absolute -top-16 left-[70px] flex h-28 w-28 items-center justify-center overflow-hidden rounded-xl bg-lf-bg shadow-lf-panel">
+              <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[262px] pr-12">
+                <span className="absolute -top-24 left-[70px] flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl bg-lf-bg shadow-lf-panel">
                   {avatarSrc ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    <User className="h-12 w-12 text-lf-text-muted" />
+                    <User className="h-16 w-16 text-lf-text-muted" />
                   )}
                 </span>
                 <div className="min-w-0">
