@@ -7,7 +7,6 @@ import { useRouter, useParams } from "next/navigation";
 import { Star } from "lucide-react";
 import { BackButton } from "@/components/select/SelectFooter";
 import { LogoButton } from "@/components/menu/LogoButton";
-import GameSlider from "@/components/game/shared/GameSlider";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { getBeatmap, getBeatmapUrl } from "@/lib/api/beatmaps";
@@ -94,11 +93,11 @@ export default function PreparePage() {
 
       <aside className="absolute right-6 top-6 hidden w-[358px] flex-col gap-4 lg:flex">
         <Panel title="Visual settings">
-          <GameSlider label="Background dim" value={settings.backgroundDim} min={0} max={100} suffix="%" onChange={settings.setBackgroundDim} />
-          <GameSlider label="Background blur" value={settings.backgroundBlur} min={0} max={100} suffix="%" onChange={settings.setBackgroundBlur} />
+          <Slider label="Background dim" value={settings.backgroundDim} min={0} max={100} suffix="%" onChange={settings.setBackgroundDim} />
+          <Slider label="Background blur" value={settings.backgroundBlur} min={0} max={100} suffix="%" onChange={settings.setBackgroundBlur} />
         </Panel>
         <Panel title="Audio settings">
-          <GameSlider label="Audio offset" value={settings.globalOffset} min={-200} max={200} suffix=" ms" onChange={settings.setGlobalOffset} />
+          <Slider label="Audio offset" value={settings.globalOffset} min={-200} max={200} suffix=" ms" onChange={settings.setGlobalOffset} />
         </Panel>
       </aside>
 
@@ -112,9 +111,31 @@ export default function PreparePage() {
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 rounded-lg bg-white/15 p-3 pb-4">
-      <h2 className="font-game-display text-sm font-bold uppercase tracking-wide text-white/90">{title}</h2>
-      {children}
+    <section className="rounded-xl bg-black/35 px-4 pb-4 pt-3 shadow-lf-panel">
+      <h2 className="mb-3 font-game-display text-[15px] font-bold uppercase tracking-wide text-white">{title}</h2>
+      <div className="space-y-4">{children}</div>
     </section>
+  );
+}
+
+// Thin track, pill thumb (spec: docs/ui-spec/loader.md). The fill is a gradient on the input itself.
+function Slider({ label, value, min, max, suffix = "", onChange }: { label: string; value: number; min: number; max: number; suffix?: string; onChange: (v: number) => void }) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <label className="block">
+      <span className="flex justify-between font-game-body text-[15px] text-white/85">
+        {label}
+        <span className="tabular-nums text-white/60">{value}{suffix}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={{ background: `linear-gradient(to right, var(--color-lf-accent) ${pct}%, rgb(255 255 255 / 0.25) ${pct}%)` }}
+        className="mt-2 block h-1 w-full cursor-pointer appearance-none rounded-full [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-9 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-lf-accent [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-9 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-lf-accent [&::-webkit-slider-thumb]:shadow-lf-glow"
+      />
+    </label>
   );
 }
