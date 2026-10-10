@@ -12,6 +12,7 @@ import { SkewedPanel } from "@/components/ui/SkewedPanel";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
+import { useGameStore } from "@/lib/store/useGameStore";
 import { GAMEPLAY_TIPS } from "@/types/game";
 
 const MENU_BACKGROUNDS = ["/background/BG-1.webp", "/background/BG-2.webp"];
@@ -21,7 +22,8 @@ export default function MainMenuPage() {
   const { isGuest, logout } = useAuthStore();
   const globalOffset = useSettingsStore((s) => s.globalOffset);
   const isPlaying = useMusicStore((s) => s.isPlaying);
-  const coverUrl = useMusicStore((s) => s.playlist[s.currentIndex]?.coverUrl);
+  // Hanya beatmap yang dipilih di selector yang mengganti art maskot; lagu acak menu tidak.
+  const coverUrl = useGameStore((s) => s.selectedBeatmap?.coverUrl) ?? null;
   const [mounted, setMounted] = useState(false);
   const [isMenuExpanded, setIsMenuExpanded] = useState(false);
   const [tip, setTip] = useState("");
@@ -36,7 +38,7 @@ export default function MainMenuPage() {
 
   return (
     <div className={`relative flex-1 flex flex-col overflow-hidden bg-lf-bg selection:bg-lf-accent/30 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
-      {/* Art maskot (acak per kunjungan); cover lagu yang sedang diputar menggantikannya begitu diketahui */}
+      {/* Art maskot (acak per kunjungan) sampai ada beatmap dipilih di selector */}
       <AnimatePresence>
         {(coverUrl || mascotBg) && (
           <motion.div
