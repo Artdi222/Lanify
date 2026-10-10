@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 
 /** Footer layar select: ukuran dan warna dari foto (docs/ui-spec/song-select.md, bagian Footer). */
 
-function BackButton() {
+export function BackButton({ href = "/" }: { href?: string }) {
   return (
     <Link
-      href="/"
+      href={href}
       className="group absolute bottom-[18px] left-[22px] z-10 flex h-16 w-[328px] -skew-x-[10deg] items-center justify-center rounded-lg border border-white/25 bg-select-back shadow-lg transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[0.98]"
     >
       <span className="flex skew-x-[10deg] items-center gap-5 pr-[22px] font-game-display text-xl text-white">
