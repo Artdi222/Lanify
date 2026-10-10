@@ -155,6 +155,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       maxScoreUnits: 0,
       latestJudgement: null,
       isReadOnly: false,
+      retryTrigger: 0,
     }),
 
   retryGame: () =>
