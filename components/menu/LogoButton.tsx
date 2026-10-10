@@ -17,13 +17,15 @@ export function LogoButton({ src, pulsing, circleClassName, className, ...props 
     <button type="button" aria-label="Lany" {...props} className={cn("group relative cursor-pointer focus:outline-hidden", className)}>
       <div
         className={cn(
-          "relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-linear-to-br from-lf-primary-hover to-lf-primary text-3xl sm:text-5xl shadow-lf-glow transition-transform duration-200 ease-lf-out group-hover:scale-105 group-active:scale-95 sm:h-64 sm:w-64",
+          "relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-full text-3xl sm:text-5xl shadow-lf-glow transition-transform duration-200 ease-lf-out group-hover:scale-105 group-active:scale-95 sm:h-64 sm:w-64",
+          // Logo gambar sudah punya cincin sendiri; placeholder teks butuh cincin + latar.
+          !src && "border-[6px] border-white bg-linear-to-br from-lf-primary-hover to-lf-primary",
           pulsing && "animate-breathe",
           circleClassName,
         )}
       >
         {src ? (
-          <img src={src} alt="" className="h-full w-full object-cover" />
+          <img src={src} alt="" draggable={false} className="h-full w-full object-contain" />
         ) : (
           <span className="font-game-display font-bold tracking-wide text-white">Lany</span>
         )}
