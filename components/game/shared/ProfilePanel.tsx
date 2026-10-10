@@ -6,6 +6,7 @@ import { X, User, Pencil, Save, Upload, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
+import { COUNTRIES, countryName, flagEmoji } from "@/lib/country";
 import { useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
 
@@ -39,6 +40,8 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
   const [username, setUsername] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [country, setCountry] = useState("");
+  const [savedCountry, setSavedCountry] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const avatarSrc = useMemo(() => (avatarFile ? URL.createObjectURL(avatarFile) : user?.avatarUrl), [avatarFile, user?.avatarUrl]);
@@ -53,6 +56,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
 
   const startEditing = () => {
     setUsername(user?.username ?? "");
+    setCountry(profile?.country ?? "");
     setAvatarFile(null);
     setBannerFile(null);
     setIsEditing(true);
@@ -81,9 +85,11 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
         username: username !== user.username ? username : undefined,
         avatarUrl: avatarUrl || undefined,
         bannerUrl: bannerUrl || undefined,
+        country: country && country !== profile?.country ? country : undefined,
       });
 
       login(token, updatedUser);
+      if (country) setSavedCountry(country);
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: unknown) {
@@ -93,6 +99,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
     }
   };
 
+  const shownCountry = savedCountry ?? profile?.country;
   const rank = profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-";
   const pp = profile ? `${Math.round(profile.totalPp ?? 0).toLocaleString("en-US")}pp` : "-";
   const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "recently";
@@ -138,7 +145,15 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                     <User className="h-12 w-12 text-lf-text-muted" />
                   )}
                 </span>
-                <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
+                <div className="min-w-0">
+                  <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
+                  {shownCountry && (
+                    <div className="mt-1 flex items-center gap-2 font-game-body text-sm text-white/85">
+                      <span className="text-xl leading-none">{flagEmoji(shownCountry)}</span>
+                      {countryName(shownCountry)}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => (isEditing ? setIsEditing(false) : startEditing())}
@@ -152,6 +167,14 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
               {isEditing && (
                 <form onSubmit={handleSaveProfile} className="mx-[70px] mt-6 max-w-xl space-y-3">
                   <input value={username} onChange={(e) => setUsername(e.target.value)} minLength={3} maxLength={50} required placeholder="username" className="block h-11 w-full rounded-lf-sm border-2 border-transparent bg-black/40 px-4 font-game-body text-base text-white outline-hidden focus:border-lf-accent" />
+                  <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Country" className="block h-11 w-full rounded-lf-sm border-2 border-transparent bg-black/40 px-3 font-game-body text-base text-white outline-hidden focus:border-lf-accent">
+                    <option value="">Country (not set)</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {flagEmoji(c.code)} {c.name}
+                      </option>
+                    ))}
+                  </select>
                   <label className={FILE_BUTTON}>
                     <Upload className="h-4 w-4 text-lf-accent" />
                     {avatarFile ? avatarFile.name : "Choose avatar image..."}
@@ -175,6 +198,12 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                     <div className={LABEL}>Global Ranking</div>
                     <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{rank}</div>
                   </div>
+                  {profile?.countryRank != null && savedCountry === null && (
+                    <div>
+                      <div className={LABEL}>Country Ranking</div>
+                      <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">#{profile.countryRank.toLocaleString("en-US")}</div>
+                    </div>
+                  )}
                   <div>
                     <div className={LABEL}>Performance</div>
                     <div className="font-game-display text-[30px] font-bold leading-9 text-white">{pp}</div>

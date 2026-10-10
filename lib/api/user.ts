@@ -8,6 +8,7 @@ export interface UserStats {
 
 export interface UserProfileResponse extends User {
   globalRank: number;
+  countryRank: number | null;
   stats: UserStats;
 }
 
@@ -19,7 +20,7 @@ export async function getUserProfile(id: string): Promise<UserProfileResponse> {
 /** Update current user's profile (username and/or avatarUrl) */
 export async function updateProfile(
   token: string,
-  payload: { username?: string; avatarUrl?: string; bannerUrl?: string }
+  payload: { username?: string; avatarUrl?: string; bannerUrl?: string; country?: string }
 ): Promise<User> {
   return apiClient<User>("/users/me", {
     method: "PUT",

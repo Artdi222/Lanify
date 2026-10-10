@@ -8,6 +8,7 @@ export interface User {
   bannerUrl?: string | null;
   createdAt?: string;
   totalPp?: number;
+  country?: string | null;
 }
 
 /** Admin user profile from the API (backward compat for admin panel) */

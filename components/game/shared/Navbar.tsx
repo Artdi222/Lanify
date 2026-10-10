@@ -90,7 +90,7 @@ export default function GameNavbar() {
           <div className="relative flex" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`flex cursor-pointer items-center gap-3 px-3 transition-colors ${isDropdownOpen ? "bg-lf-primary" : "hover:bg-lf-surface-hover"}`}
+              className={`m-1 flex cursor-pointer items-center gap-3 rounded-lf-md px-3 transition-colors ${isDropdownOpen ? "bg-lf-primary" : "hover:bg-lf-surface-hover"}`}
             >
               <span className="max-w-44 truncate text-[15px] font-game-body text-lf-text">
                 {isGuest ? "Guest" : user?.username}

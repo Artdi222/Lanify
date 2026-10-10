@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { User as UserIcon } from "lucide-react";
+import { ChevronDown, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
+import { PRESENCE_OPTIONS, usePresenceStore } from "@/lib/store/usePresenceStore";
+import { countryName, flagEmoji } from "@/lib/country";
 import { useUserProfile } from "./useUserProfile";
 
 const ROW = "block w-full cursor-pointer px-4 py-2 text-left font-game-body text-base text-white transition-colors hover:bg-white/10";
@@ -11,6 +14,9 @@ const ROW = "block w-full cursor-pointer px-4 py-2 text-left font-game-body text
 export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: () => void; onDone: () => void }) {
   const { user, logout } = useAuthStore();
   const profile = useUserProfile(user?.id);
+  const { status, setStatus } = usePresenceStore();
+  const [statusOpen, setStatusOpen] = useState(false);
+  const current = PRESENCE_OPTIONS.find((o) => o.value === status)!;
   if (!user) return null;
 
   return (
@@ -32,30 +38,67 @@ export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: 
               <UserIcon className="h-9 w-9 text-lf-text-muted" />
             )}
           </span>
-          <span className="absolute bottom-2 left-[107px] right-3 truncate font-game-display text-base font-bold text-white">{user.username}</span>
+          <div className="absolute bottom-2 left-[107px] right-3 min-w-0">
+            {profile?.country && (
+              <span className="mb-1 flex items-center gap-1.5 font-game-body text-xs text-white/80" title={countryName(profile.country)}>
+                <span className="text-base leading-none">{flagEmoji(profile.country)}</span>
+              </span>
+            )}
+            <span className="block truncate font-game-display text-base font-bold text-white">{user.username}</span>
+          </div>
         </div>
-        <div className="px-3 pb-3 pt-2.5">
-          <div className="font-game-body text-xs text-white/70">Global Ranking</div>
-          <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-"}</div>
+        <div className="flex gap-12 px-3 pb-3 pt-2.5">
+          <div>
+            <div className="font-game-body text-xs text-white/70">Global Ranking</div>
+            <div className="font-game-display text-[30px] font-bold leading-9 text-lf-warning">{profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-"}</div>
+          </div>
+          {profile?.countryRank != null && (
+            <div>
+              <div className="font-game-body text-xs text-white/70">Country Ranking</div>
+              <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">#{profile.countryRank.toLocaleString("en-US")}</div>
+            </div>
+          )}
         </div>
       </button>
 
-      <div className="overflow-hidden rounded-lf-sm bg-black/25 py-1">
-        {user.role === "admin" && (
-          <Link href="/admin" onClick={onDone} className={ROW}>
-            Admin Dashboard
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            logout();
-            onDone();
-          }}
-          className={ROW}
-        >
-          Sign out
+      <div className="overflow-hidden rounded-lf-sm bg-black/25">
+        <button type="button" onClick={() => setStatusOpen((o) => !o)} aria-expanded={statusOpen} className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left font-game-body text-base text-white transition-colors hover:bg-white/10">
+          <span className={`h-3 w-3 rounded-full ${current.dot}`} />
+          {current.label}
+          <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${statusOpen ? "rotate-180" : ""}`} />
         </button>
+        {statusOpen && (
+          <div className="border-t border-white/10 py-1">
+            {PRESENCE_OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => {
+                  setStatus(o.value);
+                  setStatusOpen(false);
+                }}
+                className={`${ROW} ${o.value === status ? "bg-lf-primary hover:bg-lf-primary" : ""}`}
+              >
+                {o.label}
+              </button>
+            ))}
+            {user.role === "admin" && (
+              <Link href="/admin" onClick={onDone} className={ROW}>
+                Admin Dashboard
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                onDone();
+              }}
+              className={ROW}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
