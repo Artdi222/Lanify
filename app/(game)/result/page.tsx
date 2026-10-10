@@ -9,14 +9,16 @@ import { ChevronLeft, RotateCcw, Star, User } from "lucide-react";
 import { useGameStore, calculateRank } from "@/lib/store/useGameStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { getBeatmapPerformance, submitScore } from "@/lib/api/scores";
+import { getLeaderboard } from "@/lib/api/leaderboard";
 import { judgementsToPayload } from "@/types/score";
-import { JUDGEMENT_COLORS } from "@/types/game";
+import { JUDGEMENT_COLORS, type LeaderboardEntry } from "@/types/game";
 import { cn } from "@/lib/utils";
 import { SHEAR, UNSHEAR } from "@/components/select/shear";
 import GradeRing from "@/components/game/result/GradeRing";
 import AccuracyGraph from "@/components/game/result/AccuracyGraph";
 import HitErrorBar from "@/components/game/result/HitErrorBar";
 import GuestBanner from "@/components/game/result/GuestBanner";
+import NeighbourCard from "@/components/game/result/NeighbourCard";
 import { toast } from "sonner";
 
 type Perf = { starRating: number; maxCombo: number; maxPp: number };
@@ -48,6 +50,10 @@ export default function ResultPage() {
   const { token, isGuest, user } = useAuthStore();
   const submitted = useRef(false);
   const [freshPp, setFreshPp] = useState<number | null>(null);
+  const [freshId, setFreshId] = useState<string | null>(null);
+  const [board, setBoard] = useState<LeaderboardEntry[]>([]);
+  const [detail, setDetail] = useState(false);
+  const mainRef = useRef<HTMLDivElement>(null);
   const [perf, setPerf] = useState<Perf | null>(null);
   const [playedAt] = useState(() => new Date().toISOString());
 
@@ -79,12 +85,25 @@ export default function ResultPage() {
       submitScore(payload, token)
         .then((res) => {
           setFreshPp(res.pp ?? null);
+          setFreshId(res.id);
           toast.success("Score saved!");
           useGameStore.getState().invalidateLeaderboardCache(selectedBeatmapId);
         })
         .catch(() => toast.error("Failed to save score"));
     }
   }, [token, selectedBeatmapId, score, accuracy, maxCombo, judgements, accuracyHistory, hitErrors, isReadOnly]);
+
+  // Leaderboard strip; refetched once the fresh score is saved so it lands in its real position.
+  useEffect(() => {
+    if (!beatmapId) return;
+    let alive = true;
+    getLeaderboard(beatmapId, "GLOBAL", token)
+      .then((res) => alive && setBoard(Array.isArray(res) ? res : []))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [beatmapId, token, freshId]);
 
   useEffect(() => {
     if (!beatmapId) return;
@@ -102,6 +121,23 @@ export default function ResultPage() {
   const when = new Date(isReadOnly && viewingMeta ? viewingMeta.submittedAt : playedAt);
   const ppShare = pp !== null && perf?.maxPp ? Math.min(1, pp / perf.maxPp) : 0;
 
+  const currentId = isReadOnly ? viewingMeta?.scoreId : freshId;
+  const others = board.filter((e) => e.id !== currentId);
+  const ownIndex = board.findIndex((e) => e.id === currentId);
+  // Not on the board (e.g. not the player's best): slot it in by pp, else by score.
+  const insertAt =
+    ownIndex >= 0 ? ownIndex : others.findIndex((e) => (pp !== null && e.pp !== undefined ? e.pp < pp : e.score < score));
+  const split = insertAt < 0 ? others.length : insertAt;
+
+  useEffect(() => {
+    if (!detail) mainRef.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [detail, split, board.length]);
+
+  const openEntry = (entry: LeaderboardEntry) => {
+    useGameStore.getState().setViewingScore(entry);
+    setDetail(false);
+  };
+
   const judgementCells = [
     { label: "Marvelous", count: judgements.marvelous, color: JUDGEMENT_COLORS.MARVELOUS },
     { label: "Perfect", count: judgements.perfect, color: JUDGEMENT_COLORS.PERFECT },
@@ -111,22 +147,22 @@ export default function ResultPage() {
     { label: "Miss", count: judgements.miss, color: JUDGEMENT_COLORS.MISS },
   ];
 
-  const back = () => {
-    useGameStore.getState().resetGame();
-    router.push("/select");
-  };
-
-  return (
-    <div className="relative h-screen overflow-hidden bg-lf-bg">
-      {currentBeatmap?.backgroundUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={currentBeatmap.backgroundUrl} alt="" className="absolute inset-0 h-full w-full scale-105 object-cover blur-md" />
-      )}
-      <div className="absolute inset-0 bg-black/55" />
-
-      <div className="relative z-10 flex h-full gap-9 px-7 pb-[72px] pt-[72px]">
-        {/* Left: score card */}
-        <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }} className="relative flex w-[477px] shrink-0 flex-col pt-[65px]">
+  // Main score card: centered in the strip, or on the left in detail mode. Click toggles detail.
+  const mainCard = (
+        <motion.div
+          ref={mainRef}
+          layout
+          role="button"
+          tabIndex={0}
+          aria-expanded={detail}
+          aria-label={detail ? "Hide score details" : "Show score details"}
+          onClick={() => setDetail((d) => !d)}
+          onKeyDown={(e) => e.key === "Enter" && setDetail((d) => !d)}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative flex h-full max-h-[880px] w-[477px] shrink-0 cursor-pointer flex-col pt-[65px]"
+        >
           <div className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center">
             <span className="flex h-[105px] w-[105px] items-center justify-center overflow-hidden rounded-[22px] bg-lf-bg shadow-lf-panel">
               {player.avatarUrl ? (
@@ -186,6 +222,24 @@ export default function ResultPage() {
             </div>
           </div>
         </motion.div>
+  );
+
+  const back = () => {
+    useGameStore.getState().resetGame();
+    router.push("/select");
+  };
+
+  return (
+    <div className="relative h-screen overflow-hidden bg-lf-bg">
+      {currentBeatmap?.backgroundUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={currentBeatmap.backgroundUrl} alt="" className="absolute inset-0 h-full w-full scale-105 object-cover blur-md" />
+      )}
+      <div className="absolute inset-0 bg-black/55" />
+
+      {detail ? (
+      <div className="relative z-10 flex h-full gap-9 px-7 pb-[72px] pt-[72px]">
+        {mainCard}
 
         {/* Right: breakdown + Lanify's own stats */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} className="no-scrollbar min-w-0 flex-1 space-y-3 overflow-y-auto pt-[150px]">
@@ -220,6 +274,17 @@ export default function ResultPage() {
           )}
         </motion.div>
       </div>
+      ) : (
+        <div className="no-scrollbar relative z-10 flex h-full items-center gap-6 overflow-x-auto px-[50vw] pb-[72px] pt-[72px]">
+          {others.slice(0, split).map((e) => (
+            <NeighbourCard key={e.id} entry={e} onClick={() => openEntry(e)} />
+          ))}
+          {mainCard}
+          {others.slice(split).map((e) => (
+            <NeighbourCard key={e.id} entry={e} onClick={() => openEntry(e)} />
+          ))}
+        </div>
+      )}
 
       {/* Footer */}
       <div className="absolute inset-x-0 bottom-0 z-10 flex h-[67px] items-center justify-center gap-3 bg-lf-bg-raised/90">
