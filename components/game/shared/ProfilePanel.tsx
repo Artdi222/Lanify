@@ -8,7 +8,7 @@ import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
 import { COUNTRIES, countryName } from "@/lib/country";
 import Flag from "@/components/profile/Flag";
-import { useUserProfile } from "@/components/profile/useUserProfile";
+import { invalidateUserProfile, useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
 
 interface ProfilePanelProps {
@@ -90,6 +90,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
       });
 
       login(token, updatedUser);
+      invalidateUserProfile(user.id);
       if (country) setSavedCountry(country);
       toast.success("Profile updated successfully!");
       setIsEditing(false);
