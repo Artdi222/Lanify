@@ -86,7 +86,9 @@ export const useMusicStore = create<MusicState>((set, get) => {
       // Stop current and clear for new source
       currentAudio.pause();
       const playRequestId = Math.random().toString(36).substring(7);
-      set({ lastRequestId: playRequestId });
+      // Index (sumber cover/judul di UI) diisi sekarang, bukan setelah arsip selesai diunduh (bisa >10 s).
+      const index = playlist.findIndex(b => b.title === beatmap.title && b.artist === beatmap.artist);
+      set({ lastRequestId: playRequestId, currentIndex: index });
 
       try {
         const archiveKey = beatmap.filePath;
@@ -107,16 +109,7 @@ export const useMusicStore = create<MusicState>((set, get) => {
         currentAudio.src = data.audioUrl;
         currentAudio.volume = volume;
         
-        // Find the index of this song in our unique playlist
-        const index = playlist.findIndex(
-          b => b.title === beatmap.title && b.artist === beatmap.artist
-        );
-
-        set({ 
-          isPlaying: true, 
-          currentIndex: index,
-          currentBeatmapId: beatmap.id
-        });
+        set({ isPlaying: true, currentBeatmapId: beatmap.id });
 
         const playPromise = currentAudio.play();
         if (playPromise !== undefined) {
