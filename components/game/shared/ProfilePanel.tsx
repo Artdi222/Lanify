@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Pencil, Save, Upload, Loader2 } from "lucide-react";
+import { X, User, Pencil, Save, Camera, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
-import { COUNTRIES, countryName } from "@/lib/country";
+import { countryName } from "@/lib/country";
+import CountryPicker from "@/components/profile/CountryPicker";
 import Flag from "@/components/profile/Flag";
 import { invalidateUserProfile, useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
@@ -17,8 +18,19 @@ interface ProfilePanelProps {
 }
 
 const LABEL = "font-game-body text-xs text-white/70";
-const FILE_BUTTON =
-  "flex w-full cursor-pointer items-center gap-2 rounded-lf-sm border-2 border-dashed border-white/20 bg-black/30 px-3 py-2 font-game-body text-sm text-white/80 transition-colors hover:border-lf-accent";
+const FIELD =
+  "block h-12 w-full rounded-lf-md border-2 border-transparent bg-black/40 px-4 font-game-body text-base text-white outline-hidden transition-colors hover:border-white/15 focus:border-lf-accent";
+
+/** Click-to-replace overlay shown on the banner/avatar while editing. */
+function ChangeImage({ label, onPick }: { label: string; onPick: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+  return (
+    <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1.5 bg-black/45 font-game-body text-sm text-white opacity-90 transition-opacity hover:opacity-100">
+      <Camera className="h-6 w-6" />
+      {label}
+      <input type="file" accept="image/*" onChange={onPick} className="hidden" />
+    </label>
+  );
+}
 
 function uploadedUrl(path: string) {
   return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/beatmaps/bg?path=${encodeURIComponent(path)}`;
@@ -61,6 +73,12 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
     setAvatarFile(null);
     setBannerFile(null);
     setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setAvatarFile(null);
+    setBannerFile(null);
+    setIsEditing(false);
   };
 
   const pickImage = (setFile: (f: File | null) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,6 +154,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={bannerSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 )}
+                {isEditing && <ChangeImage label="Change banner" onPick={pickImage(setBannerFile)} />}
               </div>
 
               <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[262px] pr-12">
@@ -146,6 +165,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   ) : (
                     <User className="h-16 w-16 text-lf-text-muted" />
                   )}
+                  {isEditing && <ChangeImage label="Change avatar" onPick={pickImage(setAvatarFile)} />}
                 </span>
                 <div className="min-w-0">
                   <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
@@ -158,7 +178,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => (isEditing ? setIsEditing(false) : startEditing())}
+                  onClick={() => (isEditing ? cancelEditing() : startEditing())}
                   aria-label={isEditing ? "Cancel editing" : "Edit profile"}
                   className="ml-3 cursor-pointer rounded-lf-sm p-1.5 text-white/60 transition-colors hover:text-white"
                 >
@@ -167,30 +187,39 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
               </div>
 
               {isEditing && (
-                <form onSubmit={handleSaveProfile} className="mx-[70px] mt-6 max-w-xl space-y-3">
-                  <input value={username} onChange={(e) => setUsername(e.target.value)} minLength={3} maxLength={50} required placeholder="username" className="block h-11 w-full rounded-lf-sm border-2 border-transparent bg-black/40 px-4 font-game-body text-base text-white outline-hidden focus:border-lf-accent" />
-                  <select value={country} onChange={(e) => setCountry(e.target.value)} aria-label="Country" className="block h-11 w-full rounded-lf-sm border-2 border-transparent bg-black/40 px-3 font-game-body text-base text-white outline-hidden focus:border-lf-accent">
-                    <option value="">Country (not set)</option>
-                    {COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <label className={FILE_BUTTON}>
-                    <Upload className="h-4 w-4 text-lf-accent" />
-                    {avatarFile ? avatarFile.name : "Choose avatar image..."}
-                    <input type="file" accept="image/*" onChange={pickImage(setAvatarFile)} className="hidden" />
-                  </label>
-                  <label className={FILE_BUTTON}>
-                    <Upload className="h-4 w-4 text-lf-accent" />
-                    {bannerFile ? bannerFile.name : "Choose banner image..."}
-                    <input type="file" accept="image/*" onChange={pickImage(setBannerFile)} className="hidden" />
-                  </label>
-                  <button type="submit" disabled={isSaving} className="flex cursor-pointer items-center gap-2 rounded-lf-sm bg-lf-primary px-5 py-2 font-game-display text-sm font-bold text-white transition-[filter] hover:brightness-110 disabled:opacity-60">
-                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    Save
-                  </button>
+                <form onSubmit={handleSaveProfile} className="mx-[70px] mt-8 max-w-3xl rounded-lf-lg bg-black/20 p-6">
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="font-game-display text-lg font-bold text-white">Edit profile</h3>
+                    <span className="font-game-body text-xs text-white/55">Click the banner or avatar above to replace them.</span>
+                  </div>
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                    <label className="block">
+                      <span className={LABEL}>Username</span>
+                      <input value={username} onChange={(e) => setUsername(e.target.value)} minLength={3} maxLength={50} required className={`mt-1.5 ${FIELD}`} />
+                      <span className="mt-1 block font-game-body text-xs text-white/45">3 to 50 characters. Shown on leaderboards.</span>
+                    </label>
+                    <div>
+                      <span className={LABEL}>Country</span>
+                      <div className="mt-1.5">
+                        <CountryPicker value={country} onChange={setCountry} />
+                      </div>
+                      <span className="mt-1 block font-game-body text-xs text-white/45">Used for your flag and country ranking.</span>
+                    </div>
+                  </div>
+                  {(avatarFile || bannerFile) && (
+                    <p className="mt-4 font-game-body text-xs text-lf-accent">
+                      New {[avatarFile && "avatar", bannerFile && "banner"].filter(Boolean).join(" and ")} will upload when you save.
+                    </p>
+                  )}
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button type="button" onClick={cancelEditing} className="cursor-pointer rounded-lf-md px-5 py-2.5 font-game-display text-sm font-bold text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={isSaving} className="flex cursor-pointer items-center gap-2 rounded-lf-md bg-lf-primary px-6 py-2.5 font-game-display text-sm font-bold text-white transition-[filter] hover:brightness-110 disabled:opacity-60">
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      {isSaving ? "Saving..." : "Save changes"}
+                    </button>
+                  </div>
                 </form>
               )}
 
