@@ -1,76 +1,85 @@
-# Lanify Frontend
+<p align="center">
+  <img src="public/background/Logo.webp" alt="Lany logo" width="140" />
+</p>
 
-## Description
-Lanify is a web-based rhythm game platform. It allows users to play vertical scrolling rhythm games in the browser. The application includes a rendering engine for gameplay, audio synchronization logic, and a system for managing beatmap data.
+<h1 align="center">Lany</h1>
 
-## Technical Stack
-The project is built using the following technologies:
+<p align="center">A vertical scrolling rhythm game that runs in your browser. Play, sync, repeat.</p>
 
-### Core Frameworks
-- Next.js 16 (App Router): Handles routing and navigation.
-- React 19: Used for building the user interface.
-- TypeScript: Provides type checking for the codebase.
+![Lany main menu](public/background/Menu.png)
 
-### Performance and Rendering
-- PIXI.js 7: A 2D engine used for rendering gameplay elements.
-- Framer Motion: Used for UI transitions and animations.
+## What is this
 
-### Audio Engine
-- Howler.js: Manages audio playback and seeking.
-- Timing Logic: Uses performance.now() for timing interpolation during gameplay.
+Lany is a 4K and 7K key rhythm game in the style of osu!mania. You pick a song, notes fall down the lanes, and you hit them in time with the music. It reads regular `.osz` beatmap files, so a lot of existing community maps work out of the box.
 
-### State Management
-- Zustand: Manages global application state, including settings and session data.
+This repository is the frontend. The API, database and scoring live in a separate backend repo ([lanify-be](https://github.com/Artdi222/lanify-be)).
 
-### Styling and UI
-- Tailwind CSS 4: Used for styling the application.
-- Shadcn/UI: A set of UI components built with Radix UI.
-- Lucide React: Provides icons for the interface.
+The layout borrows a lot from osu!lazer because it simply plays well, but the look is our own. The colours come straight from our mascot art: dark slate, soft lavender and not much else.
 
-### Beatmap Processing
-- Custom Parsers: Utilities like `OszInspector` that manually parse `.osz` archives and `.osu` files locally using `jszip` to extract metadata and hit objects.
+## Features
 
-## Key Features
-- Song Selection: Interface for browsing and selecting beatmaps.
-- Gameplay Engine: Supports standard and hold notes with configurable scroll speeds.
-- Music Player: A global player for audio playback across the site.
-- Leaderboards: Displays scores and rankings from the backend.
-- Settings: Configuration options for volume, offsets, and visuals.
-- Admin Dashboard: Tools for beatmap management, including automated star rating calculation via backend integration.
+- Gameplay with tap notes and hold notes, 4K and 7K, adjustable scroll speed and direction
+- Game time locked to the audio you actually hear, plus an offset wizard that measures your setup by having you tap along to a metronome
+- Song select with search, star rating filter, sorting and grouping, and a virtualized list that stays smooth with large libraries
+- Global leaderboards, personal best and a result screen with accuracy graph, hit error bar and a pp breakdown
+- Player profiles, rankings by performance and by country
+- A music player that keeps playing in the menus
+- Full settings panel with search: keybinds, audio, offset, background dim and blur, frame limit, render scale and an optional FPS counter
+- Admin dashboard for uploading and managing beatmaps
 
-## Getting Started
+## Tech stack
 
-### Prerequisites
-- Bun runtime
-- Node.js (version 20 or higher)
+| Area | What we use |
+| --- | --- |
+| Framework | Next.js 16 (App Router), React 19, TypeScript |
+| Rendering | PixiJS 7 for gameplay, Framer Motion for UI transitions |
+| Audio | Howler.js, with our own clock sync on top of the Web Audio output timestamp |
+| State | Zustand |
+| Styling | Tailwind CSS 4, a few shadcn/ui components, custom SVG icons |
+| Beatmaps | `.osz` and `.osu` parsed in the browser with JSZip |
+| Tests | `bun test` |
 
-### Installation
-Install dependencies:
+## Running it locally
+
+You need [Bun](https://bun.sh) and Node.js 20 or newer. The backend should be running too, otherwise the menus will load but there will be no songs.
 
 ```bash
 bun install
+bun run dev
 ```
 
-### Development
-Start the development server:
+The dev server starts on http://localhost:3001. By default the frontend talks to the API at `http://localhost:3000`. If yours lives somewhere else, create a `.env.local`:
 
 ```bash
-bun dev
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
-The application will be available at http://localhost:3000.
-
-### Production Build
-Build and start the application:
+For a production build:
 
 ```bash
 bun run build
-bun start
+bun run start
 ```
 
-## Project Structure
-- /app: Routes and page components.
-- /components: UI components for game, admin, and general use.
-- /lib: Core logic, API utilities, and state stores.
-- /public: Static assets.
-- /types: Type definitions.
+## Checks
+
+```bash
+bun test lib          # unit tests for timing, judgement, scoring and friends
+npx tsc --noEmit -p . # type check
+bun run lint          # eslint
+```
+
+## Where things are
+
+```
+app/          routes: menu, song select, play, result, admin
+components/   UI pieces, grouped by screen (menu, select, settings, profile, game)
+lib/game/     the engine: audio clock, input, judgement, scoring, note renderer
+lib/store/    Zustand stores for game, settings, music and auth
+lib/api/      small fetch wrappers around the backend
+public/       static assets, including the mascot art in public/background
+```
+
+## Credits
+
+The beatmaps are made by the osu! community and belong to their mappers and artists. Lany is a fan project and is not affiliated with osu! or ppy.
