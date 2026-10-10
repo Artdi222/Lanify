@@ -14,6 +14,7 @@ import { judgementsToPayload } from "@/types/score";
 import { JUDGEMENT_COLORS, type LeaderboardEntry } from "@/types/game";
 import { cn } from "@/lib/utils";
 import { SHEAR, UNSHEAR } from "@/components/select/shear";
+import { difficultyColor, starTextColor } from "@/lib/select/difficultyColor";
 import GradeRing from "@/components/game/result/GradeRing";
 import AccuracyGraph from "@/components/game/result/AccuracyGraph";
 import HitErrorBar from "@/components/game/result/HitErrorBar";
@@ -186,7 +187,10 @@ export default function ResultPage() {
 
               <p className="mt-4 text-center font-game-body text-[60px] font-light leading-none text-white tabular-nums">{score.toLocaleString("en-US")}</p>
               <div className="mt-3 flex justify-center">
-                <span className="flex items-center gap-1 rounded-full bg-lf-primary px-2.5 py-0.5 font-game-display text-xs font-bold text-white">
+                <span
+                  className="flex items-center gap-1 rounded-full px-2.5 py-0.5 font-game-display text-xs font-bold"
+                  style={perf ? { backgroundColor: difficultyColor(perf.starRating), color: starTextColor(perf.starRating) } : { backgroundColor: "rgb(255 255 255 / 0.15)" }}
+                >
                   <Star className="h-3 w-3 fill-current" />
                   {perf ? perf.starRating.toFixed(2) : "-"}
                 </span>
