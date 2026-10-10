@@ -74,12 +74,12 @@ export default function ScoreCard({
         <span className="absolute left-0 top-0 flex h-full w-[72px] items-center justify-end pr-3.5 font-game-display text-[20px] font-semibold text-white">#{entry.position}</span>
       )}
 
-      <div className={cn("absolute -top-[1px] h-[70px] w-[68px] overflow-hidden rounded-[10px] bg-black/50 shadow-[0_2px_6px_rgb(0_0_0/0.35)]", best ? "left-[54px]" : "left-[72px]")}>
+      <div className={cn(SHEAR, "absolute -top-[1px] h-[70px] w-[68px] overflow-hidden rounded-[10px] bg-black/50 shadow-[0_2px_6px_rgb(0_0_0/0.35)]", best ? "left-[54px]" : "left-[72px]")}>
         {entry.avatarUrl ? (
-          <img src={entry.avatarUrl} alt="" className="h-full w-full object-cover" />
+          <img src={entry.avatarUrl} alt="" className={cn(UNSHEAR, "h-full w-full scale-125 object-cover")} />
         ) : (
           <span className="flex h-full w-full items-center justify-center text-white/40">
-            <User className="h-8 w-8" aria-hidden />
+            <User className={cn(UNSHEAR, "h-8 w-8")} aria-hidden />
           </span>
         )}
       </div>
