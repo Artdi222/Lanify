@@ -28,6 +28,8 @@ interface GameState {
   beatmaps: Beatmap[];
   latestJudgement: { type: JudgementType; time: number } | null;
   isReadOnly: boolean;
+  /** Who/when/pp of a score opened from a leaderboard; null for the player's own fresh play. */
+  viewingMeta: { username: string; avatarUrl: string | null; submittedAt: string; pp: number | null } | null;
   retryTrigger: number;
   /** Score denominator for the current chart, computed once in startGame (not per hit). */
   maxScoreUnits: number;
@@ -88,6 +90,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   beatmaps: [],
   latestJudgement: null,
   isReadOnly: false,
+  viewingMeta: null,
   retryTrigger: 0,
   maxScoreUnits: 0,
 
@@ -110,6 +113,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       selectedBeatmapId: beatmap.id,
       latestJudgement: null,
       isReadOnly: false,
+      viewingMeta: null,
     }),
 
   pauseGame: () => set({ status: 'paused' }),
@@ -155,6 +159,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       maxScoreUnits: 0,
       latestJudgement: null,
       isReadOnly: false,
+      viewingMeta: null,
       retryTrigger: 0,
     }),
 
@@ -171,6 +176,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       hitErrors: [],
       latestJudgement: null,
       isReadOnly: false,
+      viewingMeta: null,
       retryTrigger: state.retryTrigger + 1,
     })),
 
@@ -185,6 +191,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       accuracyHistory: typeof entry.accuracyHistory === 'string' ? JSON.parse(entry.accuracyHistory) : [],
       hitErrors: typeof entry.hitErrors === 'string' ? JSON.parse(entry.hitErrors) : [],
       isReadOnly: true,
+      viewingMeta: { username: entry.username, avatarUrl: entry.avatarUrl, submittedAt: entry.submittedAt, pp: entry.pp ?? null },
       status: 'complete',
       currentBeatmap: beatmap
         ? {

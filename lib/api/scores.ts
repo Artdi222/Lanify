@@ -19,3 +19,8 @@ export async function getScoresForBeatmap(
 ): Promise<ScoreResponse[]> {
   return apiClient<ScoreResponse[]>(`/scores/${beatmapId}`);
 }
+
+/** NM star rating and the pp of a perfect play, for the result screen's breakdown. */
+export async function getBeatmapPerformance(beatmapId: string) {
+  return apiClient<{ starRating: number; maxCombo: number; maxPp: number }>(`/scores/performance/${beatmapId}`);
+}

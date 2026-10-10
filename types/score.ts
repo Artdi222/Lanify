@@ -31,6 +31,7 @@ export interface ScoreResponse {
   good: number;
   bad: number;
   miss: number;
+  pp?: number;
   accuracyHistory: string | null;
   hitErrors: string | null;
   mods: string | null;
