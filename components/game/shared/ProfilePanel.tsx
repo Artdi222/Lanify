@@ -8,6 +8,7 @@ import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
 import { countryName } from "@/lib/country";
 import CountryPicker from "@/components/profile/CountryPicker";
+import ScoresSection from "@/components/profile/ScoresSection";
 import Flag from "@/components/profile/Flag";
 import { invalidateUserProfile, useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
@@ -255,6 +256,7 @@ export default function ProfilePanel({ isOpen, onClose, userId }: ProfilePanelPr
               </div>
 
               <p className="px-[70px] pb-8 font-game-body text-[13px] text-white/70">Joined {joined}</p>
+              {viewedId && <ScoresSection userId={viewedId} />}
             </div>
           </motion.div>
         </div>

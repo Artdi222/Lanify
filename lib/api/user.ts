@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { User } from "@/types/user";
+import type { RankGrade } from "@/types/game";
 
 export interface UserStats {
   playCount: number;
@@ -58,4 +59,29 @@ export function getRankings(page = 1, country?: string) {
 
 export function getCountryRankings() {
   return apiClient<CountryRankingEntry[]>("/users/rankings/countries");
+}
+
+export interface UserBestScore {
+  id: string;
+  beatmapId: string;
+  title: string;
+  artist: string;
+  difficultyName: string;
+  keyCount: number;
+  coverUrl: string | null;
+  score: number;
+  accuracy: number;
+  maxCombo: number;
+  pp: number;
+  /** 0.95^i, the share of `pp` counted in the player's total. */
+  weight: number;
+  rank: RankGrade;
+  mods: string | null;
+  submittedAt: string;
+  first: boolean;
+}
+
+/** Best pp score per ranked beatmap (max 100), highest first. */
+export function getUserBestScores(id: string) {
+  return apiClient<UserBestScore[]>(`/users/${id}/scores`);
 }
