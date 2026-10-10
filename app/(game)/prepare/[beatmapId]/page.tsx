@@ -27,6 +27,14 @@ export default function PreparePage() {
   });
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
+  // Like lazer: the cover shows bright and lightly blurred first, then eases to the chosen dim/blur.
+  const [settled, setSettled] = useState(false);
+  const hasBeatmap = beatmap !== null;
+  useEffect(() => {
+    if (!hasBeatmap) return;
+    const t = setTimeout(() => setSettled(true), 500);
+    return () => clearTimeout(t);
+  }, [hasBeatmap]);
 
   useEffect(() => {
     // Guard: React strict mode runs effects twice in dev; load once.
@@ -62,11 +70,14 @@ export default function PreparePage() {
     <div className="relative flex-1 overflow-hidden bg-lf-bg text-white">
       {beatmap?.coverUrl && (
         <div
-          className="absolute -inset-10 bg-cover bg-center"
-          style={{ backgroundImage: `url(${beatmap.coverUrl})`, filter: `blur(${20 + settings.backgroundBlur * 0.2}px)` }}
+          className="absolute -inset-10 bg-cover bg-center transition-[filter] duration-[1600ms] ease-lf-in-out"
+          style={{ backgroundImage: `url(${beatmap.coverUrl})`, filter: `blur(${settled ? 12 + settings.backgroundBlur * 0.3 : 8}px)` }}
         />
       )}
-      <div className="absolute inset-0 bg-black" style={{ opacity: 0.2 + settings.backgroundDim * 0.005 }} />
+      <div
+        className="absolute inset-0 bg-black transition-opacity duration-[1600ms] ease-lf-in-out"
+        style={{ opacity: settled ? settings.backgroundDim / 100 : 0 }}
+      />
 
       {beatmap && (
         <div className="absolute inset-x-0 top-[26%] flex flex-col items-center text-center [text-shadow:0_2px_8px_rgb(0_0_0/0.5)]">
