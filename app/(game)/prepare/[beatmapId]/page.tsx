@@ -14,7 +14,9 @@ import { BeatmapLoader } from "@/lib/game/BeatmapLoader";
 import { getStarRatingColor } from "@/types/game";
 import type { Beatmap } from "@/types/beatmap";
 
-const MIN_LOADER_MS = 2500;
+// Cover stays bright for HOLD_MS (paused while the pointer is over the settings), then eases to dim/blur over FADE_MS.
+const HOLD_MS = 2500;
+const FADE_MS = 1600;
 
 /** Player loader: loads as soon as it opens, then enters the game. Spec: docs/ui-spec/loader.md. */
 export default function PreparePage() {
@@ -27,14 +29,29 @@ export default function PreparePage() {
   });
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
-  // Like lazer: the cover shows bright and lightly blurred first, then eases to the chosen dim/blur.
+  const [loaded, setLoaded] = useState(false);
+  const [hovering, setHovering] = useState(false);
   const [settled, setSettled] = useState(false);
+  const holdLeft = useRef(HOLD_MS);
   const hasBeatmap = beatmap !== null;
+
+  // Like lazer: hold on the bright cover, counting only while the pointer is off the settings panel.
   useEffect(() => {
-    if (!hasBeatmap) return;
-    const t = setTimeout(() => setSettled(true), 500);
+    if (!hasBeatmap || hovering || settled) return;
+    const t0 = performance.now();
+    const t = setTimeout(() => setSettled(true), holdLeft.current);
+    return () => {
+      clearTimeout(t);
+      holdLeft.current -= performance.now() - t0;
+    };
+  }, [hasBeatmap, hovering, settled]);
+
+  // Enter the game once the beatmap is loaded and the fade to black has finished.
+  useEffect(() => {
+    if (!settled || !loaded) return;
+    const t = setTimeout(() => router.push(`/play/${beatmapId}`), FADE_MS);
     return () => clearTimeout(t);
-  }, [hasBeatmap]);
+  }, [settled, loaded, router, beatmapId]);
 
   useEffect(() => {
     // Guard: React strict mode runs effects twice in dev; load once.
@@ -49,10 +66,8 @@ export default function PreparePage() {
         setBeatmap(bm);
         useGameStore.getState().setSelectedBeatmapId(beatmapId);
         const signedUrl = BeatmapLoader.hasCache(bm.filePath) ? "" : (await getBeatmapUrl(beatmapId, "")).url;
-        // Hold the loader on screen so it never flashes past when the beatmap is cached.
-        await Promise.all([BeatmapLoader.load(bm.filePath, signedUrl), new Promise((r) => setTimeout(r, MIN_LOADER_MS))]);
-        if (cancelled) return;
-        router.push(`/play/${beatmapId}`);
+        await BeatmapLoader.load(bm.filePath, signedUrl);
+        if (!cancelled) setLoaded(true);
       } catch (err) {
         console.error("Failed to load beatmap:", err);
         if (!cancelled) setError("Failed to load this beatmap.");
@@ -102,7 +117,7 @@ export default function PreparePage() {
         </div>
       )}
 
-      <aside className="absolute right-6 top-6 hidden w-[358px] flex-col gap-4 lg:flex">
+      <aside onPointerEnter={() => setHovering(true)} onPointerLeave={() => setHovering(false)} className="absolute right-6 top-6 hidden w-[358px] flex-col gap-4 lg:flex">
         <Panel title="Visual settings">
           <Slider label="Background dim" value={settings.backgroundDim} min={0} max={100} suffix="%" onChange={settings.setBackgroundDim} />
           <Slider label="Background blur" value={settings.backgroundBlur} min={0} max={100} suffix="%" onChange={settings.setBackgroundBlur} />
