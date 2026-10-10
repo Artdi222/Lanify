@@ -202,7 +202,7 @@ export default function OffsetWizard() {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs font-game-body text-white/50 leading-relaxed">
-        Not sure what offset to use? Tap along to a metronome and Lanify works it out. This measures the delay
+        Not sure what offset to use? Tap along to a metronome and Lany works it out. This measures the delay
         between what you hear and when you press; it does not measure display lag. Headphones work best.
       </p>
       <div className="flex gap-2">

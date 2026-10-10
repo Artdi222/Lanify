@@ -76,7 +76,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               {step === "intro" ? (
                 <>
                   <div className="mt-24 flex h-[66px] w-[66px] shrink-0 items-center justify-center self-center rounded-full border-[3px] border-white font-game-display text-sm font-bold text-white">
-                    Lanify
+                    Lany
                   </div>
                   <h2 className="mt-24 text-center font-game-display text-[28px] font-light text-white">New Player Registration</h2>
                   <p className="mt-1 text-center font-game-body text-[13px] text-white/90">let&apos;s get you started</p>

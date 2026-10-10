@@ -31,7 +31,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lanify",
+  title: "Lany",
   description: "Web-based osu!mania rhythm game",
 };
 

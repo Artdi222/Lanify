@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Lanify Admin | Beatmap Management",
+  title: "Lany Admin | Beatmap Management",
   description: "Advanced admin dashboard for osu!mania beatmaps.",
 };
 

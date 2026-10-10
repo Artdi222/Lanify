@@ -204,7 +204,7 @@ export default function SettingsPanel() {
       <div className="flex min-w-0 flex-1 flex-col bg-lf-surface">
         <header className="shrink-0 border-b border-lf-border px-5 pb-4 pt-5">
           <h2 className="font-game-display text-lf-display leading-none">settings</h2>
-          <p className="mt-1 text-lf-body text-lf-text-muted">change the way Lanify behaves</p>
+          <p className="mt-1 text-lf-body text-lf-text-muted">change the way Lany behaves</p>
           <label className="mt-4 flex items-center gap-2 rounded-lf-md border border-lf-border bg-lf-bg px-3 py-2 focus-within:border-lf-accent">
             <input
               value={query}
