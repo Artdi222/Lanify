@@ -28,3 +28,34 @@ export async function updateProfile(
     token,
   });
 }
+
+export interface RankingEntry {
+  id: string;
+  rank: number;
+  username: string;
+  avatarUrl: string | null;
+  country: string | null;
+  totalPp: number;
+  accuracy: number;
+  playCount: number;
+  ss: number;
+  s: number;
+  a: number;
+}
+
+export interface CountryRankingEntry {
+  rank: number;
+  country: string;
+  activeUsers: number;
+  playCount: number;
+  performance: number;
+  avgPerformance: number;
+}
+
+export function getRankings(page = 1, country?: string) {
+  return apiClient<{ page: number; pageCount: number; entries: RankingEntry[] }>(`/users/rankings?page=${page}${country ? `&country=${country}` : ""}`);
+}
+
+export function getCountryRankings() {
+  return apiClient<CountryRankingEntry[]>("/users/rankings/countries");
+}

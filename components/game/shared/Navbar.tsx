@@ -12,6 +12,7 @@ import RegisterModal from "./RegisterModal";
 import AccountPanel from "@/components/auth/AccountPanel";
 import AccountCard from "@/components/profile/AccountCard";
 import ProfilePanel from "./ProfilePanel";
+import RankingsOverlay from "@/components/rankings/RankingsOverlay";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GameNavbar() {
@@ -22,6 +23,7 @@ export default function GameNavbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
+  const [isRankingsOpen, setIsRankingsOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +79,15 @@ export default function GameNavbar() {
 
         {/* Right: chat, globe, music, user, clock, notifications */}
         <div className="flex items-stretch">
+          <button
+            type="button"
+            onClick={() => setIsRankingsOpen((o) => !o)}
+            aria-label="Rankings"
+            aria-pressed={isRankingsOpen}
+            className={`m-1 flex w-[46px] cursor-pointer items-center justify-center rounded-lf-md transition-colors ${isRankingsOpen ? "bg-lf-primary" : "hover:bg-lf-surface-hover"}`}
+          >
+            <Icon name="rankings" size={22} />
+          </button>
           <button disabled title="Segera" aria-label="Chat" className="flex w-12 items-center justify-center text-lf-text-dim">
             <Icon name="chat" size={22} />
           </button>
@@ -148,6 +159,8 @@ export default function GameNavbar() {
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
       />
+
+      <RankingsOverlay isOpen={isRankingsOpen} onClose={() => setIsRankingsOpen(false)} />
 
       {/* osu!-style Profile Details Panel */}
       <ProfilePanel

@@ -53,6 +53,13 @@ const ICONS = {
       <path d="M12 2.5 V4.5 M10 20.5 C10.4 21.3 11.1 21.7 12 21.7 C12.9 21.7 13.6 21.3 14 20.5" />
     </>
   ),
+  /** Podium + bintang (foto rankings). */
+  rankings: (
+    <>
+      <path d="M9 20.5 V12.5 H15 V20.5 M3.5 20.5 V15.5 H9 M15 16.5 H20.5 V20.5 M2.5 20.5 H21.5" />
+      <path d="M12 3.5 L12.9 5.6 L15 5.8 L13.4 7.2 L13.9 9.3 L12 8.2 L10.1 9.3 L10.6 7.2 L9 5.8 L11.1 5.6 Z" />
+    </>
+  ),
   /** Pemisah vertikal di samping ikon musik. */
   divider: <path d="M12 3 V21" />,
 } satisfies Record<string, ReactNode>;
