@@ -3,32 +3,24 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { User as UserIcon, LogIn, LogOut, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { User as UserIcon, LogOut, Shield } from "lucide-react";
 import MusicPlayer from "./MusicPlayer";
 import SettingsDrawer from "./SettingsDrawer";
 import TopBarClock from "./TopBarClock";
 import { Icon } from "@/components/ui/icons/Icon";
 import RegisterModal from "./RegisterModal";
+import AccountPanel from "@/components/auth/AccountPanel";
 import ProfilePanel from "./ProfilePanel";
-import { apiClient } from "@/lib/api/client";
-import type { User } from "@/types/user";
-import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GameNavbar() {
-  const { user, isGuest, login, logout } = useAuthStore();
+  const { user, isGuest, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   // Dropdown & Modal states
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
-
-  // Login form state inside dropdown
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -65,24 +57,6 @@ export default function GameNavbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await apiClient<{ token: string; user: User }>("/auth/login", {
-        method: "POST",
-        body: { email, password },
-      });
-      login(res.token, res.user);
-      toast.success("Welcome back!");
-      setIsDropdownOpen(false);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <>
@@ -124,7 +98,7 @@ export default function GameNavbar() {
           <div className="relative flex" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex cursor-pointer items-center gap-3 px-3 transition-colors hover:bg-lf-surface-hover"
+              className={`flex cursor-pointer items-center gap-3 px-3 transition-colors ${isDropdownOpen ? "bg-lf-primary" : "hover:bg-lf-surface-hover"}`}
             >
               <span className="max-w-44 truncate text-[15px] font-game-body text-lf-text">
                 {isGuest ? "Guest" : user?.username}
@@ -147,76 +121,16 @@ export default function GameNavbar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-72 bg-[#090e17] border border-blue-900/50 rounded-2xl shadow-2xl p-4 z-50"
+                  className={isGuest ? "fixed right-0 top-12 z-50 w-[min(506px,100vw)] bg-lf-bg-raised shadow-lf-panel" : "absolute right-0 top-full mt-2 w-72 bg-[#090e17] border border-blue-900/50 rounded-2xl shadow-2xl p-4 z-50"}
                 >
                   {isGuest ? (
-                    /* Guest Dropdown Form */
-                    <form onSubmit={handleLogin} className="space-y-3">
-                      <div className="text-xs font-game-mono text-blue-400 uppercase tracking-widest pb-1 border-b border-white/5">
-                        Sign In
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-game-mono text-white/60 uppercase tracking-wider mb-1 block">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          className="w-full px-3 py-1.5 rounded-lg bg-[#040810] border border-blue-900/50 text-white text-xs font-game-body
-                            placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                          placeholder="player@lanify.gg"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-[10px] font-game-mono text-white/60 uppercase tracking-wider mb-1 block">
-                          Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full px-3 py-1.5 pr-8 rounded-lg bg-[#040810] border border-blue-900/50 text-white text-xs font-game-body
-                              placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                            placeholder="••••••••"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white cursor-pointer"
-                          >
-                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 pt-1">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-game-display font-semibold transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
-                          Login
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsDropdownOpen(false);
-                            setIsRegisterOpen(true);
-                          }}
-                          className="flex-1 py-2 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 border border-blue-800/40 text-blue-300 hover:text-white text-xs font-game-display font-semibold transition-all cursor-pointer"
-                        >
-                          Create Account
-                        </button>
-                      </div>
-                    </form>
+                    <AccountPanel
+                      onDone={() => setIsDropdownOpen(false)}
+                      onRegister={() => {
+                        setIsDropdownOpen(false);
+                        setIsRegisterOpen(true);
+                      }}
+                    />
                   ) : (
                     /* Logged-In Dropdown Profile Card (NO ROLE BADGE) */
                     <div className="space-y-3">

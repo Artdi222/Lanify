@@ -1,34 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Mail, Lock, LogIn, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { apiClient } from "@/lib/api/client";
 import type { User as UserType } from "@/types/user";
-import { toast } from "sonner";
+import { AUTH_FIELD } from "@/components/auth/styles";
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const HINT = "mt-2 mb-4 font-game-body text-sm leading-snug text-white/85";
+const BLUE_BUTTON =
+  "block h-14 w-full cursor-pointer rounded-md bg-lf-primary font-game-display text-[19px] font-bold text-white transition-[filter] hover:brightness-110 disabled:opacity-60";
+
+/** Two-step registration modal (intro, then form). Spec: docs/ui-spec/auth.md. */
 export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
-  const { login } = useAuthStore();
+  const login = useAuthStore((s) => s.login);
+  const [step, setStep] = useState<"intro" | "form">("intro");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const close = () => {
+    setStep("intro");
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await apiClient<{ token: string; user: UserType }>("/auth/register", {
@@ -37,7 +50,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       });
       login(res.token, res.user);
       toast.success("Account created successfully!");
-      onClose();
+      close();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -49,211 +62,49 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/80"
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close} className="absolute inset-0 bg-black/70" />
 
-          {/* Modal Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative z-10 w-full max-w-4xl bg-[#090e17] border border-blue-900/40 rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative z-10 flex h-[min(632px,calc(100vh-2rem))] w-[min(870px,100%)] overflow-hidden rounded-xl bg-lf-bg-raised shadow-lf-panel"
           >
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 z-20 p-2 text-white/50 hover:text-white bg-black/40 hover:bg-black/60 rounded-full transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Left Column: Form */}
-            <div className="p-8 sm:p-10 flex flex-col justify-center">
-              <div className="mb-6">
-                <span className="text-xs font-game-mono text-blue-400 uppercase tracking-widest block mb-1">
-                  JOIN LANIFY
-                </span>
-                <h2 className="text-2xl font-game-display font-bold text-white">
-                  Create Your Account
-                </h2>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                    Username
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      minLength={3}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#050911] border border-blue-900/50 text-white text-sm font-game-body
-                        placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                      placeholder="PlayerOne"
-                    />
+            {/* Left: steps (spec: 522px of 870) */}
+            <div className="flex w-full flex-col px-14 py-12 md:w-[60%]">
+              {step === "intro" ? (
+                <>
+                  <div className="mt-24 flex h-[66px] w-[66px] shrink-0 items-center justify-center self-center rounded-full border-[3px] border-white font-game-display text-sm font-bold text-white">
+                    Lanify
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#050911] border border-blue-900/50 text-white text-sm font-game-body
-                        placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                      placeholder="player@lanify.gg"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={8}
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#050911] border border-blue-900/50 text-white text-sm font-game-body
-                        placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-game-mono text-white/70 uppercase tracking-wider mb-1 block">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      minLength={8}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#050911] border border-blue-900/50 text-white text-sm font-game-body
-                        placeholder:text-white/30 focus:outline-none focus:border-blue-400 transition-colors"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 mt-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-game-display font-semibold
-                    shadow-lg shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4" />
-                      Create Account
-                    </>
-                  )}
-                </button>
-              </form>
+                  <h2 className="mt-24 text-center font-game-display text-[28px] font-light text-white">New Player Registration</h2>
+                  <p className="mt-1 text-center font-game-body text-[13px] text-white/90">let&apos;s get you started</p>
+                  <button onClick={() => setStep("form")} className={`${BLUE_BUTTON} mt-auto`}>
+                    Let&apos;s create an account!
+                  </button>
+                </>
+              ) : (
+                <form onSubmit={handleSubmit} className="flex h-full flex-col">
+                  <h2 className="mb-5 text-center font-game-display text-[22px] text-white">Let&apos;s create an account!</h2>
+                  <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} placeholder="username" autoComplete="username" className={AUTH_FIELD} />
+                  <p className={HINT}>This will be your public presence. No profanity, no impersonation. Avoid exposing your own personal details, too!</p>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="email address" autoComplete="email" className={AUTH_FIELD} />
+                  <p className={HINT}>
+                    Will be used for notifications, account verification and in the case you forget your password. No spam, ever. <b>Make sure to get it right!</b>
+                  </p>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="password" autoComplete="new-password" className={AUTH_FIELD} />
+                  <p className={HINT}>At least 8 characters long. Choose something long but also something you will remember, like a line from your favourite song.</p>
+                  <button type="submit" disabled={loading} className={`${BLUE_BUTTON} mt-auto`}>
+                    {loading ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Register"}
+                  </button>
+                </form>
+              )}
             </div>
 
-            {/* Right Column: Animated tech background with non-spinning logo badge */}
-            <div className="hidden md:flex relative flex-col items-center justify-center p-8 bg-linear-to-br from-[#050a15] via-[#0a152d] to-[#040710] border-l border-blue-900/40 overflow-hidden">
-              {/* Dynamic flowing mesh grid */}
-              <motion.div 
-                className="absolute inset-0 opacity-20 pointer-events-none"
-                style={{
-                  backgroundImage: `radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0)`,
-                  backgroundSize: "24px 24px"
-                }}
-                animate={{
-                  backgroundPosition: ["0px 0px", "24px 24px"]
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-
-              {/* Pulsing ambient radial light gradients */}
-              <motion.div
-                className="absolute w-72 h-72 rounded-full bg-blue-500/25 blur-3xl pointer-events-none"
-                animate={{
-                  scale: [0.9, 1.25, 0.9],
-                  opacity: [0.3, 0.6, 0.3],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute w-60 h-60 rounded-full bg-cyan-400/20 blur-2xl pointer-events-none"
-                animate={{
-                  scale: [1.2, 0.85, 1.2],
-                  opacity: [0.2, 0.5, 0.2],
-                }}
-                transition={{
-                  duration: 7,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              <motion.div
-                className="absolute w-64 h-64 rounded-full border border-blue-500/30 pointer-events-none"
-                animate={{
-                  scale: [0.8, 1.4, 0.8],
-                  opacity: [0.5, 0, 0.5],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeOut",
-                }}
-              />
-
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <motion.div 
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-48 h-48 rounded-full bg-[#040b16] border-4 border-blue-500 flex items-center justify-center shadow-[0_0_60px_rgba(59,130,246,0.5)] transition-shadow duration-300 hover:shadow-[0_0_80px_rgba(59,130,246,0.7)]"
-                >
-                  <span className="text-4xl font-game-display font-bold text-blue-100 tracking-[0.18em]">
-                    LANIFY
-                  </span>
-                </motion.div>
-              </div>
+            {/* Right: mascot art goes here once it exists (docs/mascot-brief.md). Static placeholder. */}
+            <div className="hidden flex-1 items-center justify-center bg-linear-to-br from-lf-primary/50 via-lf-surface to-lf-bg md:flex">
+              <span className="font-game-display text-2xl font-bold tracking-[0.2em] text-white/30">LANIFY</span>
             </div>
           </motion.div>
         </div>
