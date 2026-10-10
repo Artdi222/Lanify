@@ -163,8 +163,8 @@ export default function ProfilePanel({ isOpen, onClose, userId }: ProfilePanelPr
                 {isEditing && isOwn && <ChangeImage label="Change banner" onPick={pickImage(setBannerFile)} />}
               </div>
 
-              <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[262px] pr-12">
-                <span className="absolute -top-24 left-[70px] flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl bg-lf-bg shadow-lf-panel">
+              <div className="relative flex h-[120px] items-end bg-lf-bg-raised pb-[30px] pl-[262px] pr-12">
+                <span className="absolute bottom-[30px] left-[70px] flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl bg-lf-bg shadow-lf-panel">
                   {avatarSrc ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
