@@ -28,5 +28,6 @@ export function useUserProfile(id: string | undefined, enabled = true): UserProf
     };
   }, [id, enabled]);
 
-  return (id && cache.get(id)?.data) || profile;
+  if (!id) return null;
+  return cache.get(id)?.data ?? (profile?.id === id ? profile : null);
 }

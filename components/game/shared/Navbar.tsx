@@ -24,6 +24,7 @@ export default function GameNavbar() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
   const [isRankingsOpen, setIsRankingsOpen] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<string | undefined>();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -139,6 +140,7 @@ export default function GameNavbar() {
                       onDone={() => setIsDropdownOpen(false)}
                       onOpenProfile={() => {
                         setIsDropdownOpen(false);
+                        setProfileUserId(undefined);
                         setIsProfilePanelOpen(true);
                       }}
                     />
@@ -160,12 +162,21 @@ export default function GameNavbar() {
         onClose={() => setIsRegisterOpen(false)}
       />
 
-      <RankingsOverlay isOpen={isRankingsOpen} onClose={() => setIsRankingsOpen(false)} />
+      <RankingsOverlay
+        isOpen={isRankingsOpen}
+        onClose={() => setIsRankingsOpen(false)}
+        escBlocked={isProfilePanelOpen}
+        onOpenUser={(id) => {
+          setProfileUserId(id);
+          setIsProfilePanelOpen(true);
+        }}
+      />
 
       {/* osu!-style Profile Details Panel */}
       <ProfilePanel
         isOpen={isProfilePanelOpen}
         onClose={() => setIsProfilePanelOpen(false)}
+        userId={profileUserId}
       />
     </>
   );

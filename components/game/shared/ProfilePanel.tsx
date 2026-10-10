@@ -15,6 +15,8 @@ import { toast } from "sonner";
 interface ProfilePanelProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Player to show; defaults to the signed-in user (the only editable one). */
+  userId?: string;
 }
 
 const LABEL = "font-game-body text-xs text-white/70";
@@ -46,9 +48,13 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /** "player info" sheet. Spec: docs/ui-spec/profile.md. */
-export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
+export default function ProfilePanel({ isOpen, onClose, userId }: ProfilePanelProps) {
   const { user, token, login } = useAuthStore();
-  const profile = useUserProfile(user?.id, isOpen);
+  const viewedId = userId ?? user?.id;
+  const isOwn = !!user && viewedId === user.id;
+  const profile = useUserProfile(viewedId, isOpen);
+  // Own profile renders from the auth store (instant, updated on save); others from the fetched profile.
+  const shown = isOwn ? user : profile;
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -57,8 +63,8 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
   const [savedCountry, setSavedCountry] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const avatarSrc = useMemo(() => (avatarFile ? URL.createObjectURL(avatarFile) : user?.avatarUrl), [avatarFile, user?.avatarUrl]);
-  const bannerSrc = useMemo(() => (bannerFile ? URL.createObjectURL(bannerFile) : user?.bannerUrl), [bannerFile, user?.bannerUrl]);
+  const avatarSrc = useMemo(() => (avatarFile ? URL.createObjectURL(avatarFile) : shown?.avatarUrl), [avatarFile, shown?.avatarUrl]);
+  const bannerSrc = useMemo(() => (bannerFile ? URL.createObjectURL(bannerFile) : shown?.bannerUrl), [bannerFile, shown?.bannerUrl]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -119,14 +125,14 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
     }
   };
 
-  const shownCountry = savedCountry ?? profile?.country;
+  const shownCountry = (isOwn ? savedCountry : null) ?? profile?.country;
   const rank = profile && profile.globalRank > 0 ? `#${profile.globalRank.toLocaleString("en-US")}` : "-";
   const pp = profile ? `${Math.round(profile.totalPp ?? 0).toLocaleString("en-US")}pp` : "-";
-  const joined = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "recently";
+  const joined = shown?.createdAt ? new Date(shown.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "recently";
 
   return (
     <AnimatePresence>
-      {isOpen && user && (
+      {isOpen && shown && (
         <div className="fixed inset-x-0 bottom-0 top-12 z-40">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/60" />
 
@@ -154,7 +160,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={bannerSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 )}
-                {isEditing && <ChangeImage label="Change banner" onPick={pickImage(setBannerFile)} />}
+                {isEditing && isOwn && <ChangeImage label="Change banner" onPick={pickImage(setBannerFile)} />}
               </div>
 
               <div className="relative flex h-[120px] items-center bg-lf-bg-raised pl-[262px] pr-12">
@@ -165,10 +171,10 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   ) : (
                     <User className="h-16 w-16 text-lf-text-muted" />
                   )}
-                  {isEditing && <ChangeImage label="Change avatar" onPick={pickImage(setAvatarFile)} />}
+                  {isEditing && isOwn && <ChangeImage label="Change avatar" onPick={pickImage(setAvatarFile)} />}
                 </span>
                 <div className="min-w-0">
-                  <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
+                  <h2 className="truncate font-game-display text-2xl font-bold text-white">{shown.username}</h2>
                   {shownCountry && (
                     <div className="mt-1 flex items-center gap-2 font-game-body text-sm text-white/85">
                       <Flag code={shownCountry} height={20} />
@@ -176,17 +182,19 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => (isEditing ? cancelEditing() : startEditing())}
-                  aria-label={isEditing ? "Cancel editing" : "Edit profile"}
-                  className="ml-3 cursor-pointer rounded-lf-sm p-1.5 text-white/60 transition-colors hover:text-white"
-                >
-                  {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                </button>
+                {isOwn && (
+                  <button
+                    type="button"
+                    onClick={() => (isEditing ? cancelEditing() : startEditing())}
+                    aria-label={isEditing ? "Cancel editing" : "Edit profile"}
+                    className="ml-3 cursor-pointer rounded-lf-sm p-1.5 text-white/60 transition-colors hover:text-white"
+                  >
+                    {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                  </button>
+                )}
               </div>
 
-              {isEditing && (
+              {isEditing && isOwn && (
                 <form onSubmit={handleSaveProfile} className="mx-[70px] mt-8 max-w-3xl rounded-lf-lg bg-black/20 p-6">
                   <div className="flex items-baseline justify-between">
                     <h3 className="font-game-display text-lg font-bold text-white">Edit profile</h3>
@@ -232,7 +240,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   {(
                     <div>
                       <div className={LABEL}>Country Ranking</div>
-                      <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">{profile?.countryRank != null && savedCountry === null ? `#${profile.countryRank.toLocaleString("en-US")}` : "-"}</div>
+                      <div className="font-game-display text-[30px] font-bold leading-9 text-white/80">{profile?.countryRank != null && (!isOwn || savedCountry === null) ? `#${profile.countryRank.toLocaleString("en-US")}` : "-"}</div>
                     </div>
                   )}
                   <div>

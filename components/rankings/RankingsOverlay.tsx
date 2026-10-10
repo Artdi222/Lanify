@@ -49,7 +49,18 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 }
 
 /** Rankings overlay. Spec: docs/ui-spec/rankings.md. */
-export default function RankingsOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function RankingsOverlay({
+  isOpen,
+  onClose,
+  onOpenUser,
+  escBlocked,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenUser: (id: string) => void;
+  /** True while a profile opened from here sits on top and owns Esc. */
+  escBlocked?: boolean;
+}) {
   const [tab, setTab] = useState<Tab>("performance");
   const [page, setPage] = useState(1);
   const [country, setCountry] = useState<string | null>(null);
@@ -58,11 +69,11 @@ export default function RankingsOverlay({ isOpen, onClose }: { isOpen: boolean; 
   const countries = useFetch<CountryRankingEntry[]>("countries", isOpen && tab === "country", getCountryRankings);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || escBlocked) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, escBlocked]);
 
   const showCountry = (code: string | null) => {
     setCountry(code);
@@ -127,11 +138,26 @@ export default function RankingsOverlay({ isOpen, onClose }: { isOpen: boolean; 
                   </div>
                   <div className="space-y-1">
                     {players?.entries.map((p) => (
-                      <div key={p.id} className={`${ROW} ${PLAYER_COLS}`}>
+                      <div
+                        key={p.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => onOpenUser(p.id)}
+                        onKeyDown={(e) => e.key === "Enter" && onOpenUser(p.id)}
+                        className={`${ROW} ${PLAYER_COLS} cursor-pointer transition-colors hover:bg-lf-surface-hover`}
+                      >
                         <span className="font-bold text-white">#{p.rank}</span>
                         <span className="flex min-w-0 items-center gap-2">
                           {p.country ? (
-                            <button type="button" onClick={() => showCountry(p.country)} title={countryName(p.country)} className="shrink-0 cursor-pointer">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation(); // flag filters by country instead of opening the profile
+                                showCountry(p.country);
+                              }}
+                              title={countryName(p.country)}
+                              className="shrink-0 cursor-pointer"
+                            >
                               <Flag code={p.country} height={27} />
                             </button>
                           ) : (
