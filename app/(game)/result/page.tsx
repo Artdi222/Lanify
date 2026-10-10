@@ -287,13 +287,22 @@ export default function ResultPage() {
         </motion.div>
   );
 
+  // Reset only once the route has actually changed: resetting first left this page on screen with an
+  // empty store ("SS, 0 points") or blank until /select loaded. The flag keeps React strict mode's
+  // dev-only mount/unmount from resetting a live result.
+  const leaving = useRef(false);
+  useEffect(
+    () => () => {
+      if (leaving.current) useGameStore.getState().resetGame();
+    },
+    [],
+  );
   const back = () => {
-    useGameStore.getState().resetGame();
+    leaving.current = true;
     router.push("/select");
   };
 
-  // After `back` resets the store this page still renders until the route changes; an empty store
-  // would show as "SS, 0 points". Render nothing instead (also covers opening /result directly).
+  // Opening /result directly (nothing played or picked) has no score to show.
   if (status === "idle") return null;
 
   return (
