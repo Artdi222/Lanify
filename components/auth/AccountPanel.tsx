@@ -23,15 +23,14 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   return (
     <label className="flex cursor-pointer items-center justify-between font-game-body text-base text-white">
       {label}
+      {/* Lazer-style on/off pill: filled when on, outline only when off (no sliding knob). */}
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`h-5 w-[69px] rounded-full transition-colors ${checked ? "bg-lf-primary" : "bg-white/20"}`}
-      >
-        <span className={`block h-5 w-8 rounded-full bg-white/90 transition-transform ${checked ? "translate-x-[37px]" : ""}`} />
-      </button>
+        className={`h-5 w-[69px] rounded-full border-2 border-lf-primary transition-colors ${checked ? "bg-lf-primary" : "bg-transparent"}`}
+      />
     </label>
   );
 }
