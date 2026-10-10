@@ -8,12 +8,12 @@ import { Icon } from "@/components/ui/icons/Icon";
 /** Kartu daftar beatmap (spec: docs/ui-spec/song-select.md, "Kanan: daftar beatmap"). */
 
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
-  ranked: { label: "RANKED", bg: "#b3ff66", fg: "#1c2a0c" },
-  approved: { label: "APPROVED", bg: "#b3ff66", fg: "#1c2a0c" },
-  loved: { label: "LOVED", bg: "#ff66aa", fg: "#33001a" },
-  qualified: { label: "QUALIFIED", bg: "#66ccff", fg: "#00243a" },
-  graveyard: { label: "GRAVEYARD", bg: "#8c9296", fg: "#101315" },
-  pending: { label: "PENDING", bg: "#ffcc22", fg: "#2a2000" },
+  ranked: { label: "RANKED", bg: "#c9cdf0", fg: "#1b1c26" },
+  approved: { label: "APPROVED", bg: "#c9cdf0", fg: "#1b1c26" },
+  loved: { label: "LOVED", bg: "#b9bde6", fg: "#1b1c26" },
+  qualified: { label: "QUALIFIED", bg: "#b9bde6", fg: "#1b1c26" },
+  graveyard: { label: "GRAVEYARD", bg: "#8c9296", fg: "#111219" },
+  pending: { label: "PENDING", bg: "#dddded", fg: "#1b1c26" },
 };
 
 /** Ikon ruleset mania di samping pill status dan di tile difficulty (lazer menampilkan ikon ruleset di sini). */
@@ -81,8 +81,8 @@ export function SetCard({
       onClick={onClick}
       aria-expanded={selected ? expanded : undefined}
       className={cn(
-        "relative flex w-full cursor-pointer items-stretch overflow-hidden rounded-l-[10px] bg-[#101420] text-left transition-[filter,box-shadow] duration-200",
-        selected ? "h-[95px] ring-2 ring-white shadow-[0_0_18px_rgba(140,200,255,0.55)]" : "h-[92px] hover:brightness-110",
+        "relative flex w-full cursor-pointer items-stretch overflow-hidden rounded-l-[10px] bg-[#14151c] text-left transition-[filter,box-shadow] duration-200",
+        selected ? "h-[95px] ring-2 ring-white shadow-[0_0_18px_rgba(185,189,230,0.55)]" : "h-[92px] hover:brightness-110",
       )}
     >
       {coverUrl && <Image fill unoptimized src={coverUrl} alt="" className="object-cover object-right" sizes="880px" />}
@@ -124,11 +124,11 @@ export function DiffCard({ diff, selected, onClick }: { diff: Beatmap; selected:
       style={{
         ["--glow" as string]: `${color}88`,
         border: selected ? `2px solid ${color}` : undefined,
-        // Opak, rona difficulty memudar ke kanan. Di-fit dari 5 baris foto (warna strip diketahui): kiri ~25% di atas #3a4347,
-        // tengah ~14.5% di atas #343d40, ujung ~8%. Terpilih (satu sampel, 4.26): kiri bernuansa warna, kanan abu terang #79737a.
+        // Opak, rona difficulty memudar ke kanan. Di-fit dari 5 baris foto (warna strip diketahui): kiri ~25% di atas #343747,
+        // tengah ~14.5% di atas #2f3142, ujung ~8%. Terpilih (satu sampel, 4.26): kiri bernuansa warna, kanan abu terang #72748e.
         background: selected
-          ? `linear-gradient(to right, color-mix(in srgb, ${color} 15%, #585056), color-mix(in srgb, ${color} 8%, #625b60) 25%, #79737a)`
-          : `linear-gradient(to right, color-mix(in srgb, ${color} 25%, #3a4347), color-mix(in srgb, ${color} 14.5%, #343d40) 55%, color-mix(in srgb, ${color} 8%, #32393d))`,
+          ? `linear-gradient(to right, color-mix(in srgb, ${color} 15%, #4f5266), color-mix(in srgb, ${color} 8%, #5a5c70) 25%, #72748e)`
+          : `linear-gradient(to right, color-mix(in srgb, ${color} 25%, #343747), color-mix(in srgb, ${color} 14.5%, #2f3142) 55%, color-mix(in srgb, ${color} 8%, #2a2c3a))`,
       }}
     >
       <span className="flex w-4 shrink-0 items-center justify-center" style={{ backgroundColor: color }}>

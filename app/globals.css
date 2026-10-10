@@ -35,14 +35,14 @@
   --color-ring: var(--ring);
 
   /* Lanify game theme colors */
-  --color-lanify-accent: #00e5ff;
-  --color-lanify-accent2: #7C3AED;
-  --color-lanify-bg: #08080f;
-  --color-lanify-surface: #0f0f1a;
+  --color-lanify-accent: #b9bde6;
+  --color-lanify-accent2: #787ac7;
+  --color-lanify-bg: #14151c;
+  --color-lanify-surface: #1b1c26;
   --color-lanify-text: #ffffff;
-  --color-lanify-text-secondary: #8888aa;
-  --color-lanify-danger: #ff4444;
-  --color-lanify-success: #00ff88;
+  --color-lanify-text-secondary: #a3a4bd;
+  --color-lanify-danger: #e07a86;
+  --color-lanify-success: #9fd3c0;
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -54,28 +54,28 @@
    Token baru, additive: layar lama tetap memakai token di atas sampai dipindah di Fase 3.
    Referensi: docs/design-system.md */
 @theme {
-  /* Palet biru/cyan */
-  --color-lf-bg: #060b14;
-  --color-lf-bg-raised: #0a1424;
-  --color-lf-surface: #0f1c30;
-  --color-lf-surface-hover: #15284a;
-  --color-lf-border: #1f3a66;
-  --color-lf-primary: #2563eb;
-  --color-lf-primary-hover: #3b82f6;
-  --color-lf-accent: #00e5ff;
-  --color-lf-text: #f1f6ff;
-  --color-lf-text-muted: #8fa3c4;
-  --color-lf-text-dim: #5a6e8f;
-  --color-lf-success: #22e39a;
-  --color-lf-warning: #ffc53d;
-  --color-lf-danger: #ff4d5e;
+  /* Palet maskot: slate-navy + lavender (diambil dari public/background/*.png) */
+  --color-lf-bg: #14151c;
+  --color-lf-bg-raised: #1b1c26;
+  --color-lf-surface: #262835;
+  --color-lf-surface-hover: #343747;
+  --color-lf-border: #4f5266;
+  --color-lf-primary: #6a7294;
+  --color-lf-primary-hover: #7b84a7;
+  --color-lf-accent: #b9bde6;
+  --color-lf-text: #ecebf2;
+  --color-lf-text-muted: #a3a4bd;
+  --color-lf-text-dim: #72748e;
+  --color-lf-success: #9fd3c0;
+  --color-lf-warning: #e6cf94;
+  --color-lf-danger: #e07a86;
 
   /* Radius & bayangan */
   --radius-lf-sm: 4px;
   --radius-lf-md: 8px;
   --radius-lf-lg: 14px;
   --shadow-lf-panel: 0 8px 24px rgb(0 0 0 / 0.45);
-  --shadow-lf-glow: 0 0 16px rgb(0 229 255 / 0.35);
+  --shadow-lf-glow: 0 0 16px rgb(185 189 230 / 0.3);
 
   /* Tipografi */
   --text-lf-caption: 0.75rem;
@@ -89,31 +89,31 @@
 }
 
 /* Layar song select: warna diukur dari foto lazer (docs/ui-spec/song-select.md).
-   Netral abu-abu kehijauan; warna identitas ada di -back. */
+   Layout dari lazer, warna diganti ke palet maskot (slate + lavender, tanpa hijau/pink). */
 @theme {
-  --color-select-bar: #22282a;
-  --color-select-field: #2e3538;
-  --color-select-tile: #394246;
-  --color-select-tile-dim: #101315;
-  --color-select-button: #394246;
-  --color-select-band: #282c2f;
-  --color-select-panel: #24282c;
-  --color-select-back: #de31ae;
-  --color-select-status-ranked: #b3ff66;
-  --color-select-match: #ffcc22;
-  --color-select-converts: #66ccff;
-  --color-select-mods: #425048;
-  --color-select-mods-line: #4d614b;
-  --color-select-mods-icon: #b3ff66;
-  --color-select-random: #3c4c54;
-  --color-select-random-line: #405965;
-  --color-select-random-icon: #66ccff;
-  --color-select-options: #3f4554;
-  --color-select-options-line: #474865;
-  --color-select-options-icon: #a67cff;
-  --color-select-grade-s: #168d97;
-  --color-select-grade-a: #77c120;
-  --color-select-fc: #b5ff3a;
+  --color-select-bar: #1e1f29;
+  --color-select-field: #2a2c3a;
+  --color-select-tile: #343747;
+  --color-select-tile-dim: #111219;
+  --color-select-button: #343747;
+  --color-select-band: #22232e;
+  --color-select-panel: #20212b;
+  --color-select-back: #6a7294;
+  --color-select-status-ranked: #c9cdf0;
+  --color-select-match: #dddded;
+  --color-select-converts: #b9bde6;
+  --color-select-mods: #2f3142;
+  --color-select-mods-line: #4f5266;
+  --color-select-mods-icon: #dddded;
+  --color-select-random: #2f3142;
+  --color-select-random-line: #4f5266;
+  --color-select-random-icon: #b9bde6;
+  --color-select-options: #2f3142;
+  --color-select-options-line: #4f5266;
+  --color-select-options-icon: #9397b5;
+  --color-select-grade-s: #6a7294;
+  --color-select-grade-a: #9397b5;
+  --color-select-fc: #dddded;
 }
 
 :root {
@@ -156,26 +156,26 @@
 }
 
 .dark {
-  /* OLED Dark Mode: Pure black background */
-  --background: oklch(0.05 0 0); 
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.12 0.01 240);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.1 0.01 240);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.5 0.2 250); /* Deep Blue */
-  --primary-foreground: oklch(0.95 0 0);
-  --secondary: oklch(0.2 0.02 240);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.15 0.02 240);
-  --muted-foreground: oklch(0.65 0.02 240);
-  --accent: oklch(0.7 0.18 85); /* Vibrant Amber */
-  --accent-foreground: oklch(0.1 0.01 240);
-  --destructive: oklch(0.5 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.2 0.02 240);
-  --input: oklch(0.2 0.02 240);
-  --ring: oklch(0.5 0.2 250);
+  /* Palet maskot (sama dengan token lf-*) */
+  --background: #14151c;
+  --foreground: #ecebf2;
+  --card: #1b1c26;
+  --card-foreground: #ecebf2;
+  --popover: #1b1c26;
+  --popover-foreground: #ecebf2;
+  --primary: #6a7294;
+  --primary-foreground: #ecebf2;
+  --secondary: #262835;
+  --secondary-foreground: #ecebf2;
+  --muted: #22232e;
+  --muted-foreground: #a3a4bd;
+  --accent: #b9bde6;
+  --accent-foreground: #14151c;
+  --destructive: #e07a86;
+  --destructive-foreground: #14151c;
+  --border: #343747;
+  --input: #343747;
+  --ring: #9397b5;
 }
 
 @layer base {

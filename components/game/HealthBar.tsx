@@ -13,7 +13,7 @@ export default function HealthBar() {
     return () => window.removeEventListener("resize", checkSize);
   }, []);
 
-  const color = hp > 50 ? "#00e5ff" : hp > 25 ? "#ffdd00" : "#ff4444";
+  const color = hp > 50 ? "#b9bde6" : hp > 25 ? "#e6cf94" : "#e07a86";
   
   const keyCount = currentBeatmap?.keyCount || 4;
   const sizeScale = isBigger ? 1.2 : 1.0;

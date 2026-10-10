@@ -102,10 +102,12 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               )}
             </div>
 
-            {/* Right: mascot art goes here once it exists (docs/mascot-brief.md). Static placeholder. */}
-            <div className="hidden flex-1 items-center justify-center bg-linear-to-br from-lf-primary/50 via-lf-surface to-lf-bg md:flex">
-              <span className="font-game-display text-2xl font-bold tracking-[0.2em] text-white/30">LANIFY</span>
-            </div>
+            {/* Right: mascot art */}
+            <div
+              aria-hidden
+              className="hidden flex-1 bg-lf-surface bg-cover bg-center md:block"
+              style={{ backgroundImage: "url(/background/Register.webp)" }}
+            />
           </motion.div>
         </div>
       )}

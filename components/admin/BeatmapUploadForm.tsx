@@ -237,7 +237,7 @@ export default function BeatmapUploadForm() {
               <div className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                 isActive ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/30" : 
-                isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : 
+                isCompleted ? "bg-lf-success border-lf-success text-white" : 
                 "bg-card border-border text-muted-foreground"
               )}>
                 {isCompleted ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}

@@ -29,7 +29,7 @@ export default function GameSlider({
         <span className="text-sm font-game-body text-white/70 group-hover:text-white transition-colors">
           {label}
         </span>
-        <span className="text-xs font-game-mono text-cyan-300 tabular-nums font-bold bg-cyan-950/50 px-2 py-1 rounded-md border border-cyan-500/20 shadow-[inset_0_0_10px_rgba(0,229,255,0.05)]">
+        <span className="text-xs font-game-mono text-lf-accent tabular-nums font-bold bg-lf-surface/50 px-2 py-1 rounded-md border border-lf-accent/20 shadow-[inset_0_0_10px_rgba(185,189,230,0.05)]">
           {step < 1 ? value.toFixed(1) : value}{suffix}
         </span>
       </div>
@@ -38,7 +38,7 @@ export default function GameSlider({
         <div className="absolute w-full h-1.5 bg-white/10 rounded-full overflow-hidden shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)]">
           {/* Filled part */}
           <div 
-            className="absolute top-0 left-0 h-full bg-linear-to-r from-cyan-600 to-cyan-400"
+            className="absolute top-0 left-0 h-full bg-linear-to-r from-lf-primary to-lf-accent"
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -54,7 +54,7 @@ export default function GameSlider({
         />
         {/* Custom thumb */}
         <div 
-          className="absolute h-4 w-4 bg-white rounded-full shadow-[0_0_10px_rgba(0,229,255,0.8)] border-2 border-cyan-400 pointer-events-none transition-transform group-hover:scale-125"
+          className="absolute h-4 w-4 bg-white rounded-full shadow-[0_0_10px_rgba(185,189,230,0.8)] border-2 border-lf-accent pointer-events-none transition-transform group-hover:scale-125"
           style={{ left: `calc(${percentage}% - 8px)` }}
         />
       </div>

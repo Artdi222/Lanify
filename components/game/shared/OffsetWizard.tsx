@@ -100,7 +100,7 @@ export default function OffsetWizard() {
 
   const box = "flex flex-col gap-3 rounded-xl border border-white/10 bg-black/30 p-4";
   const primary =
-    "h-10 rounded-lg bg-cyan-500/20 border border-cyan-400/50 text-cyan-200 text-sm font-game-display font-bold tracking-wider uppercase hover:bg-cyan-500/30 transition-colors cursor-pointer";
+    "h-10 rounded-lg bg-lf-accent/20 border border-lf-accent/50 text-lf-accent text-sm font-game-display font-bold tracking-wider uppercase hover:bg-lf-accent/30 transition-colors cursor-pointer";
   const secondary =
     "h-10 rounded-lg bg-white/5 border border-white/10 text-white/70 text-sm font-game-display tracking-wider uppercase hover:bg-white/10 hover:text-white transition-colors cursor-pointer";
 
@@ -123,7 +123,7 @@ export default function OffsetWizard() {
             <span
               key={i}
               className={`h-2.5 w-2.5 rounded-full ${
-                i === beat ? "bg-cyan-300 shadow-[0_0_8px_rgba(0,229,255,0.9)]" : i < beat ? "bg-white/40" : "bg-white/10"
+                i === beat ? "bg-lf-accent shadow-[0_0_8px_rgba(185,189,230,0.9)]" : i < beat ? "bg-white/40" : "bg-white/10"
               } ${i < warmup ? "opacity-50" : ""}`}
             />
           ))}
@@ -134,7 +134,7 @@ export default function OffsetWizard() {
             const fb = calibrator.current?.tap(e.timeStamp);
             if (fb) setLastError(fb.errorMs);
           }}
-          className="h-20 rounded-xl border-2 border-cyan-400/40 bg-cyan-500/10 text-cyan-200 font-game-display font-bold tracking-[0.2em] uppercase active:bg-cyan-500/30 cursor-pointer select-none"
+          className="h-20 rounded-xl border-2 border-lf-accent/40 bg-lf-accent/10 text-lf-accent font-game-display font-bold tracking-[0.2em] uppercase active:bg-lf-accent/30 cursor-pointer select-none"
         >
           Tap here or press any key
         </button>
@@ -161,7 +161,7 @@ export default function OffsetWizard() {
               <b className="text-white">{Math.abs(Math.round(result.meanErrorMs))} ms</b>{" "}
               {result.meanErrorMs > 0 ? "late" : "early"}. Suggested Audio Offset:
             </p>
-            <p className="text-3xl font-game-mono font-bold text-cyan-300 tabular-nums">
+            <p className="text-3xl font-game-mono font-bold text-lf-accent tabular-nums">
               {fmtSigned(result.offsetMs)} ms
             </p>
             <p className="text-xs font-game-mono text-white/50">
@@ -169,7 +169,7 @@ export default function OffsetWizard() {
               {Math.round(result.stdMs)} ms
             </p>
             {result.stdMs > 30 && (
-              <p className="text-xs font-game-body text-amber-300">
+              <p className="text-xs font-game-body text-lf-warning">
                 Your taps were quite uneven, so this may be off. Try again for a steadier result.
               </p>
             )}
@@ -184,7 +184,7 @@ export default function OffsetWizard() {
           </>
         ) : (
           <>
-            <p className="text-sm font-game-body text-amber-300">
+            <p className="text-sm font-game-body text-lf-warning">
               Not enough taps were detected ({result?.used ?? 0} of {DEFAULT_CALIBRATION.measured}). Tap on every beep and try again.
             </p>
             <button type="button" onClick={start} className={primary}>

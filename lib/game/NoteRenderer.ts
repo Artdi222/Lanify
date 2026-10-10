@@ -3,15 +3,15 @@ import type { ParsedNote, ScrollDirection } from "@/types/game";
 import { ColumnFlashes } from "./ColumnFlash";
 import { advanceFirstVisible, holdEndKey } from "./noteUtils";
 
-const COLUMN_COLORS_4K = ["#3399ff", "#ffffff", "#ffffff", "#3399ff"];
+const COLUMN_COLORS_4K = ["#8f95c4", "#ffffff", "#ffffff", "#8f95c4"];
 const COLUMN_COLORS_7K = [
-  "#3399ff",
-  "#00e5ff",
+  "#8f95c4",
+  "#b9bde6",
   "#ffffff",
-  "#ffdd00",
+  "#787ac7",
   "#ffffff",
-  "#00e5ff",
-  "#3399ff",
+  "#b9bde6",
+  "#8f95c4",
 ];
 const HIT_ZONE_COLOR = 0x7d7d7d;
 const COLUMN_FLASH_COLOR = 0x7d7d7d;

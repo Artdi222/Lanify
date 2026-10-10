@@ -50,10 +50,10 @@ function TabButton({ active, children, onClick }: { active: boolean; children: R
     <button
       type="button"
       onClick={onClick}
-      className={cn("relative cursor-pointer px-1 pb-1 font-game-display text-[17px] font-semibold transition-colors", active ? "text-white" : "text-[#dae7ee]/80 hover:text-white")}
+      className={cn("relative cursor-pointer px-1 pb-1 font-game-display text-[17px] font-semibold transition-colors", active ? "text-white" : "text-[#dddded]/80 hover:text-white")}
     >
       {children}
-      <span className={cn("absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-[#66ccff] transition-opacity", active ? "opacity-100" : "opacity-0")} />
+      <span className={cn("absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-[#b9bde6] transition-opacity", active ? "opacity-100" : "opacity-0")} />
     </button>
   );
 }

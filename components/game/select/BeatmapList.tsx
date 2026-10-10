@@ -162,7 +162,7 @@ export default function BeatmapList({
               aria-label="Search beatmaps"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={cn(UNSHEAR, "w-full bg-transparent font-game-display text-[24px] text-white outline-none placeholder:text-[#98a5ab]")}
+              className={cn(UNSHEAR, "w-full bg-transparent font-game-display text-[24px] text-white outline-none placeholder:text-[#a3a4bd]")}
             />
             <span className={cn(UNSHEAR, "font-game-display text-[12px] font-semibold text-select-match")}>{matchCount} matches</span>
           </label>

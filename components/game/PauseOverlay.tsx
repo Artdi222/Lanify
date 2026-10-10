@@ -15,9 +15,9 @@ const TRIANGLES = `url("data:image/svg+xml,${encodeURIComponent(
 )}")`;
 
 const BUTTONS = [
-  { label: "Continue", color: "#8cb400", action: "onResume" },
-  { label: "Retry", color: "#f0ab00", action: "onRetry" },
-  { label: "Quit", color: "#b01c28", action: "onQuit" },
+  { label: "Continue", color: "#6a7294", action: "onResume" },
+  { label: "Retry", color: "#4f5266", action: "onRetry" },
+  { label: "Quit", color: "#a35a66", action: "onQuit" },
 ] as const;
 
 export default function PauseOverlay(props: PauseOverlayProps) {
@@ -32,7 +32,7 @@ export default function PauseOverlay(props: PauseOverlayProps) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex flex-col items-center bg-black/85 text-white"
     >
-      <h2 className="mt-[12vh] font-game-display text-6xl font-bold lowercase tracking-[0.25em] text-[#ffcc00]">
+      <h2 className="mt-[12vh] font-game-display text-6xl font-bold lowercase tracking-[0.25em] text-[#dddded]">
         paused
       </h2>
 

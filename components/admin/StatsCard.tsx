@@ -35,7 +35,7 @@ export default function StatsCard({
               {trend && (
                 <span className={cn(
                   "text-xs font-semibold",
-                  trend.isPositive ? "text-emerald-500" : "text-destructive"
+                  trend.isPositive ? "text-lf-success" : "text-destructive"
                 )}>
                   {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%
                 </span>

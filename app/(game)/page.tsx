@@ -7,13 +7,14 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, LogIn, LogOut, Lightbulb, Settings as SettingsIcon } from "lucide-react";
 import SettingsDrawer from "@/components/game/shared/SettingsDrawer";
-import MenuBackground from "@/components/menu/MenuBackground";
 import { LogoButton } from "@/components/menu/LogoButton";
 import { SkewedPanel } from "@/components/ui/SkewedPanel";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { useMusicStore } from "@/lib/store/useMusicStore";
 import { GAMEPLAY_TIPS } from "@/types/game";
+
+const MENU_BACKGROUNDS = ["/background/BG-1.webp", "/background/BG-2.webp"];
 
 export default function MainMenuPage() {
   const router = useRouter();
@@ -24,30 +25,30 @@ export default function MainMenuPage() {
   const [mounted, setMounted] = useState(false);
   const [isMenuExpanded, setIsMenuExpanded] = useState(false);
   const [tip, setTip] = useState("");
+  const [mascotBg, setMascotBg] = useState<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     setTip(GAMEPLAY_TIPS[Math.floor(Math.random() * GAMEPLAY_TIPS.length)]);
+    setMascotBg(MENU_BACKGROUNDS[Math.floor(Math.random() * MENU_BACKGROUNDS.length)]);
   }, []);
 
   return (
     <div className={`relative flex-1 flex flex-col overflow-hidden bg-lf-bg selection:bg-lf-accent/30 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}>
-      <MenuBackground />
-
-      {/* Cover beatmap yang terakhir dipilih menggantikan background prosedural */}
+      {/* Art maskot (acak per kunjungan); cover lagu yang sedang diputar menggantikannya begitu diketahui */}
       <AnimatePresence>
-        {coverUrl && (
+        {(coverUrl || mascotBg) && (
           <motion.div
-            key={coverUrl}
+            key={coverUrl ?? mascotBg}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
             className="pointer-events-none absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${coverUrl})` }}
+            style={{ backgroundImage: `url(${coverUrl ?? mascotBg})` }}
           >
-            <div className="absolute inset-0 bg-black/60" />
+            <div className={`absolute inset-0 ${coverUrl ? "bg-black/60" : "bg-black/25"}`} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -86,9 +87,9 @@ export default function MainMenuPage() {
             }`}
           >
             <SettingsDrawer>
-              <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-blue-900 -ml-12 pl-12 sm:pl-16">
-                <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Settings</span>
+              <SkewedPanel className="w-40 h-24 sm:w-52 sm:h-32 hover:bg-lf-surface-hover -ml-12 pl-12 sm:pl-16">
+                <SettingsIcon className="w-8 h-8 sm:w-10 sm:h-10 text-lf-accent group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-lf-accent group-hover:text-white">Settings</span>
               </SkewedPanel>
             </SettingsDrawer>
 
@@ -99,13 +100,13 @@ export default function MainMenuPage() {
 
             {isGuest ? (
               <SkewedPanel onClick={() => window.dispatchEvent(new CustomEvent("open-auth-dropdown"))} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
-                <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log In</span>
+                <LogIn className="w-8 h-8 sm:w-10 sm:h-10 text-lf-accent group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-lf-accent group-hover:text-white">Log In</span>
               </SkewedPanel>
             ) : (
               <SkewedPanel onClick={() => logout()} className="w-32 h-24 sm:w-40 sm:h-32 pr-2">
-                <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 group-hover:text-white transition-colors" />
-                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-blue-400 group-hover:text-white">Log Out</span>
+                <LogOut className="w-8 h-8 sm:w-10 sm:h-10 text-lf-accent group-hover:text-white transition-colors" />
+                <span className="text-[10px] sm:text-sm font-game-display font-bold uppercase tracking-wider text-lf-accent group-hover:text-white">Log Out</span>
               </SkewedPanel>
             )}
           </div>

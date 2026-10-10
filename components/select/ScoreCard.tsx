@@ -60,13 +60,13 @@ export default function ScoreCard({
       onClick={onClick}
       className={cn("group relative block h-[68px] cursor-pointer text-left transition-[filter] duration-150 hover:brightness-125", best ? "w-[797px]" : "w-[808px]")}
     >
-      <div className={cn(SHEAR, "absolute inset-x-0 inset-y-[2px] rounded-[10px]", best ? "bg-[#353b3c]" : "bg-[#1c1c1c]/60")} />
+      <div className={cn(SHEAR, "absolute inset-x-0 inset-y-[2px] rounded-[10px]", best ? "bg-[#2f3142]" : "bg-[#1c1c1c]/60")} />
       {/* segmen skor sedikit lebih terang (foto), menempel ke tile grade */}
       <div className={cn(SHEAR, "absolute inset-y-0 right-[40px] w-[230px] rounded-[10px] bg-white/[0.06]")} />
 
       {best ? (
         <div
-          className={cn(SHEAR, "absolute left-0 top-0 flex h-full w-[57px] items-center justify-center rounded-[10px] bg-linear-to-b from-[#65fbc9] to-[#58c29f] font-game-display text-[17px] font-semibold text-black/80")}
+          className={cn(SHEAR, "absolute left-0 top-0 flex h-full w-[57px] items-center justify-center rounded-[10px] bg-linear-to-b from-[#b9bde6] to-[#9397b5] font-game-display text-[17px] font-semibold text-black/80")}
         >
           <span className={UNSHEAR}>{rankLabel}</span>
         </div>

@@ -228,7 +228,7 @@ export default function BeatmapDetailPage() {
                       className="flex-1 gap-2" 
                       onClick={copyToClipboard}
                     >
-                      {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      {copied ? <CheckCircle2 className="h-4 w-4 text-lf-success" /> : <Copy className="h-4 w-4" />}
                       {copied ? "Copied" : "Copy Link"}
                     </Button>
                     <Button 
@@ -328,7 +328,7 @@ function DetailItem({
             onClick={handleCopy}
             className="text-muted-foreground hover:text-primary transition-colors"
           >
-            {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-lf-success" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         )}
       </div>

@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  */
 
 const VARIANTS = {
-  default: "bg-[#0a1424] hover:bg-blue-900/60",
-  primary: "bg-blue-600 hover:bg-blue-500",
+  default: "bg-[#1b1c26] hover:bg-lf-surface-hover/60",
+  primary: "bg-lf-primary hover:bg-lf-primary-hover",
 } as const;
 
 type SkewedPanelProps = ComponentProps<"button"> & {
@@ -24,7 +24,7 @@ export function SkewedPanel({ variant = "default", className, contentClassName, 
       type="button"
       {...props}
       className={cn(
-        "flex flex-col items-center justify-center shrink-0 -skew-x-12 border-y-2 border-r-2 border-blue-500 shadow-lg transition-colors cursor-pointer group",
+        "flex flex-col items-center justify-center shrink-0 -skew-x-12 border-y-2 border-r-2 border-lf-primary-hover shadow-lg transition-colors cursor-pointer group",
         VARIANTS[variant],
         className,
       )}

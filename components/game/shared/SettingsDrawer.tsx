@@ -10,8 +10,8 @@ export default function SettingsDrawer({ children }: { children?: React.ReactNod
     <Sheet>
       <SheetTrigger asChild>
         {children || (
-          <button className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/30 transition-all duration-200 cursor-pointer">
-            <Settings className="w-5 h-5 text-white/70 hover:text-cyan-400 transition-colors" />
+          <button className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-lf-accent/30 transition-all duration-200 cursor-pointer">
+            <Settings className="w-5 h-5 text-white/70 hover:text-lf-accent transition-colors" />
           </button>
         )}
       </SheetTrigger>

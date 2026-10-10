@@ -8,12 +8,12 @@ import { SHEAR } from "./shear";
 /** Panel info kiri-atas layar select. Ukuran dari foto: docs/ui-spec/song-select.md ("Kiri-atas"). */
 
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
-  ranked: { label: "RANKED", bg: "#b3ff66", fg: "#1c2a0c" },
-  approved: { label: "APPROVED", bg: "#b3ff66", fg: "#1c2a0c" },
-  loved: { label: "LOVED", bg: "#ff66aa", fg: "#33001a" },
-  qualified: { label: "QUALIFIED", bg: "#66ccff", fg: "#00243a" },
-  graveyard: { label: "GRAVEYARD", bg: "#8c9296", fg: "#101315" },
-  pending: { label: "PENDING", bg: "#ffcc22", fg: "#2a2000" },
+  ranked: { label: "RANKED", bg: "#c9cdf0", fg: "#1b1c26" },
+  approved: { label: "APPROVED", bg: "#c9cdf0", fg: "#1b1c26" },
+  loved: { label: "LOVED", bg: "#b9bde6", fg: "#1b1c26" },
+  qualified: { label: "QUALIFIED", bg: "#b9bde6", fg: "#1b1c26" },
+  graveyard: { label: "GRAVEYARD", bg: "#8c9296", fg: "#111219" },
+  pending: { label: "PENDING", bg: "#dddded", fg: "#1b1c26" },
 };
 
 const n = (v: number | null | undefined) => (v ?? 0).toLocaleString("en-US");
@@ -84,7 +84,7 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
   return (
     <div className="relative shrink-0">
       {/* Satu latar miring (tan 0.2) untuk ketiga bagian supaya tepi kanannya satu garis seperti foto: x≈930 di atas, ≈876 di bawah.
-          Pita warna diukur dari foto: judul #22262d, baris meta #282933, strip difficulty #262b2e, statistik #23282a. */}
+          Pita warna diukur dari foto: judul #22262d, baris meta #282933, strip difficulty #22232e, statistik #22232e. */}
       <div
         aria-hidden
         className={cn(SHEAR, "absolute inset-y-0 -left-[60px] -right-[16px] rounded-r-2xl shadow-[0_8px_24px_rgb(0_0_0/0.3)]")}
@@ -147,7 +147,7 @@ export default function BeatmapInfoPanel({ beatmap }: { beatmap: Beatmap }) {
           >
             mapped by
           </span>
-          <span className="shrink-0 font-game-display text-[17px] font-semibold text-[#8fd3ff]">
+          <span className="shrink-0 font-game-display text-[17px] font-semibold text-[#b9bde6]">
             {beatmap.creator}
           </span>
         </div>

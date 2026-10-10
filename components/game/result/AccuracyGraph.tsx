@@ -33,14 +33,14 @@ export default function AccuracyGraph({ data }: AccuracyGraphProps) {
         <ResponsiveContainer width="100%" height="100%" debounce={100} minWidth={0} minHeight={0}>
           <LineChart data={formatted} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#8888aa" }} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#8888aa" }} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} />
+            <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#a3a4bd" }} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#a3a4bd" }} axisLine={{ stroke: "rgba(255,255,255,0.1)" }} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#0f0f1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "#8888aa" }}
-              itemStyle={{ color: "#00e5ff" }}
+              contentStyle={{ backgroundColor: "#1b1c26", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
+              labelStyle={{ color: "#a3a4bd" }}
+              itemStyle={{ color: "#b9bde6" }}
             />
-            <Line type="monotone" dataKey="accuracy" stroke="#00e5ff" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="accuracy" stroke="#b9bde6" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

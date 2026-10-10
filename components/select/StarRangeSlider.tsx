@@ -58,7 +58,7 @@ export default function StarRangeSlider({ min, max, onChange }: { min: number; m
   const pct = (v: number) => `calc(${v / MAX} * (100% - ${2 * HANDLE}px))`;
 
   return (
-    <div className={cn(SHEAR, "relative h-full w-full select-none overflow-hidden rounded-[10px] border-[1.5px] border-[#66ccff] touch-none")} style={{ background: GRADIENT }}>
+    <div className={cn(SHEAR, "relative h-full w-full select-none overflow-hidden rounded-[10px] border-[1.5px] border-[#b9bde6] touch-none")} style={{ background: GRADIENT }}>
       {/* foto: spektrum diredam ~22% ke abu gelap */}
       <div className="absolute inset-0 bg-[rgb(40_44_52/0.22)]" />
       <div className="absolute inset-y-0 left-0 bg-black/55" style={{ width: `calc(${pct(min)} + ${HANDLE / 2}px)` }} />
@@ -72,7 +72,7 @@ export default function StarRangeSlider({ min, max, onChange }: { min: number; m
         aria-valuenow={min}
         onPointerDown={drag("min")}
         onKeyDown={key("min")}
-        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-l-lg bg-[#4290fb] font-game-display text-[17px] font-semibold text-[#10243f] outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute inset-y-0 flex cursor-ew-resize items-center justify-center rounded-l-lg bg-[#787ac7] font-game-display text-[17px] font-semibold text-[#1b1c26] outline-none focus-visible:ring-2 focus-visible:ring-white"
         style={{ left: pct(min), width: HANDLE }}
       >
         <span className={UNSHEAR}>{min.toFixed(1)}</span>

@@ -17,7 +17,7 @@ export default function HitErrorBar({ errors }: HitErrorBarProps) {
         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/30" />
         {/* Gradient: cyan (early) → white (center) → purple (late) */}
         <div className="absolute inset-0 opacity-10" style={{
-          background: "linear-gradient(90deg, #00e5ff, #ffffff, #7C3AED)"
+          background: "linear-gradient(90deg, #b9bde6, #ffffff, #787ac7)"
         }} />
         {/* Error dots */}
         {errors.slice(-100).map((err, i) => {

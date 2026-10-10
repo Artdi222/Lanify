@@ -19,7 +19,7 @@ export default function GuestBanner() {
         </span>
         <button
           onClick={handleOpenAuth}
-          className="px-3 py-1 rounded-lg bg-lanify-accent text-lanify-bg text-xs font-game-body font-medium cursor-pointer hover:shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all duration-200"
+          className="px-3 py-1 rounded-lg bg-lanify-accent text-lanify-bg text-xs font-game-body font-medium cursor-pointer hover:shadow-[0_0_12px_rgba(185,189,230,0.3)] transition-all duration-200"
         >
           Login to save future scores
         </button>
