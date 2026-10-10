@@ -2,20 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Play, 
-  Pause, 
-  SkipForward, 
-  SkipBack, 
-  Music, 
-  Volume2,
-  ListMusic
-} from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Menu } from "lucide-react";
 import { useMusicStore } from "@/lib/store/useMusicStore";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { Icon } from "@/components/ui/icons/Icon";
 
 export default function MusicPlayer() {
@@ -31,10 +22,13 @@ export default function MusicPlayer() {
     previous, 
     playBeatmap, 
     playRandom,
-    setVolume
+    setVolume,
+    shuffle,
+    toggleShuffle,
   } = useMusicStore();
   
   const [expanded, setExpanded] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const currentSong = playlist[currentIndex];
@@ -70,6 +64,18 @@ export default function MusicPlayer() {
     }
   }, [currentIndex, playlist.length, playRandom]);
 
+  // F6 toggles the panel (shown in the lazer tooltip).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "F6") {
+        e.preventDefault();
+        setExpanded((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Click outside to close
   useEffect(() => {
     const handle = (e: MouseEvent) => {
@@ -90,111 +96,94 @@ export default function MusicPlayer() {
         onClick={() => setExpanded(!expanded)}
         aria-label={currentSong ? `Now playing: ${currentSong.title}` : "Now playing"}
         title={currentSong?.title ?? "Not Playing"}
-        className={`flex h-full w-12 cursor-pointer items-center justify-center transition-colors hover:bg-lf-surface-hover ${isPlaying ? "text-lf-accent" : "text-lf-text"}`}
+        className={`flex h-full w-12 cursor-pointer items-center justify-center rounded-md transition-colors ${expanded ? "bg-lf-primary text-white" : `hover:bg-white/10 ${isPlaying ? "text-lf-accent" : "text-lf-text"}`}`}
       >
         <Icon name="music" size={22} />
       </button>
 
-      {/* Expanded Card */}
+      {/* Panel: spec docs/ui-spec/now-playing.md */}
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute top-full right-0 mt-2 w-72 bg-[#0a0a18]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-60"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.15 }}
+            className="fixed right-3 top-16 z-60 w-[min(561px,calc(100vw-1.5rem))]"
           >
-            {/* Header / Current Song */}
-            <div className="relative h-28 w-full overflow-hidden">
-              {currentSong?.coverUrl ? (
-                <Image 
-                  fill 
-                  unoptimized 
-                  src={currentSong.coverUrl} 
-                  alt="" 
-                  className="object-cover brightness-[0.4]" 
-                />
-              ) : (
-                <div className="w-full h-full bg-linear-to-br from-lanify-surface to-lanify-bg" />
-              )}
-              
-              <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-game-display font-bold text-white truncate">
-                      {currentSong?.title || "Unknown"}
-                    </h4>
-                    <p className="text-[10px] font-game-body text-white/60 truncate">
-                      {currentSong?.artist || "Unknown Artist"}
-                    </p>
-                  </div>
-                  <Volume2 className="w-3.5 h-3.5 text-white/40" />
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center justify-center gap-6">
-                  <button onClick={previous} className="text-white/70 hover:text-white transition-colors cursor-pointer">
-                    <SkipBack className="w-4 h-4 fill-current" />
-                  </button>
-                  <button 
-                    onClick={togglePlay}
-                    className="w-8 h-8 rounded-full bg-lanify-accent flex items-center justify-center text-lanify-bg hover:scale-110 transition-all cursor-pointer"
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
-                  </button>
-                  <button onClick={next} className="text-white/70 hover:text-white transition-colors cursor-pointer">
-                    <SkipForward className="w-4 h-4 fill-current" />
-                  </button>
-                </div>
+            <div className="overflow-hidden rounded-lg bg-lf-bg-raised shadow-lf-panel">
+              <div className="relative flex h-[105px] flex-col items-center justify-center px-6 text-center">
+                {currentSong?.coverUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={currentSong.coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+                )}
+                <div className="absolute inset-0 bg-linear-to-r from-black/50 to-transparent" />
+                <h4 className="relative max-w-full truncate font-game-display text-[28px] font-light text-white">{currentSong?.title ?? "Not playing"}</h4>
+                <p className="relative max-w-full truncate font-game-display text-[15px] font-bold text-white/90">{currentSong?.artist ?? ""}</p>
               </div>
-            </div>
 
-            {/* Song List */}
-            <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-              <div className="flex items-center gap-2 px-2 py-1 mb-1 border-b border-white/5">
-                <ListMusic className="w-3 h-3 text-white/30" />
-                <span className="text-[9px] font-game-display font-bold text-white/30 tracking-widest uppercase">Playlist</span>
-              </div>
-              
-              {playlist.map((bm, idx) => (
-                <button
-                  key={bm.id}
-                  onClick={() => playBeatmap(bm)}
-                  className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all text-left group
-                    ${idx === currentIndex ? "bg-lanify-accent/10 border border-lanify-accent/20" : "hover:bg-white/5 border border-transparent"}`}
-                >
-                  <div className="relative w-8 h-8 rounded-md overflow-hidden bg-white/5 shrink-0">
-                    {bm.coverUrl ? (
-                      <Image fill unoptimized src={bm.coverUrl} alt="" className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Music className="w-3 h-3 text-white/10" />
-                      </div>
-                    )}
-                    {idx === currentIndex && isPlaying && (
-                      <div className="absolute inset-0 bg-lanify-accent/20 flex items-center justify-center">
-                         <div className="flex gap-0.5 items-end h-3">
-                            <div className="w-0.5 bg-lanify-accent animate-music-bar-1" />
-                            <div className="w-0.5 bg-lanify-accent animate-music-bar-2" />
-                            <div className="w-0.5 bg-lanify-accent animate-music-bar-3" />
-                         </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <div className={`text-[11px] font-game-display font-bold truncate ${idx === currentIndex ? "text-lanify-accent" : "text-white group-hover:text-white"}`}>
-                      {bm.title}
-                    </div>
-                    <div className="text-[9px] font-game-body text-white/40 truncate">
-                      {bm.artist}
-                    </div>
-                  </div>
+              <div className="flex h-[70px] items-center justify-between bg-lf-surface px-6">
+                <button onClick={toggleShuffle} aria-label="Shuffle" aria-pressed={shuffle} className={`cursor-pointer transition-colors ${shuffle ? "text-lf-accent" : "text-white/70 hover:text-white"}`}>
+                  <Shuffle className="h-6 w-6" />
                 </button>
-              ))}
+                <div className="flex items-center gap-10 text-white">
+                  <button onClick={previous} aria-label="Previous" className="cursor-pointer hover:text-lf-accent"><SkipBack className="h-6 w-6 fill-current" /></button>
+                  <button onClick={togglePlay} aria-label={isPlaying ? "Pause" : "Play"} className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-[3px] border-white transition-transform hover:scale-105 active:scale-95">
+                    {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
+                  </button>
+                  <button onClick={next} aria-label="Next" className="cursor-pointer hover:text-lf-accent"><SkipForward className="h-6 w-6 fill-current" /></button>
+                </div>
+                <button onClick={() => setListOpen((v) => !v)} aria-label="Playlist" aria-pressed={listOpen} className={`cursor-pointer transition-colors ${listOpen ? "text-lf-accent" : "text-white/70 hover:text-white"}`}>
+                  <Menu className="h-6 w-6" />
+                </button>
+              </div>
+              <ProgressStrip />
             </div>
+
+            {listOpen && (
+              <ul className="custom-scrollbar mt-[22px] max-h-[60vh] overflow-y-auto rounded-lg bg-lf-bg-raised/95 p-5 shadow-lf-panel">
+                {playlist.map((bm, idx) => (
+                  <li key={bm.id}>
+                    <button
+                      onClick={() => playBeatmap(bm)}
+                      className={`flex w-full cursor-pointer items-baseline gap-3 py-0.5 text-left hover:text-white ${idx === currentIndex ? "text-lf-accent" : "text-white/90"}`}
+                    >
+                      <span className="shrink-0 font-game-body text-lg">{bm.title}</span>
+                      <span className="truncate font-game-display text-sm font-bold text-white/45">{bm.artist}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/** Song progress along the card's bottom edge. Own component: audio `timeupdate` re-renders only this strip. */
+function ProgressStrip() {
+  const audio = useMusicStore((s) => s.currentAudio);
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    if (!audio) return;
+    const update = () => setPct(audio.duration ? (audio.currentTime / audio.duration) * 100 : 0);
+    update();
+    audio.addEventListener("timeupdate", update);
+    return () => audio.removeEventListener("timeupdate", update);
+  }, [audio]);
+
+  const seek = useMusicStore((s) => s.seek);
+  const onSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    seek((e.clientX - r.left) / r.width);
+  };
+
+  return (
+    <div onClick={onSeek} className="h-1.5 w-full cursor-pointer bg-black/40">
+      <div className="h-full bg-lf-accent" style={{ width: `${pct}%` }} />
     </div>
   );
 }

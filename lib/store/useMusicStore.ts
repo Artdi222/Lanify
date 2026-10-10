@@ -7,6 +7,7 @@ interface MusicState {
   playlist: Beatmap[];
   currentIndex: number;
   isPlaying: boolean;
+  shuffle: boolean;
   currentAudio: HTMLAudioElement | null;
   volume: number;
   lastRequestId: string;
@@ -17,6 +18,9 @@ interface MusicState {
   playRandom: () => Promise<void>;
   playBeatmap: (beatmap: Beatmap) => Promise<void>;
   togglePlay: () => void;
+  toggleShuffle: () => void;
+  /** Jump to a fraction (0-1) of the current track. */
+  seek: (fraction: number) => void;
   pauseMusic: () => void;
   next: () => void;
   previous: () => void;
@@ -34,6 +38,7 @@ export const useMusicStore = create<MusicState>((set, get) => {
     playlist: [],
     currentIndex: -1,
     isPlaying: false,
+    shuffle: false,
     currentAudio: audio,
     volume: 0.3,
     lastRequestId: "",
@@ -164,10 +169,17 @@ export const useMusicStore = create<MusicState>((set, get) => {
     set({ isPlaying: false });
   },
 
+  toggleShuffle: () => set((s) => ({ shuffle: !s.shuffle })),
+
+  seek: (fraction) => {
+    const { currentAudio } = get();
+    if (currentAudio?.duration) currentAudio.currentTime = fraction * currentAudio.duration;
+  },
+
   next: () => {
-    const { playlist, currentIndex } = get();
+    const { playlist, currentIndex, shuffle } = get();
     if (playlist.length === 0) return;
-    const nextIndex = (currentIndex + 1) % playlist.length;
+    const nextIndex = shuffle ? Math.floor(Math.random() * playlist.length) : (currentIndex + 1) % playlist.length;
     get().playBeatmap(playlist[nextIndex]);
   },
 
