@@ -24,6 +24,30 @@ import { toast } from "sonner";
 
 type Perf = BeatmapPerformance;
 
+/** Stored mods ('["DT","HD"]') to the acronym string the pp calculator takes ("DTHD"). */
+function modAcronyms(mods: string | null | undefined): string {
+  try {
+    const list = mods ? JSON.parse(mods) : [];
+    return Array.isArray(list) ? list.join("") : "";
+  } catch {
+    return "";
+  }
+}
+
+const CARD_H = 880;
+
+/** Shrinks the score cards on screens shorter than 1080 px (card + top bar + footer). */
+function useCardZoom() {
+  const [zoom, setZoom] = useState(1);
+  useEffect(() => {
+    const update = () => setZoom(Math.min(1, (window.innerHeight - 150) / CARD_H));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return zoom;
+}
+
 function StatCell({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return (
     <div className="min-w-0 text-center">
@@ -47,7 +71,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 /** Score screen. Spec: docs/ui-spec/score.md. */
 export default function ResultPage() {
   const router = useRouter();
-  const { score, maxCombo, accuracy, judgements, accuracyHistory, hitErrors, currentBeatmap, selectedBeatmapId, isReadOnly, viewingMeta } = useGameStore();
+  const { status, score, maxCombo, accuracy, judgements, accuracyHistory, hitErrors, currentBeatmap, selectedBeatmapId, isReadOnly, viewingMeta } = useGameStore();
   const { token, isGuest, user } = useAuthStore();
   const submitted = useRef(false);
   const [freshPp, setFreshPp] = useState<number | null>(null);
@@ -62,6 +86,9 @@ export default function ResultPage() {
   const [playedAt] = useState(() => new Date().toISOString());
 
   const rank = calculateRank(accuracy);
+  const zoom = useCardZoom();
+  const mods = isReadOnly ? modAcronyms(viewingMeta?.mods) : "";
+  const totalJudgements = Object.values(judgements).reduce((a, b) => a + b, 0);
   const beatmapId = currentBeatmap?.id ?? selectedBeatmapId;
 
   // Submit score on mount
@@ -69,7 +96,6 @@ export default function ResultPage() {
     if (submitted.current || isReadOnly) return;
 
     // Don't submit if no notes were hit (avoids empty SS bug)
-    const totalJudgements = Object.values(judgements).reduce((a, b) => a + b, 0);
     if (totalJudgements === 0 || (score === 0 && accuracy === 100)) {
       return;
     }
@@ -95,7 +121,7 @@ export default function ResultPage() {
         })
         .catch(() => toast.error("Failed to save score"));
     }
-  }, [token, selectedBeatmapId, score, accuracy, maxCombo, judgements, accuracyHistory, hitErrors, isReadOnly]);
+  }, [token, selectedBeatmapId, score, accuracy, maxCombo, judgements, accuracyHistory, hitErrors, isReadOnly, totalJudgements]);
 
   // Leaderboard strip; refetched once the fresh score is saved so it lands in its real position.
   useEffect(() => {
@@ -133,20 +159,22 @@ export default function ResultPage() {
   }, [viewedId]);
 
   useEffect(() => {
-    if (!beatmapId || peekBeatmapPerformance(beatmapId)) return;
+    if (!beatmapId || !totalJudgements || peekBeatmapPerformance(beatmapId, mods, totalJudgements)) return;
     let alive = true;
-    getBeatmapPerformance(beatmapId)
+    getBeatmapPerformance(beatmapId, mods, totalJudgements)
       .then((res) => alive && setPerf(res))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [beatmapId]);
+  }, [beatmapId, mods, totalJudgements]);
 
-  // Prefetched on the loader screen, so usually ready on the first frame.
-  const perf = (beatmapId && peekBeatmapPerformance(beatmapId)) || fetchedPerf;
-  // Star rating is already known from song select; only fall back to the fetched one.
-  const stars = selectedBeatmap?.id === beatmapId ? selectedBeatmap.starRating : perf?.starRating;
+  // Exact value (this play's mods + judgement count) once loaded; until then the NM lookup prefetched
+  // on the loader screen, so star / max combo render on the first frame.
+  const exactPerf = (beatmapId && peekBeatmapPerformance(beatmapId, mods, totalJudgements)) || fetchedPerf;
+  const perf = exactPerf ?? (beatmapId ? peekBeatmapPerformance(beatmapId, mods) ?? (mods ? undefined : peekBeatmapPerformance(beatmapId)) : undefined) ?? null;
+  // No mods: the star rating is already known from song select.
+  const stars = !mods && selectedBeatmap?.id === beatmapId ? selectedBeatmap.starRating : perf?.starRating;
   const pp = isReadOnly ? viewingMeta?.pp ?? null : freshPp;
   const player = isReadOnly && viewingMeta ? viewingMeta : { username: isGuest ? "Guest" : user?.username ?? "Player", avatarUrl: isGuest ? null : user?.avatarUrl ?? null };
   const when = new Date(isReadOnly && viewingMeta ? viewingMeta.submittedAt : playedAt);
@@ -192,7 +220,8 @@ export default function ResultPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative flex h-full max-h-[880px] w-[477px] shrink-0 cursor-pointer flex-col pt-[65px]"
+          style={{ zoom, height: CARD_H }}
+          className="relative flex w-[477px] shrink-0 cursor-pointer flex-col pt-[65px]"
         >
           <div className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 flex-col items-center">
             <span className="flex h-[105px] w-[105px] items-center justify-center overflow-hidden rounded-[22px] bg-lf-bg shadow-lf-panel">
@@ -263,6 +292,10 @@ export default function ResultPage() {
     router.push("/select");
   };
 
+  // After `back` resets the store this page still renders until the route changes; an empty store
+  // would show as "SS, 0 points". Render nothing instead (also covers opening /result directly).
+  if (status === "idle") return null;
+
   return (
     <div className="relative h-screen overflow-hidden bg-lf-bg">
       {currentBeatmap?.backgroundUrl && (
@@ -311,11 +344,11 @@ export default function ResultPage() {
       ) : (
         <div className="no-scrollbar relative z-10 flex h-full items-center gap-6 overflow-x-auto px-[50vw] pb-[72px] pt-[72px]">
           {others.slice(0, split).map((e) => (
-            <NeighbourCard key={e.id} entry={e} onClick={() => openEntry(e)} />
+            <NeighbourCard key={e.id} entry={e} zoom={zoom} onClick={() => openEntry(e)} />
           ))}
           {mainCard}
           {others.slice(split).map((e) => (
-            <NeighbourCard key={e.id} entry={e} onClick={() => openEntry(e)} />
+            <NeighbourCard key={e.id} entry={e} zoom={zoom} onClick={() => openEntry(e)} />
           ))}
         </div>
       )}

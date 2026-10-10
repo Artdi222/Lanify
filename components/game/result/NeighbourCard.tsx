@@ -12,9 +12,9 @@ const ROWS: [string, keyof LeaderboardEntry["judgements"]][] = [
 ];
 
 /** Small leaderboard card beside the main score card (foto 1791518660446). */
-export default function NeighbourCard({ entry, onClick }: { entry: LeaderboardEntry; onClick: () => void }) {
+export default function NeighbourCard({ entry, zoom = 1, onClick }: { entry: LeaderboardEntry; zoom?: number; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex w-[170px] shrink-0 cursor-pointer flex-col items-center opacity-80 transition-opacity hover:opacity-100">
+    <button type="button" onClick={onClick} style={{ zoom }} className="flex w-[170px] shrink-0 cursor-pointer flex-col items-center opacity-80 transition-opacity hover:opacity-100">
       <div className="w-full rounded-[18px] bg-lf-bg-raised/85 px-3 pb-4 pt-2.5 shadow-lf-panel">
         <div className="text-center font-game-display text-[17px] font-bold text-white">#{entry.position}</div>
         <span className="mx-auto mt-2 flex h-[145px] w-[145px] items-center justify-center overflow-hidden rounded-[18px] bg-lf-bg">

@@ -22,20 +22,28 @@ export async function getScoresForBeatmap(
 
 export type BeatmapPerformance = { starRating: number; maxCombo: number; maxPp: number };
 
-// ponytail: memoized per beatmap (the value never changes); failed lookups are dropped so they retry.
+// ponytail: memoized per beatmap/mods/total (the value never changes); failed lookups are dropped so they retry.
 const perfRequests = new Map<string, Promise<BeatmapPerformance>>();
 const perfValues = new Map<string, BeatmapPerformance>();
+const perfKey = (id: string, mods: string, total?: number) => `${id}|${mods}|${total ?? ""}`;
 
 /** Already-loaded value, for rendering without waiting a tick. */
-export const peekBeatmapPerformance = (beatmapId: string) => perfValues.get(beatmapId);
+export const peekBeatmapPerformance = (beatmapId: string, mods = "", total?: number) => perfValues.get(perfKey(beatmapId, mods, total));
 
-/** NM star rating and the pp of a perfect play, for the result screen's breakdown. */
-export function getBeatmapPerformance(beatmapId: string): Promise<BeatmapPerformance> {
-  let req = perfRequests.get(beatmapId);
+/**
+ * Star rating (for `mods`, e.g. "DTHD") and the pp of a perfect play, for the result screen's breakdown.
+ * `total` = the play's judgement count, which makes "Maximum" exact; without it the backend uses max combo.
+ */
+export function getBeatmapPerformance(beatmapId: string, mods = "", total?: number): Promise<BeatmapPerformance> {
+  const key = perfKey(beatmapId, mods, total);
+  let req = perfRequests.get(key);
   if (!req) {
-    req = apiClient<BeatmapPerformance>(`/scores/performance/${beatmapId}`);
-    req.then((v) => perfValues.set(beatmapId, v)).catch(() => perfRequests.delete(beatmapId));
-    perfRequests.set(beatmapId, req);
+    const q = new URLSearchParams();
+    if (mods) q.set("mods", mods);
+    if (total) q.set("total", String(total));
+    req = apiClient<BeatmapPerformance>(`/scores/performance/${beatmapId}${q.size ? `?${q}` : ""}`);
+    req.then((v) => perfValues.set(key, v)).catch(() => perfRequests.delete(key));
+    perfRequests.set(key, req);
   }
   return req;
 }

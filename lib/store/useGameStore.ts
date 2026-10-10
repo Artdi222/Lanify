@@ -29,7 +29,7 @@ interface GameState {
   latestJudgement: { type: JudgementType; time: number } | null;
   isReadOnly: boolean;
   /** Who/when/pp of a score opened from a leaderboard; null for the player's own fresh play. */
-  viewingMeta: { scoreId: string; username: string; avatarUrl: string | null; submittedAt: string; pp: number | null } | null;
+  viewingMeta: { scoreId: string; mods: string | null; username: string; avatarUrl: string | null; submittedAt: string; pp: number | null } | null;
   retryTrigger: number;
   /** Score denominator for the current chart, computed once in startGame (not per hit). */
   maxScoreUnits: number;
@@ -191,7 +191,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       accuracyHistory: typeof entry.accuracyHistory === 'string' ? JSON.parse(entry.accuracyHistory) : [],
       hitErrors: typeof entry.hitErrors === 'string' ? JSON.parse(entry.hitErrors) : [],
       isReadOnly: true,
-      viewingMeta: { scoreId: entry.id, username: entry.username, avatarUrl: entry.avatarUrl, submittedAt: entry.submittedAt, pp: entry.pp ?? null },
+      viewingMeta: { scoreId: entry.id, mods: entry.mods, username: entry.username, avatarUrl: entry.avatarUrl, submittedAt: entry.submittedAt, pp: entry.pp ?? null },
       status: 'complete',
       currentBeatmap: beatmap
         ? {
