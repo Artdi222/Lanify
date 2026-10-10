@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { getUserBestScores, type UserBestScore } from "@/lib/api/user";
-import { GRADE_COLORS, relativeTime } from "@/lib/select/format";
+import { GRADE_COLORS, relativeTimeLong } from "@/lib/select/format";
 
 // ponytail: in-memory cache so reopening a profile shows its scores at once; refreshed on every open.
 const cache = new Map<string, UserBestScore[]>();
@@ -19,7 +19,6 @@ function parseMods(mods: string | null): string[] {
 }
 
 function ScoreRow({ s }: { s: UserBestScore }) {
-  const time = relativeTime(s.submittedAt);
   return (
     <div className="flex h-[58px] items-stretch overflow-hidden rounded-lf-md bg-lf-surface-hover/60 font-game-body">
       <div className="flex min-w-0 flex-1 items-center gap-4 pl-4">
@@ -34,7 +33,7 @@ function ScoreRow({ s }: { s: UserBestScore }) {
             <span className="text-lf-warning">
               [{s.keyCount}K] {s.difficultyName}
             </span>
-            <span className="ml-2 text-white/45">{time === "now" ? "just now" : `${time} ago`}</span>
+            <span className="ml-2 text-white/45">{relativeTimeLong(s.submittedAt)}</span>
           </div>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1.5">

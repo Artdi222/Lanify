@@ -17,6 +17,21 @@ export function relativeTime(iso: string, now: number = Date.now()): string {
   return `${Math.floor(diff / (365 * DAY))}yr`;
 }
 
+/** Waktu relatif panjang untuk daftar skor profil: "just now", "5 minutes ago", "2 months ago", "1 year ago". */
+export function relativeTimeLong(iso: string, now: number = Date.now()): string {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "";
+  const diff = Math.max(0, now - t);
+  if (diff < MIN) return "just now";
+  const [n, unit] =
+    diff < HOUR ? [Math.floor(diff / MIN), "minute"]
+    : diff < DAY ? [Math.floor(diff / HOUR), "hour"]
+    : diff < 30 * DAY ? [Math.floor(diff / DAY), "day"]
+    : diff < 365 * DAY ? [Math.floor(diff / (30 * DAY)), "month"]
+    : [Math.floor(diff / (365 * DAY)), "year"];
+  return `${n} ${unit}${n === 1 ? "" : "s"} ago`;
+}
+
 /** Warna tile grade, diukur dari piksel bersih di foto (S #02b5c3, A #88da20; B/C/D dari chip di foto skor); SS tidak ada di foto (`?`, emas). */
 export const GRADE_COLORS: Record<RankGrade, string> = {
   SS: "#f2d24b",
