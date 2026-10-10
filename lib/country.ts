@@ -5,8 +5,4 @@ const names = new Intl.DisplayNames(["en"], { type: "region" });
 
 export const countryName = (code: string) => names.of(code.toUpperCase()) ?? code;
 
-/** Flag emoji from regional-indicator letters (shows as the letters on platforms without flag glyphs). */
-export const flagEmoji = (code: string) =>
-  String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
-
 export const COUNTRIES = CODES.map((code) => ({ code, name: countryName(code) })).sort((a, b) => a.name.localeCompare(b.name));

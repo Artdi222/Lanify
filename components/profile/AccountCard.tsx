@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ChevronDown, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { PRESENCE_OPTIONS, usePresenceStore } from "@/lib/store/usePresenceStore";
-import { countryName, flagEmoji } from "@/lib/country";
+import { countryName } from "@/lib/country";
+import Flag from "./Flag";
 import { useUserProfile } from "./useUserProfile";
 
 const ROW = "block w-full cursor-pointer px-4 py-2 text-left font-game-body text-base text-white transition-colors hover:bg-white/10";
@@ -40,8 +41,8 @@ export default function AccountCard({ onOpenProfile, onDone }: { onOpenProfile: 
           </span>
           <div className="absolute bottom-2 left-[107px] right-3 min-w-0">
             {profile?.country && (
-              <span className="mb-1 flex items-center gap-1.5 font-game-body text-xs text-white/80" title={countryName(profile.country)}>
-                <span className="text-base leading-none">{flagEmoji(profile.country)}</span>
+              <span className="mb-1 block" title={countryName(profile.country)}>
+                <Flag code={profile.country} height={22} />
               </span>
             )}
             <span className="block truncate font-game-display text-base font-bold text-white">{user.username}</span>

@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { COUNTRIES, countryName, flagEmoji } from "./country";
+import { COUNTRIES, countryName } from "./country";
 
 describe("country", () => {
-  test("flag emoji and name", () => {
-    expect(flagEmoji("id")).toBe("🇮🇩");
+  test("name", () => {
     expect(countryName("id")).toBe("Indonesia");
   });
   test("every listed code resolves to a real name", () => {

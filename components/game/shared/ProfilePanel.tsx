@@ -6,7 +6,8 @@ import { X, User, Pencil, Save, Upload, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { updateProfile } from "@/lib/api/user";
 import { uploadToSupabase } from "@/lib/api/beatmaps";
-import { COUNTRIES, countryName, flagEmoji } from "@/lib/country";
+import { COUNTRIES, countryName } from "@/lib/country";
+import Flag from "@/components/profile/Flag";
 import { useUserProfile } from "@/components/profile/useUserProfile";
 import { toast } from "sonner";
 
@@ -149,7 +150,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                   <h2 className="truncate font-game-display text-2xl font-bold text-white">{user.username}</h2>
                   {shownCountry && (
                     <div className="mt-1 flex items-center gap-2 font-game-body text-sm text-white/85">
-                      <span className="text-xl leading-none">{flagEmoji(shownCountry)}</span>
+                      <Flag code={shownCountry} height={20} />
                       {countryName(shownCountry)}
                     </div>
                   )}
@@ -171,7 +172,7 @@ export default function ProfilePanel({ isOpen, onClose }: ProfilePanelProps) {
                     <option value="">Country (not set)</option>
                     {COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>
-                        {flagEmoji(c.code)} {c.name}
+                        {c.name}
                       </option>
                     ))}
                   </select>
