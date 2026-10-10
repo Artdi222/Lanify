@@ -14,6 +14,7 @@ interface SettingsState extends GameSettings {
   setRenderScale: (scale: number) => void;
   setMaxFps: (fps: number) => void;
   setReduceMotion: (mode: GameSettings['reduceMotion']) => void;
+  setShowFps: (on: boolean) => void;
   setKeybind: (mode: '4k' | '7k', index: number, key: string) => void;
   setSelectionSortBy: (s: 'title' | 'artist' | 'starRating' | 'bpm') => void;
   setSelectionGroupBy: (g: 'NONE' | 'ARTIST' | 'DIFFICULTY') => void;
@@ -38,6 +39,7 @@ export const useSettingsStore = create<SettingsState>()(
       setRenderScale: (scale) => set({ renderScale: scale }),
       setMaxFps: (fps) => set({ maxFps: fps }),
       setReduceMotion: (mode) => set({ reduceMotion: mode }),
+      setShowFps: (on) => set({ showFps: on }),
       setKeybind: (mode, index, key) =>
         set((state) => {
           const newBinds = { ...state.keybinds };

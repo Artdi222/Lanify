@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import GameNavbar from "@/components/game/shared/Navbar";
 import AmbientMotionController from "@/components/ui/AmbientMotionController";
+import FpsCounter from "@/components/ui/FpsCounter";
 
 export default function GameLayout({
   children,
@@ -34,6 +35,7 @@ export default function GameLayout({
           </motion.div>
         </AnimatePresence>
       </main>
+      <FpsCounter />
     </div>
     </AmbientMotionController>
   );

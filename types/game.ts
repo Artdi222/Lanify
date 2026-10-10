@@ -144,6 +144,8 @@ export interface GameSettings {
   maxFps: number;
   /** Animasi dekoratif: 'system' ikut prefers-reduced-motion. */
   reduceMotion: 'system' | 'on' | 'off';
+  /** Indikator FPS/ms di pojok kanan bawah (debug). */
+  showFps: boolean;
   keybinds: {
     '4k': [string, string, string, string];
     '7k': [string, string, string, string, string, string, string];
@@ -168,6 +170,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   renderScale: 0,
   maxFps: 0,
   reduceMotion: 'system',
+  showFps: false,
   keybinds: {
     '4k': ['d', 'f', 'j', 'k'],
     '7k': ['s', 'd', 'f', ' ', 'j', 'k', 'l'],

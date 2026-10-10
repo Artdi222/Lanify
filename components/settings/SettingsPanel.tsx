@@ -129,6 +129,14 @@ export default function SettingsPanel() {
       render: () => <SettingRow label="Frame Limit" stacked><OptionPills options={FPS_LIMIT_OPTIONS} value={s.maxFps} onChange={s.setMaxFps} /></SettingRow>,
     },
     {
+      id: "showFps", category: "graphics", section: "Renderer", label: "Show FPS", keywords: "fps counter frame time ms debug",
+      render: () => (
+        <SettingRow label="Show FPS" hint="Frame rate and frame time in the bottom-right corner.">
+          <OptionPills options={[{ label: "Off", value: 0 }, { label: "On", value: 1 }]} value={s.showFps ? 1 : 0} onChange={(v) => s.setShowFps(v === 1)} />
+        </SettingRow>
+      ),
+    },
+    {
       id: "renderScale", category: "graphics", section: "Renderer", label: "Render Scale", keywords: "resolution",
       render: () => <SettingRow label="Render Scale" stacked><OptionPills options={RENDER_SCALE_OPTIONS} value={s.renderScale} onChange={s.setRenderScale} /></SettingRow>,
     },
