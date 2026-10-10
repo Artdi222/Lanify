@@ -229,9 +229,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     set((state) => {
       const newCache = { ...state.leaderboardCache };
+      // Mark stale instead of deleting: the old list stays on screen while the refetch runs.
       Object.keys(newCache).forEach((key) => {
         if (key.startsWith(beatmapId)) {
-          delete newCache[key];
+          newCache[key] = { ...newCache[key], timestamp: 0 };
         }
       });
       return { leaderboardCache: newCache };

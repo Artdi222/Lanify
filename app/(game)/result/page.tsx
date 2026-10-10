@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, RotateCcw, Star, User } from "lucide-react";
 import { useGameStore, calculateRank } from "@/lib/store/useGameStore";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { getBeatmapPerformance, submitScore } from "@/lib/api/scores";
+import { getBeatmapPerformance, getScoreDetail, peekBeatmapPerformance, submitScore, type BeatmapPerformance } from "@/lib/api/scores";
 import { getLeaderboard } from "@/lib/api/leaderboard";
 import { judgementsToPayload } from "@/types/score";
 import { JUDGEMENT_COLORS, type LeaderboardEntry } from "@/types/game";
@@ -22,7 +22,7 @@ import GuestBanner from "@/components/game/result/GuestBanner";
 import NeighbourCard from "@/components/game/result/NeighbourCard";
 import { toast } from "sonner";
 
-type Perf = { starRating: number; maxCombo: number; maxPp: number };
+type Perf = BeatmapPerformance;
 
 function StatCell({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return (
@@ -52,10 +52,13 @@ export default function ResultPage() {
   const submitted = useRef(false);
   const [freshPp, setFreshPp] = useState<number | null>(null);
   const [freshId, setFreshId] = useState<string | null>(null);
-  const [board, setBoard] = useState<LeaderboardEntry[]>([]);
+  const boardKey = `${currentBeatmap?.id ?? selectedBeatmapId}-GLOBAL-${token || ""}`;
+  // Same cache as the song select ranking panel, so the strip shows at once and refreshes behind.
+  const board = useGameStore((s) => s.leaderboardCache[boardKey]?.entries) ?? [];
+  const selectedBeatmap = useGameStore((s) => s.selectedBeatmap);
   const [detail, setDetail] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
-  const [perf, setPerf] = useState<Perf | null>(null);
+  const [fetchedPerf, setPerf] = useState<Perf | null>(null);
   const [playedAt] = useState(() => new Date().toISOString());
 
   const rank = calculateRank(accuracy);
@@ -99,15 +102,38 @@ export default function ResultPage() {
     if (!beatmapId) return;
     let alive = true;
     getLeaderboard(beatmapId, "GLOBAL", token)
-      .then((res) => alive && setBoard(Array.isArray(res) ? res : []))
+      .then((res) => alive && useGameStore.getState().setLeaderboardCache(boardKey, Array.isArray(res) ? res : []))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [beatmapId, token, freshId]);
+  }, [beatmapId, token, freshId, boardKey]);
+
+  // Leaderboard lists leave out the graph data; load it for the score being viewed.
+  const viewedId = isReadOnly ? viewingMeta?.scoreId : undefined;
+  useEffect(() => {
+    if (!viewedId) return;
+    let alive = true;
+    getScoreDetail(viewedId)
+      .then((d) => {
+        if (!alive) return;
+        const parse = (v: string | null) => {
+          try {
+            return v ? JSON.parse(v) : [];
+          } catch {
+            return [];
+          }
+        };
+        useGameStore.setState({ accuracyHistory: parse(d.accuracyHistory), hitErrors: parse(d.hitErrors) });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [viewedId]);
 
   useEffect(() => {
-    if (!beatmapId) return;
+    if (!beatmapId || peekBeatmapPerformance(beatmapId)) return;
     let alive = true;
     getBeatmapPerformance(beatmapId)
       .then((res) => alive && setPerf(res))
@@ -117,6 +143,10 @@ export default function ResultPage() {
     };
   }, [beatmapId]);
 
+  // Prefetched on the loader screen, so usually ready on the first frame.
+  const perf = (beatmapId && peekBeatmapPerformance(beatmapId)) || fetchedPerf;
+  // Star rating is already known from song select; only fall back to the fetched one.
+  const stars = selectedBeatmap?.id === beatmapId ? selectedBeatmap.starRating : perf?.starRating;
   const pp = isReadOnly ? viewingMeta?.pp ?? null : freshPp;
   const player = isReadOnly && viewingMeta ? viewingMeta : { username: isGuest ? "Guest" : user?.username ?? "Player", avatarUrl: isGuest ? null : user?.avatarUrl ?? null };
   const when = new Date(isReadOnly && viewingMeta ? viewingMeta.submittedAt : playedAt);
@@ -189,10 +219,10 @@ export default function ResultPage() {
               <div className="mt-3 flex justify-center">
                 <span
                   className="flex items-center gap-1 rounded-full px-2.5 py-0.5 font-game-display text-xs font-bold"
-                  style={perf ? { backgroundColor: difficultyColor(perf.starRating), color: starTextColor(perf.starRating) } : { backgroundColor: "rgb(255 255 255 / 0.15)" }}
+                  style={stars !== undefined ? { backgroundColor: difficultyColor(stars), color: starTextColor(stars) } : { backgroundColor: "rgb(255 255 255 / 0.15)" }}
                 >
                   <Star className="h-3 w-3 fill-current" />
-                  {perf ? perf.starRating.toFixed(2) : "-"}
+                  {stars !== undefined ? stars.toFixed(2) : "-"}
                 </span>
               </div>
               <p className="mt-1 text-center font-game-body text-[15px] text-white">{currentBeatmap?.difficultyName}</p>

@@ -10,6 +10,7 @@ import { LogoButton } from "@/components/menu/LogoButton";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useSettingsStore } from "@/lib/store/useSettingsStore";
 import { getBeatmap, getBeatmapUrl } from "@/lib/api/beatmaps";
+import { getBeatmapPerformance } from "@/lib/api/scores";
 import { BeatmapLoader } from "@/lib/game/BeatmapLoader";
 import { getStarRatingColor } from "@/types/game";
 import type { Beatmap } from "@/types/beatmap";
@@ -65,6 +66,7 @@ export default function PreparePage() {
         if (cancelled) return;
         setBeatmap(bm);
         useGameStore.getState().setSelectedBeatmapId(beatmapId);
+        getBeatmapPerformance(beatmapId).catch(() => {}); // warm the result screen's max pp
         const signedUrl = BeatmapLoader.hasCache(bm.filePath) ? "" : (await getBeatmapUrl(beatmapId, "")).url;
         await BeatmapLoader.load(bm.filePath, signedUrl);
         if (!cancelled) setLoaded(true);
